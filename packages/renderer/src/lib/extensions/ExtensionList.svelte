@@ -161,9 +161,12 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
         <SearchInput bind:searchTerm={searchTerm} title="extensions" />
       </div>
       {#if screen === 'catalog'}
-        <div class="flex min-w-0 flex-wrap items-center gap-2 pl-5">
+        <div
+          class="flex min-w-0 max-w-full items-center gap-2 px-5"
+          role="group"
+          aria-label="Catalog filters">
           <Dropdown
-            class="w-40"
+            class="w-40 grow-0"
             bind:value={getInstallStatus, changeInstallStatus}
             options={CatalogInstallStatusFilter.OPTIONS}>
             {#snippet left()}
@@ -171,7 +174,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
             {/snippet}
           </Dropdown>
           <Dropdown
-            class="w-48 max-w-60 [&>button]:min-w-0 [&>button>span]:truncate [&>button>div]:shrink-0 [&>div>button>div:last-child]:truncate"
+            class="w-48 grow-0 [&>button]:min-w-0 [&>button>span]:truncate [&>button>div]:shrink-0 [&>div>button>div:last-child]:truncate"
             bind:value={getCategory, changeCategory}
             options={categoryFilter.options}>
             {#snippet left()}
@@ -181,7 +184,8 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
         </div>
       {/if}
       <div
-        class="flex items-center px-5 text-sm text-(--pd-content-text)"
+        class="flex items-center text-sm text-(--pd-content-text)"
+        class:px-5={screen !== 'catalog' || filteredCatalogItems > 0}
         class:flex-1={screen !== 'catalog'}
         class:whitespace-nowrap={screen === 'catalog'}
         role="status">

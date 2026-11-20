@@ -323,10 +323,16 @@ test.each(['installed', 'catalog'] as const)(
     const searchRegion = within(screen.getByRole('region', { name: 'search' }));
     const filterStatus = searchRegion.getByRole('status');
     expect(filterStatus).toBeEmptyDOMElement();
+    if (currentScreen === 'catalog') {
+      expect(filterStatus).not.toHaveClass('px-5');
+    } else {
+      expect(filterStatus).toHaveClass('px-5');
+    }
 
     await fireEvent.input(searchInput, { target: { value: 'no-match' } });
 
     expect(searchRegion.getByRole('status')).toBe(filterStatus);
+    expect(filterStatus).toHaveClass('px-5');
     expect(filterStatus).toHaveTextContent(
       currentScreen === 'installed' ? 'Filtered out 1 items of 1' : 'Filtered out 2 items of 2',
     );
@@ -355,6 +361,20 @@ test('Catalog install status shares the sticky search row', async () => {
   const dropdown = await screen.findByRole('button', { name: 'Install status All statuses' });
   expect(dropdown).toHaveTextContent('All statuses');
   expect(screen.getByRole('region', { name: 'search' })).toContainElement(dropdown);
+});
+
+test('Catalog keeps both dropdowns in one shrinkable group without growing them', async () => {
+  render(ExtensionList, { screen: 'catalog' });
+
+  const filters = await screen.findByRole('group', { name: 'Catalog filters' });
+  expect(filters).toHaveClass('flex', 'min-w-0', 'max-w-full');
+  expect(filters).not.toHaveClass('flex-wrap');
+  expect(screen.getByRole('region', { name: 'search' })).toContainElement(filters);
+  within(filters).getByRole('button', { name: 'Install status All statuses' });
+  within(filters).getByRole('button', { name: 'Category All categories' });
+  expect(filters.children).toHaveLength(2);
+  expect(filters.children[0]).toHaveClass('w-40', 'grow-0');
+  expect(filters.children[1]).toHaveClass('w-48', 'grow-0');
 });
 
 test('Catalog category shares the sticky row and lists categories from the unfiltered catalog', async () => {
