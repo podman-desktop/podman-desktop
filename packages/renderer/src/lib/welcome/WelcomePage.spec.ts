@@ -199,6 +199,30 @@ test('Expect unchecking an onboarding provider to survive a providerInfos refres
   expect(screen.queryByRole('button', { name: 'Start onboarding' })).not.toBeInTheDocument();
 });
 
+test('Expect five onboarding cards to be laid out as three on top and two centered below', async () => {
+  onboardingList.set(
+    [1, 2, 3, 4, 5].map(i => ({
+      extension: `id${i}`,
+      removable: true,
+      title: 'onboarding',
+      name: `foobar${i}`,
+      displayName: `FooBar${i}`,
+      icon: `data:image/png;base64,foobar${i}`,
+      steps: [{ id: 'step', title: 'step', state: 'failed', completionEvents: [] }],
+      enablement: 'true',
+    })),
+  );
+
+  await waitRender({ showWelcome: true });
+
+  const providerList = await screen.findByLabelText('providerList');
+  expect(providerList.children).toHaveLength(5);
+  expect(providerList).toHaveClass('grid-cols-6');
+  const cards = Array.from(providerList.children);
+  expect(cards[3]).toHaveClass('col-span-2', 'col-start-2');
+  expect(cards[4]).not.toHaveClass('col-start-2');
+});
+
 test('Make sure the provider with name podman appears first even if its 2nd in the list', async () => {
   providerInfos.set([
     {
