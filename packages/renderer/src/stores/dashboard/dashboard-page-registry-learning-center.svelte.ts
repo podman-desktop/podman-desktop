@@ -23,6 +23,7 @@ import type { DashboardPageRegistryEntry } from './dashboard-page-registry.svelt
 export function createLearningCenter(): DashboardPageRegistryEntry {
   return {
     id: 'Learning Center',
+    label: 'Learning center',
     originalOrder: 4,
     component: LearningCenter,
   };

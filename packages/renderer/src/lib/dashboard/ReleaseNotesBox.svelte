@@ -2,8 +2,9 @@
 import type { ReleaseNotes } from '@desktop-framework/api';
 import { faCircleArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { Button, ButtonRow, CloseButton, Link } from '@podman-desktop/ui-svelte';
-import { onDestroy, onMount } from 'svelte';
+import { getContext, onDestroy, onMount } from 'svelte';
 
+import { DASHBOARD_SECTION_CONTEXT, type DashboardSectionContext } from '/@/lib/dashboard/dashboard-section-context';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { updateAvailable } from '/@/stores/update-store';
@@ -14,6 +15,10 @@ let notesURL: string | undefined = $state();
 let currentVersion: string | undefined = $state();
 let notesInfo: ReleaseNotes | undefined = $state();
 let imageError: boolean = $state(false);
+
+const dashboard = getContext<DashboardSectionContext | undefined>(DASHBOARD_SECTION_CONTEXT);
+// the enhanced dashboard uses larger corners; the legacy layout keeps rounded-md
+const rounded = $derived(dashboard?.enhanced ? 'rounded-lg' : 'rounded-md');
 
 function onDidChangeConfigurationCallback(e: Event): void {
   if (!('detail' in e) || !e.detail || typeof e.detail !== 'object') {
@@ -66,7 +71,7 @@ onDestroy(async () => {
 
 {#if showBanner}
   {#if notesAvailable}
-    <div class="flex bg-[var(--pd-content-card-bg)] rounded-md gap-3 flex-row flex-nowrap h-[200px] items-center overflow-hidden">
+    <div class="flex bg-[var(--pd-content-card-bg)] {rounded} gap-3 flex-row flex-nowrap h-[200px] items-center overflow-hidden">
       {#if notesInfo?.image && !imageError}
         <img
           src={notesInfo.image}
@@ -95,7 +100,7 @@ onDestroy(async () => {
       </div>
     </div>
   {:else if notesURL}
-    <div class="flex bg-[var(--pd-content-card-bg)] rounded-md p-5 flex-col flex-nowrap h-auto items-center">
+    <div class="flex bg-(--pd-content-card-bg) {rounded} p-5 flex-col flex-nowrap h-auto items-center">
       <div class="flex flex-row items-center justify-between w-full">
         <p class="text-[var(--pd-content-card-header-text)] font-bold text-lg w-full items-center">
           Release notes are currently unavailable, please check again later

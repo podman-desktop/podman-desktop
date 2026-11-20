@@ -22,6 +22,8 @@ import type { Guide } from '@desktop-framework/api/learning-center';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
+import { DASHBOARD_SECTION_CONTEXT, type DashboardSectionContext } from '/@/lib/dashboard/dashboard-section-context';
+
 import LearningCenter from './LearningCenter.svelte';
 
 const guides: Guide[] = [
@@ -126,4 +128,13 @@ test('Expanded when the config value is set to expanded', async () => {
 
   const button = screen.getByRole('button', { name: 'Learning Center' });
   expect(button).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('enhanced dashboard: title is the context label', async () => {
+  const context: DashboardSectionContext = { enhanced: true, label: () => 'Learning center', hide: vi.fn() };
+  render(LearningCenter, { context: new Map([[DASHBOARD_SECTION_CONTEXT, context]]) });
+
+  await waitFor(() => expect(screen.getByText(guides[0].title)).toBeVisible());
+
+  expect(screen.getByRole('button', { name: 'Learning center' })).toBeInTheDocument();
 });

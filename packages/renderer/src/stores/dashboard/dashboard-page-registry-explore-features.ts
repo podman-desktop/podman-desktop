@@ -23,6 +23,7 @@ import type { DashboardPageRegistryEntry } from './dashboard-page-registry.svelt
 export function createExploreFeatures(): DashboardPageRegistryEntry {
   return {
     id: 'Explore Features',
+    label: 'Explore features',
     originalOrder: 3,
     component: ExploreFeatures,
   };
