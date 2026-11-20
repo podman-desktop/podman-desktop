@@ -97,13 +97,13 @@ Contrast with the cancel/action pattern, where `Cancel` stays `type="link"` and 
 
 ## Destructive actions
 
-Every action that deletes, removes, clears, or uninstalls something belongs to one of three tiers. The tier is decided by what the user loses, not if a dialog follows. It sets the button style, if a confirmation is required, and if the user may turn the confirmation off. Clearing a view that refills when reopened (such as a log terminal) is not a destructive action and gets a neutral control.
+Every action that deletes, removes, clears, or uninstalls something belongs to one of three tiers. The tier is decided by what the user loses, not if a dialog follows. When an action sits between two tiers, pick the more protective one. The tier sets the button style, if a confirmation is required, and if the user may turn the confirmation off. Clearing a view that refills when reopened (such as a log terminal) loses nothing, so it is not a destructive action and gets a neutral control.
 
 ### Tiers
 
 #### 🟪 Mild
 
-UI state, or something the user can get back by reinstalling or re-adding it.
+Something of little value to the user, or that they can get back by reinstalling or re-adding it.
 
 - Examples: clear all tasks, uninstall an extension, untrack a local extension folder.
 - Confirmation: none.
@@ -111,7 +111,7 @@ UI state, or something the user can get back by reinstalling or re-adding it.
 
 #### 🟧 Destructive
 
-A resource they cannot undo but can recreate, usually routine.
+Resources the action cannot undo, but that the user can generally recreate without much effort.
 
 - Examples: delete a container, image, pod, volume or network, bulk delete.
 - Confirmation: required by default. For bulk deletes the user may turn it off in Preferences (`userConfirmation.bulk`).
@@ -135,10 +135,6 @@ Data or configuration they cannot recreate, or that takes other resources with i
 - There is one danger style. Do not add outlined, lighter, or "soft" danger variants.
 - The confirmation dialog's action button is danger too, labeled with the action verb (see [Button text](#button-text)), and focus starts on Cancel (see [Focus management](#focus-management)).
 - Any component that can host a destructive action must support the danger style. `Button` does. `DropdownMenu.Item`, `ListItemButtonIcon`, and `LoadingIconButton` do not yet. Add the support in the component rather than styling a single call site.
-
-### Assigning a tier
-
-Decide the tier in the action's issue before opening the PR, naming the tier it matches. Do not reopen the decision in PR review. When an action sits between two tiers, pick the more protective one.
 
 ## Button layout in dialogs, modals, and forms
 
