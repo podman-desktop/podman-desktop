@@ -23,6 +23,7 @@ import * as podmanCli from './podman-cli';
 import {
   APPLEHV_LABEL,
   execPodman,
+  getDefaultMachineProvider,
   getMultiplePodmanInstallationsWarnings,
   getProviderByLabel,
   getProviderLabel,
@@ -102,6 +103,32 @@ test('expect exec called without CONTAINERS_MACHINE_PROVIDER if a provider is NO
     env: {
       label: 'one',
     },
+  });
+});
+
+describe('getDefaultMachineProvider', () => {
+  test('returns the VMType reported by podman machine info without forcing a provider', async () => {
+    const execMock = vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
+      stdout: JSON.stringify({ Host: { VMType: 'hyperv' } }),
+    } as extensionApi.RunResult);
+
+    await expect(getDefaultMachineProvider()).resolves.toEqual('hyperv');
+    expect(execMock).toBeCalledWith(podmanCli.getPodmanCli(), ['machine', 'info', '--format', 'json'], {});
+  });
+
+  test('returns undefined if VMType is missing', async () => {
+    vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
+      stdout: JSON.stringify({ Host: {} }),
+    } as extensionApi.RunResult);
+
+    await expect(getDefaultMachineProvider()).resolves.toBeUndefined();
+  });
+
+  test('returns undefined if podman machine info fails', async () => {
+    vi.spyOn(extensionApi.process, 'exec').mockRejectedValue(new Error('podman not found'));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await expect(getDefaultMachineProvider()).resolves.toBeUndefined();
   });
 });
 

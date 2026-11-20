@@ -80,7 +80,14 @@ import * as podmanCli from './utils/podman-cli';
 import type { PodmanConfiguration } from './utils/podman-configuration';
 import { RosettaProvisioner } from './utils/rosetta';
 import * as util from './utils/util';
-import { getAssetsFolder, LIBKRUN_LABEL, LoggerDelegator, VMTYPE } from './utils/util';
+import {
+  DEFAULT_PROVIDER_LABEL,
+  getAssetsFolder,
+  getDefaultMachineProvider,
+  LIBKRUN_LABEL,
+  LoggerDelegator,
+  VMTYPE,
+} from './utils/util';
 import { isDisguisedPodman } from './utils/warnings';
 
 const config: Configuration = {
@@ -381,6 +388,7 @@ vi.mock(import('./utils/util'), async importOriginal => {
     isMac: vi.fn(),
     isWindows: vi.fn(),
     getAssetsFolder: vi.fn(),
+    getDefaultMachineProvider: vi.fn(),
   };
 });
 
@@ -4341,6 +4349,105 @@ describe('connectionAuditor', () => {
     });
     expect(extensionApi.context.setValue).toHaveBeenLastCalledWith(CREATE_WSL_MACHINE_OPTION_SELECTED_KEY, false);
   });
+});
+
+describe('default windows provider option', () => {
+  beforeEach(() => {
+    vi.mocked(extensionApi.env).isWindows = true;
+    vi.mocked(extensionApi.env).isMac = false;
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
+  });
+
+  test.each([VMTYPE.WSL, VMTYPE.HYPERV])(
+    'createMachine uses the provider resolved by the podman CLI (%s)',
+    async resolvedProvider => {
+      vi.mocked(getDefaultMachineProvider).mockResolvedValue(resolvedProvider);
+
+      await extension.createMachine(
+        {
+          'podman.factory.machine.image': 'path',
+          'podman.factory.machine.win.provider': DEFAULT_PROVIDER_LABEL,
+        },
+        podmanConfiguration,
+      );
+
+      expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+        podmanCli.getPodmanCli(),
+        expect.arrayContaining(['machine', 'init']),
+        expect.objectContaining({ env: { CONTAINERS_MACHINE_PROVIDER: resolvedProvider } }),
+      );
+      await vi.waitFor(() => {
+        expect(telemetryLogger.logUsage).toBeCalledWith(
+          'podman.machine.init',
+          expect.objectContaining({ provider: resolvedProvider, defaultProviderOption: true }),
+        );
+      });
+    },
+  );
+
+  test('createMachine uses the embedded image when the default provider resolves to wsl', async () => {
+    vi.mocked(getDefaultMachineProvider).mockResolvedValue(VMTYPE.WSL);
+    vi.mocked(getAssetsFolder).mockReturnValue('fake');
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.win.provider': DEFAULT_PROVIDER_LABEL,
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['--image', expect.stringContaining('podman-image-')]),
+      expect.objectContaining({ env: { CONTAINERS_MACHINE_PROVIDER: VMTYPE.WSL } }),
+    );
+    await vi.waitFor(() => {
+      expect(telemetryLogger.logUsage).toBeCalledWith(
+        'podman.machine.init',
+        expect.objectContaining({ imagePath: 'embedded', defaultProviderOption: true }),
+      );
+    });
+  });
+
+  test('createMachine does not force any provider if the podman CLI default cannot be resolved', async () => {
+    vi.mocked(getDefaultMachineProvider).mockResolvedValue(undefined);
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.win.provider': DEFAULT_PROVIDER_LABEL,
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining(['machine', 'init']),
+      expect.not.objectContaining({ env: expect.anything() }),
+    );
+  });
+
+  test.each([
+    { resolvedProvider: VMTYPE.WSL, expected: true },
+    { resolvedProvider: VMTYPE.HYPERV, expected: false },
+  ])(
+    'connectionAuditor sets isCreateWSLOptionSelected to $expected when default resolves to $resolvedProvider',
+    async ({ resolvedProvider, expected }) => {
+      // start from the opposite state
+      await extension.connectionAuditor({
+        'podman.factory.machine.win.provider': expected ? VMTYPE.HYPERV : VMTYPE.WSL,
+      });
+      vi.mocked(getDefaultMachineProvider).mockResolvedValue(resolvedProvider);
+
+      await extension.connectionAuditor({
+        'podman.factory.machine.win.provider': DEFAULT_PROVIDER_LABEL,
+      });
+      expect(extensionApi.context.setValue).toHaveBeenLastCalledWith(CREATE_WSL_MACHINE_OPTION_SELECTED_KEY, expected);
+    },
+  );
 });
 
 // https://github.com/podman-desktop/podman-desktop/issues/10173
