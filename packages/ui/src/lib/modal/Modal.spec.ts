@@ -61,6 +61,19 @@ test('Escape key should trigger close', async () => {
   expect(closeMock).toHaveBeenCalled();
 });
 
+test('ignoreFocusOut blocks Escape until cleared', async () => {
+  const onclose = vi.fn();
+  const { rerender } = render(Modal, { onclose, ignoreFocusOut: true });
+
+  await userEvent.keyboard('{Escape}');
+  expect(onclose).not.toHaveBeenCalled();
+
+  await rerender({ ignoreFocusOut: false });
+
+  await userEvent.keyboard('{Escape}');
+  expect(onclose).toHaveBeenCalledOnce();
+});
+
 describe('translation-y', () => {
   test('default modal should have translate-y', async () => {
     render(Modal);

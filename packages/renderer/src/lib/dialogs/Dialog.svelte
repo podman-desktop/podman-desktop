@@ -33,7 +33,11 @@ function shouldFocusContainer(): boolean {
 }
 </script>
 
-<Modal name={title} onclose={onclose} focusContainer={shouldFocusContainer()} {ignoreFocusOut}>
+<Modal
+  name={title}
+  onclose={onclose}
+  focusContainer={shouldFocusContainer()}
+  ignoreFocusOut={ignoreFocusOut || closeDisabled}>
   <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
     {@render icon?.()}
     <h1 class="grow text-lg font-bold">{title}</h1>
