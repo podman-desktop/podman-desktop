@@ -793,17 +793,6 @@ export async function setDockerCompatibilityFeature(page: Page, enable: boolean)
   await settingsBar.expandPreferencesTab();
 }
 
-export async function setStatusBarProvidersFeature(
-  page: Page,
-  navigationBar: NavigationBar,
-  enable: boolean,
-): Promise<void> {
-  await navigationBar.openSettings();
-  const settingsBar = new SettingsBar(page);
-  const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
-  await experimentalPage.setExperimentalCheckbox(experimentalPage.statusBarProvidersCheckbox, enable);
-}
-
 export async function setEnhancedDashboardFeature(
   page: Page,
   navigationBar: NavigationBar,

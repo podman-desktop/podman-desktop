@@ -31,7 +31,6 @@ import {
   deletePodmanMachine,
   ensureCliInstalled,
   handlePodmanConfirmationDialogs,
-  setStatusBarProvidersFeature,
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
 } from '/@/utility/operations';
@@ -61,9 +60,8 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   }
 });
 
-test.afterAll(async ({ runner, page, navigationBar }) => {
+test.afterAll(async ({ runner, page }) => {
   if (test.info().status === 'failed') {
-    await setStatusBarProvidersFeature(page, navigationBar, false);
     await deletePodmanMachine(page, newMachineName);
     if (isMac) {
       await createPodmanMachineFromCLI();
@@ -75,9 +73,6 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
 
 test.describe('Status bar providers feature verification', { tag: '@k8s_e2e' }, () => {
   test.describe.configure({ mode: 'serial' });
-  test('Enable status bar providers experimental feature', async ({ navigationBar, page }) => {
-    await setStatusBarProvidersFeature(page, navigationBar, true);
-  });
   test('Verify default Podman provider in status bar', async ({ statusBar }) => {
     const podmanStatusBarProviderButton = await statusBar.getProviderButton(podmanProviderName);
     await playExpect(podmanStatusBarProviderButton).toBeVisible();
@@ -179,9 +174,5 @@ test.describe('Status bar providers feature verification', { tag: '@k8s_e2e' }, 
     await playExpect
       .poll(async () => await statusBar.isProviderResourceRunning(kindProviderName, kindClusterName))
       .toBeTruthy();
-  });
-  test('Disable status bar providers feature', async ({ page, navigationBar, statusBar }) => {
-    await setStatusBarProvidersFeature(page, navigationBar, false);
-    await playExpect(statusBar.pinProvidersButton).not.toBeVisible();
   });
 });
