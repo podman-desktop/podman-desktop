@@ -44,6 +44,7 @@ import { PodmanInstall } from '/@/installer/podman-install';
 import { WinInstaller } from '/@/installer/win-installer';
 import { WinPlatform } from '/@/platforms/win-platform';
 import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
+import { HyperVPrepOnboarding } from '/@/platforms/windows/hyperv-prep-onboarding';
 import { WSLPodmanVersionNotification } from '/@/platforms/windows/wsl-podman-version-notification';
 import { PodmanProvider } from '/@/providers/podman-provider';
 import { ExtensionNotifications } from '/@/utils/notifications';
@@ -101,6 +102,8 @@ export class InversifyBinding {
       this.#inversifyContainer.bind(StartupSymbol).toService(HyperVPrep);
       this.#inversifyContainer.bind(WSLPodmanVersionNotification).toSelf().inSingletonScope();
       this.#inversifyContainer.bind(StartupSymbol).toService(WSLPodmanVersionNotification);
+      this.#inversifyContainer.bind(HyperVPrepOnboarding).toSelf().inSingletonScope();
+      this.#inversifyContainer.bind(StartupSymbol).toService(HyperVPrepOnboarding);
     } else if (envAPI.isMac) {
       this.#inversifyContainer.bind(Installer).to(MacOSInstaller).inSingletonScope();
       this.#inversifyContainer.bind(ProviderCleanupSymbol).to(PodmanCleanupMacOS).inSingletonScope();
