@@ -19,14 +19,24 @@ import fs from 'node:fs';
 import os from 'node:os';
 
 import extensionApi from '@podman-desktop/api';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 
 import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import { findRunningMachine } from '/@/extension';
-import { execPodman } from '/@/utils/util';
+import { PodmanBinary } from '/@/utils/podman-binary';
+import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 
 @injectable()
 export class DarwinSocketCompatibility extends SocketCompatibility {
+  constructor(
+    @inject(PodmanBinary)
+    private readonly podmanBinary: PodmanBinary,
+    @inject(PodmanMachineLifecycle)
+    private readonly podmanMachineLifecycle: PodmanMachineLifecycle,
+  ) {
+    super();
+  }
+
   // Shows the details of the compatibility mode on what we do.
   details = 'the podman-mac-helper binary will be run, unlinking the Docker socket from Podman.';
 
@@ -104,9 +114,8 @@ export class DarwinSocketCompatibility extends SocketCompatibility {
         'Cancel',
       );
       if (result === 'Yes') {
-        // Await since we must wait for the machine to stop before starting it again
-        await execPodman(['machine', 'stop', machine]);
-        await execPodman(['machine', 'start', machine]);
+        const podmanInstallation = await this.podmanBinary.getBinaryInfo();
+        await this.podmanMachineLifecycle.restart({ machineName: machine, podmanVersion: podmanInstallation?.version });
       }
     }
   }
