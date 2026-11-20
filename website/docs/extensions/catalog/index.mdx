@@ -120,6 +120,7 @@ The catalog file is a JSON document containing a top-level `extensions` array. E
 | `categories`              | array of strings | Yes      | Category names used for filtering in the catalog UI (e.g. `["Containers"]`, `["Kubernetes"]`, `["AI"]`).                                                                     |
 | `keywords`                | array of strings | Yes      | Search tags matching user queries in the catalog search bar.                                                                                                                 |
 | `unlisted`                | boolean          | No       | If `true`, the extension is hidden from catalog listings but accessible if navigated to directly. Defaults to `false`.                                                       |
+| `targetPlatforms`         | array of strings | No       | Platforms the extension supports, as `os/architecture` values from the OCI image specification (e.g. `["darwin/arm64"]`). If omitted, the extension supports every platform. |
 | `versions`                | array            | Yes      | Array of release versions. **Must be ordered with the newest version first.**                                                                                                |
 
 ### Version object fields

@@ -82,6 +82,8 @@ image for Linux (amd64 or arm64 depending on the architecture of the user's plat
 
 You can leverage the [Buildah Build action](https://github.com/redhat-actions/buildah-build) to build this manifest.
 
+If the extension itself only runs on some platforms, also declare the [`targetPlatforms`](/docs/extensions/developing#restricting-the-platforms-an-extension-supports) property in its `package.json`, so that Podman Desktop refuses the installation on the other platforms instead of installing an extension that cannot run.
+
 #### Procedure: Publish the extension to the catalog
 
 1. Fork and then clone the [Podman Desktop catalog repository](https://github.com/podman-desktop/podman-desktop-catalog).
