@@ -1,36 +1,22 @@
 <script lang="ts">
-import type { ExtensionDevelopmentFolderInfo, ExtensionInfo } from '@desktop-framework/api';
 import { ExtensionLoaderSettings } from '@desktop-framework/api';
-import { Button } from '@podman-desktop/ui-svelte';
-import { onDestroy, onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
+import { Button, FilteredEmptyScreen } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
 
 import DevelopmentExtensionListTable from '/@/lib/extensions/dev-mode/table/ListTable.svelte';
-import { extensionDevelopmentFolders } from '/@/stores/extensionDevelopmentFolders';
-import { extensionInfos } from '/@/stores/extensions';
+import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 
 import type { SelectableExtensionDevelopmentFolderInfoUI } from './development-folder-info-ui';
 import DevelopmentExtensionEmptyScreen from './DevelopmentExtensionEmptyScreen.svelte';
 
+interface Props {
+  extensionFolders: SelectableExtensionDevelopmentFolderInfoUI[];
+  searchTerm?: string;
+}
+
+let { extensionFolders, searchTerm = $bindable('') }: Props = $props();
+
 let isDevelopmentModeEnabled = $state(false);
-
-const unsubscribers: Unsubscriber[] = [];
-
-let currentExtFolders: ExtensionDevelopmentFolderInfo[] = $state([]);
-let currentExtensionInfos: ExtensionInfo[] = $state([]);
-
-const selectableExtensionDevelopmentFolders: SelectableExtensionDevelopmentFolderInfoUI[] = $derived(
-  currentExtFolders.map(folder => {
-    // do we have a matching extension
-    const matchingExtension = currentExtensionInfos.find(ext => ext.path === folder.path);
-    let extension = undefined;
-    if (matchingExtension) {
-      extension = { name: matchingExtension.name, state: matchingExtension.state, id: matchingExtension.id };
-    }
-
-    return { ...folder, selected: false, name: folder.path, extension };
-  }),
-);
 
 onMount(async () => {
   //
@@ -39,24 +25,6 @@ onMount(async () => {
     (await window.getConfigurationValue(
       `${ExtensionLoaderSettings.SectionName}.${ExtensionLoaderSettings.DevelopmentMode}`,
     )) ?? false;
-
-  // subscribe to extension changes
-  unsubscribers.push(
-    extensionInfos.subscribe(value => {
-      currentExtensionInfos = value;
-    }),
-  );
-  unsubscribers.push(
-    extensionDevelopmentFolders.subscribe(value => {
-      currentExtFolders = value;
-    }),
-  );
-});
-
-onDestroy(() => {
-  for (const unsubscriber of unsubscribers) {
-    unsubscriber();
-  }
 });
 
 async function addLocalFolderExtension(): Promise<void> {
@@ -95,11 +63,19 @@ async function addLocalFolderExtension(): Promise<void> {
         </div>
 
         <!-- List of extensions in development mode -->
-        {#if selectableExtensionDevelopmentFolders.length === 0}
-          <div class="italic">No extension for now</div>
+        {#if extensionFolders.length === 0}
+          {#if searchTerm}
+            <FilteredEmptyScreen
+              icon={ExtensionIcon}
+              kind="extensions"
+              searchTerm={searchTerm}
+              on:resetFilter={(): string => (searchTerm = '')} />
+          {:else}
+            <div class="italic">No extension for now</div>
+          {/if}
         {:else}
           <div class="mr-5 -ml-5 mb-3">
-            <DevelopmentExtensionListTable extensionFolderUIInfos={selectableExtensionDevelopmentFolders} />
+            <DevelopmentExtensionListTable extensionFolderUIInfos={extensionFolders} />
           </div>
         {/if}
       </div>
