@@ -116,7 +116,8 @@ Resources the action cannot undo, but that the user can generally recreate witho
 - Examples: delete a container, image, pod, volume or network, bulk delete.
 - Confirmation: required by default. For common actions, a preference may let the user turn it off, such as `userConfirmation.bulk` for bulk deletes.
 - Actions covered by a preference: use the helper that reads it, such as `withBulkConfirmation()` from `/@/lib/actions/BulkActions`, with `variant: 'delete'`.
-- Other actions: `withConfirmation()` from `/@/lib/dialogs/messagebox-utils` with `variant: 'delete'`.
+- Other delete actions: `withConfirmation()` from `/@/lib/dialogs/messagebox-utils` with `variant: 'delete'`.
+- Other actions (Remove, Clear): `window.showMessageBox` with `type: 'danger'` and the action verb as the button label.
 
 #### 🟥 Very destructive
 
