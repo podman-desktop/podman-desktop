@@ -42,7 +42,7 @@ patches:
 
 Previously, bundled extensions such as Podman, Docker, Kind, and Compose could not be updated between Podman Desktop
 releases—running a patched or newer version required sideloading it without any guarantee it would take precedence. Now,
-an installed extension can declare that it *overrides* a bundled extension, and the loader automatically gives it
+an installed extension can declare that it _overrides_ a bundled extension, and the loader automatically gives it
 priority. You can also update bundled extensions directly from the catalog, with a new **Overrides** badge on the
 extension card confirming that your version is the one running.
 
@@ -96,7 +96,7 @@ manager, ensuring large downloads never lock up the UI.
 On Windows systems with Podman 6.0.0 or later, Podman Desktop now checks `podman system hyperv-prep --status` to verify
 whether your account belongs to the Hyper-V Administrators group. When preparation has not yet been applied,
 a **Podman: Prepare Hyper-V** action appears on the Podman provider card in **Settings > Resources**. Triggering it
-requests a one-time administrator confirmation (UAC) to run `podman system hyperv-prep` in the background, hides 
+requests a one-time administrator confirmation (UAC) to run `podman system hyperv-prep` in the background, hides
 the action once complete, and reminds you to sign out or restart Windows for the changes to take effect. Once
 preparation is complete, you no longer need to run Podman Desktop as an administrator to create a Hyper-V VM.
 
@@ -149,6 +149,12 @@ via per-user plists at `/Library/Managed Preferences/<username>/io.podman_deskto
 the roles of `default-settings.json` and `locked.json` into standard macOS managed preference files, IT teams can
 natively standardize and lock Podman Desktop settings across their macOS fleets.
 
+### Security hardening
+
+This release includes fixes for multiple security vulnerabilities reported through
+Dependabot. Updated direct and transitive dependencies address known CVEs and help
+keep Podman Desktop's container and extension workflows secure.
+
 ### Other improvements
 
 - **Catalog filters**: The extension catalog now understands `is:featured` and `not:featured` in its search, so you can
@@ -183,7 +189,12 @@ this release:
 
 If you would like to discuss any of the new features, issues or other topics, please join us at the monthly
 community meeting that takes place <b>every 4th Thursday of the month</b>. Here are the
-<b>meeting [details](https://github.com/podman-desktop/community/issues?q=is%3Aissue%20state%3Aopen%20Agenda%20for%20Podman%20Desktop)</b>.
+
+<b>
+  meeting
+  [details](https://github.com/podman-desktop/community/issues?q=is%3Aissue%20state%3Aopen%20Agenda%20for%20Podman%20Desktop)
+</b>
+.
 
 ---
 
@@ -356,7 +367,7 @@ repository](https://github.com/podman-desktop/podman-desktop) to report issues o
 
 - refactor(renderer): drop img parameter from fetchImageLayers by @vzhukovs
   [#19902](https://github.com/podman-desktop/podman-desktop/pull/19902)
-- refactor(ui): migrate action-button color tokens to button-* tokens by @vancura
+- refactor(ui): migrate action-button color tokens to button-\* tokens by @vancura
   [#19680](https://github.com/podman-desktop/podman-desktop/pull/19680)
 - refactor(main): isolate container registry spec mocks by @bmahabirbu
   [#19658](https://github.com/podman-desktop/podman-desktop/pull/19658)
@@ -472,4 +483,3 @@ repository](https://github.com/podman-desktop/podman-desktop) to report issues o
 
 - ci(e2e): add label-triggered full E2E workflow for Windows on PR by @davillan
   [#19646](https://github.com/podman-desktop/podman-desktop/pull/19646)
-
