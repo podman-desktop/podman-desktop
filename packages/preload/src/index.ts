@@ -862,14 +862,14 @@ export function initExposure(): void {
       onError: (error: string) => void,
       onEnd: () => void,
     ): Promise<number> => {
-      onDataCallbacksAttachContainerId++;
-      onDataCallbacksAttachContainer.set(onDataCallbacksAttachContainerId, { onData, onError, onEnd });
-      return ipcInvoke(
-        'container-provider-registry:attachContainer',
-        engine,
-        containerId,
-        onDataCallbacksAttachContainerId,
-      );
+      const callbackId = ++onDataCallbacksAttachContainerId;
+      onDataCallbacksAttachContainer.set(callbackId, { onData, onError, onEnd });
+      try {
+        return await ipcInvoke('container-provider-registry:attachContainer', engine, containerId, callbackId);
+      } catch (error) {
+        onDataCallbacksAttachContainer.delete(callbackId);
+        throw error;
+      }
     },
   );
 

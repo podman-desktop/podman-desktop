@@ -3607,7 +3607,130 @@ describe('unpauseContainer', () => {
   });
 });
 
+describe('TTY stream recovery', () => {
+  let stream: PassThrough;
+  let replacement: PassThrough;
+  let container: Dockerode.Container;
+  let provider: InternalContainerProvider;
+
+  beforeEach(() => {
+    stream = new PassThrough();
+    replacement = new PassThrough();
+    const api = new Dockerode({ socketPath: '/fixture.sock' });
+    container = new Dockerode.Container(api.modem, 'fixture');
+    container.attach = vi.fn();
+    vi.mocked(container.attach).mockImplementation(async () => replacement);
+    api.getContainer = vi.fn();
+    vi.mocked(api.getContainer).mockReturnValue(container);
+    provider = {
+      id: 'docker',
+      name: 'Docker',
+      api,
+      connection: {
+        name: 'docker',
+        displayName: 'Docker',
+        type: 'docker',
+        endpoint: { socketPath: '/fixture.sock' },
+        status: (): podmanDesktopAPI.ProviderConnectionStatus => 'started',
+      },
+    };
+    containerRegistry.addInternalProvider('docker', provider);
+    containerRegistry.setStreamsPerContainerId('fixture', stream);
+    containerRegistry.setStreamsOutputPerContainerId('fixture', [Buffer.from('old output')]);
+  });
+
+  test('evicts an errored cached stream and its output before retrying', async () => {
+    const ended = vi.fn();
+    await containerRegistry.attachContainer('docker', 'fixture', vi.fn(), vi.fn(), ended);
+    stream.emit('error', new Error('connection lost'));
+
+    expect(containerRegistry.getStreamsPerContainerId().has('fixture')).toBe(false);
+    expect(containerRegistry.getStreamsOutputPerContainerId().has('fixture')).toBe(false);
+    expect(ended).toHaveBeenCalledOnce();
+
+    const output = vi.fn();
+    const send = await containerRegistry.attachContainer('docker', 'fixture', output, vi.fn(), vi.fn());
+    expect(output).not.toHaveBeenCalled();
+    send('first command\n');
+    expect(output).toHaveBeenCalledExactlyOnceWith('first command\n');
+    expect(container.attach).toHaveBeenCalledOnce();
+  });
+
+  test.each(['error', 'close'])('evicts a cached background stream on %s without waiting for end', async event => {
+    vi.mocked(container.attach).mockImplementation(async () => stream);
+    await containerRegistry.attachToContainer(provider, container, true, true);
+    stream.emit(event, new Error('connection lost'));
+    expect(containerRegistry.getStreamsPerContainerId().has('fixture')).toBe(false);
+    expect(containerRegistry.getStreamsOutputPerContainerId().has('fixture')).toBe(false);
+  });
+
+  test('an old stream ending does not evict a newer cached stream', async () => {
+    vi.mocked(container.attach).mockImplementation(async () => stream);
+    await containerRegistry.attachToContainer(provider, container, true, true);
+    containerRegistry.setStreamsPerContainerId('fixture', replacement);
+    stream.emit('end');
+    expect(containerRegistry.getStreamsPerContainerId().get('fixture')).toBe(replacement);
+  });
+
+  test('late data from an old stream does not overwrite the replacement history', async () => {
+    vi.mocked(container.attach).mockImplementation(async () => stream);
+    await containerRegistry.attachToContainer(provider, container, true, true);
+    container.attach = vi.fn();
+    vi.mocked(container.attach).mockImplementation(async () => replacement);
+    await containerRegistry.attachToContainer(provider, container, true, true);
+    replacement.write('current');
+    stream.write('stale');
+    expect(containerRegistry.getStreamsOutputPerContainerId().get('fixture')).toEqual([Buffer.from('current')]);
+  });
+
+  test('does not replay old output before a replacement stream produces its first data', async () => {
+    await containerRegistry.attachToContainer(provider, container, true, true);
+    const output = vi.fn();
+    await containerRegistry.attachContainer('docker', 'fixture', output, vi.fn(), vi.fn());
+    expect(output).not.toHaveBeenCalled();
+  });
+});
+
 describe('attach container', () => {
+  describe('failed attachment', () => {
+    let provider: InternalContainerProvider;
+    let libpod: LibPod;
+    let error: Error;
+
+    beforeEach(() => {
+      error = new Error('container is restarting');
+      const api = LibpodDockerode.createDockerode({ socketPath: '/fixture.sock' });
+      const container = new Dockerode.Container(api.modem, '1234');
+      container.attach = vi.fn();
+      vi.mocked(container.attach).mockImplementation(async () => {
+        throw error;
+      });
+      api.getContainer = vi.fn();
+      vi.mocked(api.getContainer).mockReturnValue(container);
+      api.podmanAttach = vi.fn();
+      vi.mocked(api.podmanAttach).mockRejectedValue(error);
+      libpod = api;
+      provider = {
+        id: 'podman',
+        name: 'Podman',
+        api,
+        connection: {
+          name: 'podman',
+          displayName: 'Podman',
+          type: 'podman',
+          endpoint: { socketPath: '/fixture.sock' },
+          status: (): podmanDesktopAPI.ProviderConnectionStatus => 'started',
+        },
+      };
+      containerRegistry.addInternalProvider('podman', provider);
+    });
+
+    test.each(['compat', 'libpod'])('propagates %s attachment failures so the caller can retry', async api => {
+      if (api === 'libpod') provider.libpodApi = libpod;
+      await expect(containerRegistry.attachContainer('podman', '1234', vi.fn(), vi.fn(), vi.fn())).rejects.toBe(error);
+    });
+  });
+
   test('container attach stream', async () => {
     // create a read/write stream
     const stream = new PassThrough();
@@ -3777,6 +3900,7 @@ describe('attach container', () => {
     const internalDataListeners = stream.listenerCount('data');
     const internalErrorListeners = stream.listenerCount('error');
     const internalEndListeners = stream.listenerCount('end');
+    const internalCloseListeners = stream.listenerCount('close');
 
     stream.write('previous output');
     await vi.waitFor(() => expect(containerRegistry.getStreamsOutputPerContainerId().get(container.id)).toBeDefined());
@@ -3798,6 +3922,7 @@ describe('attach container', () => {
     expect(stream.listenerCount('data')).toBe(internalDataListeners + 1);
     expect(stream.listenerCount('error')).toBe(internalErrorListeners + 1);
     expect(stream.listenerCount('end')).toBe(internalEndListeners + 1);
+    expect(stream.listenerCount('close')).toBe(internalCloseListeners + 1);
 
     // every attach got the replayed output, and the replaced ones were ended
     for (const { onData, onEnd } of previousCallbacks) {
@@ -3810,16 +3935,19 @@ describe('attach container', () => {
     // new output and errors only reach the latest callbacks
     stream.write('new output');
     await vi.waitFor(() => expect(latestCallbacks.onData).toHaveBeenLastCalledWith('new output'));
+    // the replay buffer still gets the output
+    const output = containerRegistry.getStreamsOutputPerContainerId().get(container.id) ?? [];
+    expect(Buffer.concat(output).toString('utf-8')).toBe('previous outputnew output');
+
     stream.emit('error', new Error('attach error'));
     expect(latestCallbacks.onError).toHaveBeenCalledExactlyOnceWith('Error: attach error');
+    expect(latestCallbacks.onEnd).toHaveBeenCalledOnce();
+    expect(containerRegistry.getStreamsPerContainerId().get(container.id)).toBeUndefined();
+    expect(containerRegistry.getStreamsOutputPerContainerId().get(container.id)).toBeUndefined();
     for (const { onData, onError } of previousCallbacks) {
       expect(onData).not.toHaveBeenCalledWith('new output');
       expect(onError).not.toHaveBeenCalled();
     }
-
-    // the replay buffer still gets the output
-    const output = containerRegistry.getStreamsOutputPerContainerId().get(container.id) ?? [];
-    expect(Buffer.concat(output).toString('utf-8')).toBe('previous outputnew output');
 
     stream.end();
     await vi.waitFor(() => expect(latestCallbacks.onEnd).toHaveBeenCalledOnce());

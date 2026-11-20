@@ -133,6 +133,7 @@ interface AttachStreamListeners {
   data: (chunk: Buffer) => void;
   error: (err: unknown) => void;
   end: () => void;
+  dispose: () => void;
 }
 
 @injectable()
@@ -362,7 +363,9 @@ export class ContainerProviderRegistry {
       return;
     }
 
-    internalProvider.api = new Dockerode({ socketPath: containerProviderConnection.endpoint.socketPath });
+    internalProvider.api = LibpodDockerode.createDockerode({
+      socketPath: containerProviderConnection.endpoint.socketPath,
+    });
     if (containerProviderConnection.type === 'podman') {
       internalProvider.libpodApi = internalProvider.api as unknown as LibPod;
     }
@@ -2401,35 +2404,48 @@ export class ContainerProviderRegistry {
     let attachStream = this.streamsPerContainerId.get(containerId);
 
     const setupStream = (stream: NodeJS.ReadWriteStream): void => {
-      // remove only the listeners added by a previous call on this stream,
-      // the ones added by attachToContainer() need to stay
+      // Replace only the caller's listeners; the cached stream and replay buffer stay alive.
       const previousListeners = this.attachListenersPerContainerId.get(containerId);
-      if (previousListeners?.stream === stream) {
-        stream.off('data', previousListeners.data);
-        stream.off('error', previousListeners.error);
-        stream.off('end', previousListeners.end);
-        // the previous caller will not receive anything anymore, let it clean up
-        previousListeners.end();
-      }
+      if (previousListeners?.stream === stream) previousListeners.dispose();
 
+      let ended = false;
+      const dispose = (): void => {
+        if (ended) return;
+        ended = true;
+        stream.off('data', listeners.data);
+        stream.off('error', listeners.error);
+        stream.off('end', listeners.end);
+        stream.off('close', listeners.end);
+        if (this.attachListenersPerContainerId.get(containerId) === listeners) {
+          this.attachListenersPerContainerId.delete(containerId);
+        }
+        onEnd();
+      };
+      const finish = (): void => {
+        if (ended) return;
+        if (this.streamsPerContainerId.get(containerId) === stream) {
+          this.streamsPerContainerId.delete(containerId);
+          this.streamsOutputPerContainerId.delete(containerId);
+        }
+        dispose();
+      };
       const listeners: AttachStreamListeners = {
         stream,
         data: (chunk: Buffer): void => {
           onData(chunk.toString('utf-8'));
         },
         error: (err: unknown): void => {
+          if (ended) return;
           onError(String(err));
+          finish();
         },
-        end: (): void => {
-          if (this.attachListenersPerContainerId.get(containerId) === listeners) {
-            this.attachListenersPerContainerId.delete(containerId);
-          }
-          onEnd();
-        },
+        end: finish,
+        dispose,
       };
       stream.on('data', listeners.data);
       stream.on('error', listeners.error);
       stream.on('end', listeners.end);
+      stream.on('close', listeners.end);
       this.attachListenersPerContainerId.set(containerId, listeners);
 
       // do we have previous data?
@@ -2463,17 +2479,9 @@ export class ContainerProviderRegistry {
         }
       };
 
-      getAttachStream()
-        .then(readWriteStream => {
-          attachStream = readWriteStream;
-          setupStream(attachStream);
-        })
-        .catch((err: unknown) => {
-          console.log('error in attach', err);
-        });
-    } else {
-      setupStream(attachStream);
+      attachStream = await getAttachStream();
     }
+    setupStream(attachStream);
 
     this.telemetryService.track('attachContainer');
 
@@ -2519,16 +2527,22 @@ export class ContainerProviderRegistry {
 
     if (attachStream) {
       this.streamsPerContainerId.set(container.id, attachStream);
+      this.streamsOutputPerContainerId.delete(container.id);
 
-      // if stream is closed, cleanup
-      attachStream.on('end', () => {
-        this.streamsPerContainerId.delete(container.id);
-        this.streamsOutputPerContainerId.delete(container.id);
-      });
+      const cleanStream = (): void => {
+        if (this.streamsPerContainerId.get(container.id) === attachStream) {
+          this.streamsPerContainerId.delete(container.id);
+          this.streamsOutputPerContainerId.delete(container.id);
+        }
+      };
+      attachStream.on('end', cleanStream);
+      attachStream.on('error', cleanStream);
+      attachStream.on('close', cleanStream);
 
       const chunks: Buffer[] = [];
       // keep last chunks of the buffer to replay them later
       attachStream.on('data', (data: Buffer) => {
+        if (this.streamsPerContainerId.get(container.id) !== attachStream) return;
         chunks.push(data);
         if (chunks.length > 100) {
           chunks.shift();
