@@ -95,6 +95,14 @@
           },
           "additionalProperties": false
         },
+        "targetPlatforms": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]*\\/[a-z0-9][a-z0-9._-]*$"
+          }
+        },
         "contributes": {
           "type": "object",
           "properties": {
