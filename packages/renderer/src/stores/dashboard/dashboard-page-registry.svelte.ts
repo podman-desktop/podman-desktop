@@ -38,6 +38,10 @@ export const dashboardPageRegistry = $state<{ entries: DashboardPageRegistryEntr
 
 const enhancedDashboard = $state<{ enabled: boolean }>({ enabled: false });
 
+export function isEnhancedDashboard(): boolean {
+  return enhancedDashboard.enabled;
+}
+
 function getDashboardPageRegistry(): DashboardPageRegistryEntry[] {
   const systemOverview = enhancedDashboard.enabled ? [createSystemOverview()] : [];
   const providers = !enhancedDashboard.enabled ? [createProviders()] : [];

@@ -229,3 +229,34 @@ test('hide release notes on configuration change to current version value', asyn
   expect(screen.queryByText(responseJSON.summary)).not.toBeInTheDocument();
   expect(screen.queryByRole('img')).not.toBeInTheDocument();
 });
+
+test('legacy layout keeps the rounded-md corners', async () => {
+  render(ReleaseNotesBox);
+  const title = await screen.findByText(responseJSON.title);
+  const card = title.closest('.h-\\[200px\\]');
+  expect(card).toHaveClass('rounded-md');
+  expect(card).not.toHaveClass('rounded-lg');
+});
+
+test('enhanced layout uses the rounded-lg corners', async () => {
+  render(ReleaseNotesBox, { enhanced: true });
+  const title = await screen.findByText(responseJSON.title);
+  const card = title.closest('.h-\\[200px\\]');
+  expect(card).toHaveClass('rounded-lg');
+  expect(card).not.toHaveClass('rounded-md');
+});
+
+test('enhanced layout uses rounded-lg for the unavailable notes card', async () => {
+  podmanDesktopGetReleaseNotesMock.mockResolvedValue({
+    releaseNotesAvailable: false,
+    notesURL: 'appRepo/release-summary',
+  });
+  render(ReleaseNotesBox, { enhanced: true });
+
+  const message = await screen.findByText(
+    'Release notes are currently unavailable, please check again later or try this',
+  );
+  const card = message.closest('.p-5');
+  expect(card).toHaveClass('rounded-lg');
+  expect(card).not.toHaveClass('rounded-md');
+});

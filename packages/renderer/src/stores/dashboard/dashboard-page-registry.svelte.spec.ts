@@ -25,6 +25,7 @@ import {
   dashboardPageRegistry,
   type DashboardPageRegistryEntry,
   defaultSection,
+  isEnhancedDashboard,
   setupDashboardPageRegistry,
 } from './dashboard-page-registry.svelte';
 
@@ -79,6 +80,16 @@ describe('defaultSection', () => {
     ]);
 
     expect(defaultSection.names).toEqual(sectionNames);
+  });
+
+  test('isEnhancedDashboard reflects the experimental setting', async () => {
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
+    await setupDashboardPageRegistry();
+    expect(isEnhancedDashboard()).toBe(true);
+
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(false);
+    await setupDashboardPageRegistry();
+    expect(isEnhancedDashboard()).toBe(false);
   });
 });
 

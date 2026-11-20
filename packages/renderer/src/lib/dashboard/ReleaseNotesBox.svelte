@@ -15,6 +15,15 @@ let currentVersion: string | undefined = $state();
 let notesInfo: ReleaseNotes | undefined = $state();
 let imageError: boolean = $state(false);
 
+interface Props {
+  // set by DashboardPage on the enhanced dashboard
+  enhanced?: boolean;
+}
+
+let { enhanced = false }: Props = $props();
+// the enhanced dashboard uses larger corners; the legacy layout keeps rounded-md
+const rounded = $derived(enhanced ? 'rounded-lg' : 'rounded-md');
+
 function onDidChangeConfigurationCallback(e: Event): void {
   if (!('detail' in e) || !e.detail || typeof e.detail !== 'object') {
     return;
@@ -66,7 +75,7 @@ onDestroy(async () => {
 
 {#if showBanner}
   {#if notesAvailable}
-    <div class="flex bg-[var(--pd-content-card-bg)] rounded-md gap-3 flex-row flex-nowrap h-[200px] items-center overflow-hidden">
+    <div class="flex bg-[var(--pd-content-card-bg)] {rounded} gap-3 flex-row flex-nowrap h-[200px] items-center overflow-hidden">
       {#if notesInfo?.image && !imageError}
         <img
           src={notesInfo.image}
@@ -95,7 +104,7 @@ onDestroy(async () => {
       </div>
     </div>
   {:else if notesURL}
-    <div class="flex bg-[var(--pd-content-card-bg)] rounded-md p-5 flex-col flex-nowrap h-auto items-center">
+    <div class="flex bg-[var(--pd-content-card-bg)] {rounded} p-5 flex-col flex-nowrap h-auto items-center">
       <div class="flex flex-row items-center justify-between w-full">
         <p class="text-[var(--pd-content-card-header-text)] font-bold text-lg w-full items-center">
           Release notes are currently unavailable, please check again later
