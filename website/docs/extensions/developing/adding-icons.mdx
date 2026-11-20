@@ -26,6 +26,12 @@ For example, the Kind extension register a custom icons by using the following i
 
 We restrict the format to the [Web Open Font Format 2 (aka woff2)](https://www.w3.org/TR/WOFF2/) to use icons as text, to keep consistency across the UI, as the color and size is managed by Podman-Desktop.
 
+Each value is checked when the extension is loaded, and an icon with an invalid value is not registered:
+
+- The icon id (`kind-icon` above) may only contain letters, digits, `-` and `_`.
+- `fontPath` must point to a `.woff2` file inside the extension folder, and may only contain letters, digits, spaces, `-`, `_`, `.` and `/`.
+- `fontCharacter` must be either a CSS escape, a backslash followed by 1 to 6 hexadecimal digits such as `\\EA01`, or a single character other than a backslash, a quote or a control character.
+
 ### Creating a .woff2 file
 
 You probably have an existing `.svg` file that you want to use, to make it possible you can use the tool [svgiconfont](https://nfroidure.github.io/svgiconfont/) made by [@nfroidure](https://twitter.com/nfroidure).
