@@ -1846,7 +1846,7 @@ export async function start(
 
   // register the registries
   const registrySetup = new RegistrySetup(podmanConfiguration.registryConfiguration);
-  await registrySetup.setup();
+  extensionContext.subscriptions.push(await registrySetup.setup());
 
   await calcPodmanMachineSetting();
 }
