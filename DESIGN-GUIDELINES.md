@@ -114,9 +114,9 @@ Something of little value to the user, or that they can get back by reinstalling
 Resources the action cannot undo, but that the user can generally recreate without much effort.
 
 - Examples: delete a container, image, pod, volume or network, bulk delete.
-- Confirmation: required by default. For bulk deletes the user may turn it off in Preferences (`userConfirmation.bulk`).
-- Bulk deletes: `withBulkConfirmation()` from `/@/lib/actions/BulkActions`.
-- Single deletes: `withConfirmation()` for now. Moving them to the preference is tracked per action - do not migrate them as a side effect of another change.
+- Confirmation: required by default. For common actions, a preference may let the user turn it off, such as `userConfirmation.bulk` for bulk deletes.
+- Actions covered by a preference: use the helper that reads it, such as `withBulkConfirmation()` from `/@/lib/actions/BulkActions`.
+- Other actions: `withConfirmation()` from `/@/lib/dialogs/messagebox-utils`.
 
 #### 🟥 Very destructive
 
