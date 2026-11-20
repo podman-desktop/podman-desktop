@@ -16,29 +16,34 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { process } from '@podman-desktop/api';
+import { Container } from 'inversify';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { WslHelper } from '/@/helpers/wsl-helper';
 import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
 
 import { WSLPodmanVersionCheck } from './wsl-podman-version-check';
 
+vi.mock(import('/@/helpers/wsl-helper'));
 vi.mock(import('/@/utils/podman-bundled'));
 
 beforeEach(() => {
   vi.resetAllMocks();
 });
 
-// mocks `wsl --version`, an Error makes the command fail
+function createCheck(): WSLPodmanVersionCheck {
+  const container = new Container();
+  container.bind(WslHelper).toSelf();
+  container.bind(WSLPodmanVersionCheck).toSelf();
+  return container.get(WSLPodmanVersionCheck);
+}
+
+// mocks the installed WSL version, an Error makes reading it fail
 function mockWSLVersion(wslVersion: string | Error): void {
   if (wslVersion instanceof Error) {
-    vi.mocked(process.exec).mockRejectedValue(wslVersion);
+    vi.mocked(WslHelper.prototype.getWSLVersionData).mockRejectedValue(wslVersion);
   } else {
-    vi.mocked(process.exec).mockResolvedValue({
-      stdout: `WSL version: ${wslVersion}\nKernel version: 6.6.87.2-1`,
-      stderr: '',
-      command: 'wsl --version',
-    });
+    vi.mocked(WslHelper.prototype.getWSLVersionData).mockResolvedValue({ wslVersion });
   }
 }
 
@@ -63,17 +68,17 @@ test.each([
   async ({ podmanVersion, wsl, successful, wslRead }) => {
     mockWSLVersion(wsl);
 
-    const result = await new WSLPodmanVersionCheck().executeFor(podmanVersion);
+    const result = await createCheck().executeFor(podmanVersion);
 
     expect(result.successful).toBe(successful);
-    expect(vi.mocked(process.exec).mock.calls.length > 0).toBe(wslRead);
+    expect(vi.mocked(WslHelper.prototype.getWSLVersionData).mock.calls.length > 0).toBe(wslRead);
   },
 );
 
 test('describes the issue and how to fix it', async () => {
   mockWSLVersion('2.6.1.0');
 
-  const result = await new WSLPodmanVersionCheck().executeFor('6.1.4');
+  const result = await createCheck().executeFor('6.1.4');
 
   expect(result.description).toEqual(
     'Podman 6.1.4 requires WSL 2.7.5 or later, but WSL 2.6.1.0 is installed. WSL machines will fail to start or to run containers.',
@@ -82,7 +87,7 @@ test('describes the issue and how to fix it', async () => {
 });
 
 test('reads the WSL version on each execution so that a WSL update is detected', async () => {
-  const check = new WSLPodmanVersionCheck();
+  const check = createCheck();
   mockWSLVersion('2.6.1.0');
   await expect(check.executeFor('6.1.4')).resolves.toEqual(expect.objectContaining({ successful: false }));
 
@@ -94,7 +99,7 @@ test('execute checks the bundled Podman version', async () => {
   vi.mocked(getBundledPodmanVersion).mockReturnValue('6.1.4');
   mockWSLVersion('2.6.1.0');
 
-  const result = await new WSLPodmanVersionCheck().execute();
+  const result = await createCheck().execute();
 
   expect(result.description).toContain('Podman 6.1.4 requires WSL 2.7.5 or later');
 });
