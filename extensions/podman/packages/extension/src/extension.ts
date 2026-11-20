@@ -1904,22 +1904,14 @@ export async function calcPodmanMachineSetting(): Promise<void> {
   extensionApi.context.setValue(PODMAN_MACHINE_DISK_SUPPORTED_KEY, diskSupported);
 }
 
-// Function that checks to see if the default machine is running and return a string
-export async function findRunningMachine(): Promise<string | undefined> {
-  let runningMachine: string | undefined;
-
+// Returns the first running machine, if any
+export async function findRunningMachine(): Promise<MachineJSON | undefined> {
   // Find the machines
   const machineListOutput = await getJSONMachineList();
   const machines = machineListOutput.list;
 
   // Find the machine that is running
-  const found: MachineJSON | undefined = machines.find(machine => machine?.Running);
-
-  if (found) {
-    runningMachine = found.Name;
-  }
-
-  return runningMachine;
+  return machines.find(machine => machine?.Running);
 }
 
 async function stopAutoStartedMachine(): Promise<void> {
