@@ -134,7 +134,7 @@ Data or configuration they cannot recreate, or that takes other resources with i
 - Styling never depends on the confirmation preference. A delete button looks the same no matter if the user turned confirmations off or not.
 - There is one danger style. Do not add outlined, lighter, or "soft" danger variants.
 - The confirmation dialog's action button is danger too, labeled with the action verb (see [Button text](#button-text)), and focus starts on Cancel (see [Focus management](#focus-management)).
-- Any component that can host a destructive action must support the danger style. `Button` does. `DropdownMenu.Item`, `ListItemButtonIcon`, and `LoadingIconButton` do not yet. Add the support in the component rather than styling a single call site.
+- Any component that can host a destructive action must support the danger style, as `Button` does. Add the support in the component rather than styling a single call site.
 
 ## Button layout in dialogs, modals, and forms
 
