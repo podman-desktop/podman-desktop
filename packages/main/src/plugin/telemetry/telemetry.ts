@@ -49,6 +49,7 @@ import telemetry from '../../../../../telemetry.json' with { type: 'json' };
 import { CIDetection } from './ci-detection.js';
 import { Identity } from './identity.js';
 import type { TelemetryRule } from './telemetry-api.js';
+import { TelemetryEnvDetection } from './telemetry-env-detection.js';
 
 export const EventType = {
   TRACK: 'track',
@@ -84,6 +85,8 @@ export class Telemetry {
 
   private isCIEnvironment = false;
 
+  private isDisabledByEnvironment = false;
+
   private telemetryConfigured = false;
 
   protected pendingItems: { eventName: string; properties?: unknown }[] = [];
@@ -104,6 +107,8 @@ export class Telemetry {
     private lockedConfiguration: LockedConfiguration,
     @inject(CIDetection)
     private ciDetection: CIDetection,
+    @inject(TelemetryEnvDetection)
+    private telemetryEnvDetection: TelemetryEnvDetection,
   ) {
     this.identity = new Identity();
     this.lastTimeEvents = new Map();
@@ -155,6 +160,20 @@ export class Telemetry {
       return;
     }
 
+    // telemetry turned off through the environment: same as on a CI, only this run is affected
+    this.isDisabledByEnvironment = this.telemetryEnvDetection.isTelemetryDisabled();
+    if (this.isDisabledByEnvironment) {
+      console.warn(
+        `${TelemetryEnvDetection.DISABLE_TELEMETRY_VARIABLE} environment variable detected: telemetry is disabled for this run.`,
+      );
+      this.telemetryEnabled = false;
+      this.telemetryInitialized = true;
+
+      // clear pending items, they will never be sent
+      this.pendingItems.length = 0;
+      return;
+    }
+
     // initialize objects
     this.analytics = new Analytics({ writeKey: Telemetry.SEGMENT_KEY });
     this.analytics.on('error', err => {
@@ -189,8 +208,9 @@ export class Telemetry {
   }
 
   isTelemetryEnabled(): boolean {
-    // telemetry is never reported from a CI environment, whatever the configuration says
-    if (this.isCIEnvironment) {
+    // telemetry is never reported from a CI environment or when turned off through the environment,
+    // whatever the configuration says
+    if (this.isCIEnvironment || this.isDisabledByEnvironment) {
       return false;
     }
     const telemetryConfiguration = this.configurationRegistry.getConfiguration(TelemetrySettings.SectionName);
