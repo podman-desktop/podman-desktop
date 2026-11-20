@@ -39,11 +39,13 @@ const {
 <Page
   title={title}
   titleDetail={titleDetail}
+  clampTitle
   subtitle={subtitle}
   breadcrumbLeftPart={breadcrumbLeftPart}
   breadcrumbRightPart={breadcrumbRightPart}
   onclose={onclose}
-  onbreadcrumbClick={onbreadcrumbClick}>
+  onbreadcrumbClick={onbreadcrumbClick}
+  detail={detailSnippet}>
   {#snippet content()}
     <div class="h-full bg-[var(--pd-details-bg)] min-h-0">
       {@render contentSnippet?.()}
@@ -62,8 +64,5 @@ const {
   {/snippet}
   {#snippet actions()}
     {@render actionsSnippet?.()}
-  {/snippet}
-  {#snippet detail()}
-    {@render detailSnippet?.()}
   {/snippet}
 </Page>

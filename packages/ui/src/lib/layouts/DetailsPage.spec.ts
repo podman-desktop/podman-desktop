@@ -29,8 +29,8 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test('Expect title is defined', async () => {
-  const title = 'My Dummy Title';
+test('Skips a fully visible title during keyboard navigation', async () => {
+  const title = 'My container';
   render(DetailsPage, {
     title,
   });
@@ -38,6 +38,11 @@ test('Expect title is defined', async () => {
   const titleElement = screen.getByRole('heading', { level: 1, name: title });
   expect(titleElement).toBeInTheDocument();
   expect(titleElement).toHaveTextContent(title);
+  expect(titleElement).toHaveClass('line-clamp-2');
+  expect(titleElement).not.toHaveAttribute('tabindex');
+
+  await userEvent.tab();
+  expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
 });
 
 test('Expect page name is defined', async () => {

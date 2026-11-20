@@ -83,7 +83,7 @@ $effect(() => {
       <ContainerActions container={container} detailed={true} />
     {/snippet}
     {#snippet detailSnippet()}
-      <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+      <div class="flex w-full flex-wrap items-center justify-end text-sm text-(--pd-content-text)">
         <StateChange state={container.state} />
         <ContainerStatistics container={container} />
       </div>
