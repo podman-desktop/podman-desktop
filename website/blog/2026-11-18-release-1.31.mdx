@@ -2,10 +2,10 @@
 title: Podman Desktop 1.31 Release
 description: Podman Desktop 1.31 has been released!
 slug: podman-desktop-release-1.31
-authors: [benoitf]
+authors: [dgolovin]
 tags: [podman-desktop, release, kubernetes, openshift]
 hide_table_of_contents: false
-date: 2026-11-09
+date: 2026-11-18
 image: /img/blog/podman-desktop-release-1.31/banner.png
 ---
 
@@ -26,8 +26,8 @@ patches:
   Desktop as an administrator.
 - **Using existing volumes in Run Image page:** Attach pre-created volumes directly from the Run Image page when
   launching a container.
-- **Security hardening:** Addresses multiple security advisories and dependency updates to keep your container
-  environment secure.
+- **Manage macOS settings with MDM:** Administrators can now distribute default settings and enforce locked configurations
+  across managed macOS devices using MDM preference plists.
 
 {/* truncate */}
 
@@ -100,6 +100,17 @@ effortless to select pre-created data volumes without copying and pasting long s
 
 ![Volume selection dropdown filtered by engine and showing volume names](path/to/run-image-volume-dropdown.png)
 
+## Manage macOS settings with MDM
+
+Podman Desktop now supports macOS Mobile Device Management (MDM) by reading managed preference files (`.plist`,
+in either XML or binary format) at startup and merging them with existing JSON configurations.
+
+Administrators can deploy device-wide defaults and enforce restrictions using a `locked` array at
+`/Library/Managed Preferences/io.podman_desktop.PodmanDesktop.plist`, or supply account-specific startup overrides
+via per-user plists at `/Library/Managed Preferences/<username>/io.podman_desktop.PodmanDesktop.plist`. By combining
+the roles of `default-settings.json` and `locked.json` into standard macOS managed preference files, IT teams can
+natively standardize and lock Podman Desktop settings across their macOS fleets.
+
 ### Other improvements
 
 - **Catalog filters**: The extension catalog now understands `is:featured` and `not:featured` in its search, so you can
@@ -113,38 +124,6 @@ effortless to select pre-created data volumes without copying and pasting long s
   ([#19679](https://github.com/podman-desktop/podman-desktop/pull/19679)).
 - **Task toast notifications**: Enabled by default, so long-running work reports back when it finishes
   ([#19845](https://github.com/podman-desktop/podman-desktop/pull/19845)).
-
-### Security hardening
-
-
-This release fully fixes the following security advisories reported by Dependabot (PRs omitted from the changelog):
-
-- GHSA-qhr7-859c-m2p7 in brace-expansion
-- GHSA-3wwx-pv8p-q78v in undici
-- GHSA-rpw4-54j3-4h4q in ip-address
-- GHSA-hrr3-gc8f-f4qj in fast-uri
-- GHSA-6w3j-5fw6-r9vr in joi
-- GHSA-mcm9-63f2-9j32 in devalue
-- GHSA-f596-whhp-79r4 in @grpc/grpc-js
-- GHSA-g84c-rxfj-3j2c in webpack-dev-middleware
-- GHSA-253c-mchw-3w2r in markdown-it
-- GHSA-ch52-4w7c-c8xp in http-cache-semantics
-- GHSA-jqcg-44mw-7w3h in proxy-addr
-- GHSA-5gmw-xhrv-c9v3 in tinypool
-- GHSA-pqg4-j6r4-53mv in shell-quote
-- GHSA-vc2v-76pw-4v95 in compression
-- GHSA-rj75-hqrm-r3gf in postcss-selector-parser
-- GHSA-238p-pmpm-9mq7 in katex
-- GHSA-68fv-2mgg-jv7q in source-map-js
-- GHSA-5p2g-fcmc-qvqq in image-size
-- GHSA-q3jh-wrc6-jgq8 in follow-redirects
-- GHSA-587h-7wmj-h5pm in launch-editor
-- GHSA-gfr2-rv44-r23c in markdown-it
-- GHSA-rxp7-6hxx-x8q5 in ip-address
-- GHSA-27r3-jxmh-p828 in body-parser
-- GHSA-xjj6-f33q-929c in undici
-- GHSA-gg6h-894w-4m9c in re2js
-- GHSA-mrwp-f3q8-3g9p in follow-redirects
 
 ---
 
