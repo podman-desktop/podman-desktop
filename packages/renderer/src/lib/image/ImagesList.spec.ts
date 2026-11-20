@@ -36,6 +36,8 @@ import { viewsContributions } from '/@/stores/views';
 
 import ImagesList from './ImagesList.svelte';
 
+vi.mock(import('tinro'));
+
 beforeEach(() => {
   vi.resetAllMocks();
   providerInfos.set([]);
@@ -486,14 +488,28 @@ describe('Contributions', () => {
   );
 });
 
-test('Expect importImage button redirects to image import page', async () => {
-  const goToMock = vi.spyOn(router, 'goto');
-  render(ImagesList);
+test('Open import modal over images and preserve the search when canceled', async () => {
+  render(ImagesList, { searchTerm: 'hello' });
   const btnImportImage = screen.getByRole('button', { name: 'Import Image' });
   expect(btnImportImage).toBeInTheDocument();
 
   await userEvent.click(btnImportImage);
-  expect(goToMock).toBeCalledWith('/images/import');
+  const dialog = screen.getByRole('dialog', { name: 'Import containers' });
+  expect(screen.getByRole('region', { name: 'images' })).toBeInTheDocument();
+  expect(router.goto).not.toHaveBeenCalled();
+
+  vi.mocked(window.openDialog).mockResolvedValue(['path/file.tar']);
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Add images to import' }));
+  expect(within(dialog).getByRole('textbox', { name: 'Image path for file.tar' })).toHaveValue('file.tar');
+
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+  expect(screen.queryByRole('dialog', { name: 'Import containers' })).not.toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: 'search images' })).toHaveValue('hello');
+  expect(btnImportImage).toHaveFocus();
+
+  await userEvent.click(btnImportImage);
+  expect(screen.getByRole('dialog', { name: 'Import containers' })).toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: 'Image path for file.tar' })).not.toBeInTheDocument();
 });
 
 test('expect redirect to saveImage page when at least one image is selected and the multiple save button is clicked', async () => {
@@ -541,8 +557,6 @@ test('expect redirect to saveImage page when at least one image is selected and 
     },
   ] as unknown as ImageInfo[]);
 
-  const goToMock = vi.spyOn(router, 'goto');
-
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('image-build'));
@@ -563,7 +577,7 @@ test('expect redirect to saveImage page when at least one image is selected and 
   const saveImages = screen.getByRole('button', { name: 'Save images' });
   await fireEvent.click(saveImages);
 
-  expect(goToMock).toBeCalledWith('/images/save');
+  expect(router.goto).toBeCalledWith('/images/save');
 });
 
 describe('bulk update', () => {
@@ -798,13 +812,12 @@ describe('bulk update', () => {
 });
 
 test('Expect load images button redirects to images load page', async () => {
-  const goToMock = vi.spyOn(router, 'goto');
   render(ImagesList);
   const btnLoadImages = screen.getByRole('button', { name: 'Load Images' });
   expect(btnLoadImages).toBeInTheDocument();
 
   await userEvent.click(btnLoadImages);
-  expect(goToMock).toBeCalledWith('/images/load');
+  expect(router.goto).toBeCalledWith('/images/load');
 });
 
 test('Manifest images display without actions', async () => {
