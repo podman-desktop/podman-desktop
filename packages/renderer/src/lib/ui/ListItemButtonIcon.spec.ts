@@ -27,6 +27,7 @@ import { ContextUI } from '/@/lib/context/context';
 import { context } from '/@/stores/context';
 
 import ListItemButtonIcon from './ListItemButtonIcon.svelte';
+import ListItemButtonIconTitleTestComponent from './ListItemButtonIconTitleTestComponent.svelte';
 
 // spy on the real attachment, so the tooltip still renders in the other tests
 vi.mock(import('@podman-desktop/ui-svelte'), async importOriginal => {
@@ -249,6 +250,31 @@ test('expect a visible tooltip to update its text when the tooltip prop changes'
   // same element: the text is updated in place, the tooltip is not recreated
   expect(screen.getByRole('tooltip')).toBe(tooltip);
   expect(tooltip).toHaveTextContent('Updating image');
+});
+
+test('expect aria-describedby to be added when only the title changes away from the tooltip', async () => {
+  // rendered through a parent, so only title changes: rerender() on ListItemButtonIcon would update every prop
+  const { rerender } = render(ListItemButtonIconTitleTestComponent, { title: 'Save image to a local directory' });
+
+  const listItemButton = screen.getByRole('button', { name: 'Save image to a local directory' });
+  await fireEvent.mouseEnter(listItemButton);
+  expect(listItemButton).not.toHaveAttribute('aria-describedby');
+
+  await rerender({ title: 'Save Image' });
+
+  expect(listItemButton).toHaveAttribute('aria-describedby', screen.getByRole('tooltip').id);
+});
+
+test('expect aria-describedby to be removed when only the title changes to match the tooltip', async () => {
+  const { rerender } = render(ListItemButtonIconTitleTestComponent, { title: 'Save Image' });
+
+  const listItemButton = screen.getByRole('button', { name: 'Save Image' });
+  await fireEvent.mouseEnter(listItemButton);
+  expect(listItemButton).toHaveAttribute('aria-describedby', screen.getByRole('tooltip').id);
+
+  await rerender({ title: 'Save image to a local directory' });
+
+  expect(listItemButton).not.toHaveAttribute('aria-describedby');
 });
 
 test('expect the tooltip to be placed below the button', () => {
