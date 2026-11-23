@@ -43,7 +43,8 @@ export class EnvfileParser {
 
     const envVariables = [];
     // parse all the lines, one by one
-    for (const line of content.split('\n')) {
+    // handle both Unix (\n) and Windows (\r\n) line endings
+    for (const line of content.split(/\r?\n/)) {
       // skip empty lines and commented lines
       if (line !== '' && !line.startsWith('#')) {
         // clean up the value to remove comments

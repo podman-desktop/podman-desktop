@@ -170,6 +170,8 @@ import { ExtensionsExternal } from '/@/plugin/extension/local/extensions-externa
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
+import { MacManagedConfiguration } from '/@/plugin/mac-managed-configuration.js';
+import { ManagedConfiguration } from '/@/plugin/managed-configuration.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
@@ -219,6 +221,7 @@ import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension/extension-development-folders.js';
 import { ExtensionInstaller } from './extension/extension-installer.js';
+import { ExtensionPlatformService } from './extension/extension-platform.js';
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
 import { FeedbackHandler } from './feedback-handler.js';
@@ -579,6 +582,10 @@ export class PluginSystem {
     container.bind<DefaultConfiguration>(DefaultConfiguration).toSelf().inSingletonScope();
     container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
     container.bind<LockedConfiguration>(LockedConfiguration).toSelf().inSingletonScope();
+    if (isMac()) {
+      container.bind<MacManagedConfiguration>(MacManagedConfiguration).toSelf().inSingletonScope();
+      container.bind<ManagedConfiguration>(ManagedConfiguration).toService(MacManagedConfiguration);
+    }
     container.bind<IConfigurationRegistry>(IConfigurationRegistry).toService(ConfigurationRegistry);
     const configurationRegistry = await this.initConfigurationRegistry(
       container,
@@ -3582,6 +3589,7 @@ export class PluginSystem {
     const dockerExtensionAdapter = new DockerPluginAdapter(contributionManager, containerProviderRegistry);
     dockerExtensionAdapter.init();
 
+    container.bind<ExtensionPlatformService>(ExtensionPlatformService).toSelf().inSingletonScope();
     container.bind<ExtensionInstaller>(ExtensionInstaller).toSelf().inSingletonScope();
     const extensionInstaller = container.get(ExtensionInstaller);
     await extensionInstaller.init();

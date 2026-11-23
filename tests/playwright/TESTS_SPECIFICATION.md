@@ -280,7 +280,7 @@ live Kubernetes cluster. The default platform scope is Linux/macOS/Windows.
 | ---------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [welcome-page-smoke.spec.ts](src/specs/welcome-page-smoke.spec.ts)                       | `@smoke`, `@windows_sanity`, `@macos_sanity` | Welcome overlay, telemetry consent, Dashboard and sidebar; dedicated `welcome-podman-desktop` profile.                                                                                                  |
 | [appearance-smoke.spec.ts](src/specs/appearance-smoke.spec.ts)                           | `@smoke`, `@windows_sanity`, `@macos_sanity` | System/light/dark/high-contrast switching and theme application; resets appearance afterwards.                                                                                                          |
-| [preferences.spec.ts](src/specs/preferences.spec.ts)                                     | `@macos_sanity`                              | Kubeconfig text persists across preference-page navigation; no real kubeconfig required.                                                                                                                |
+| [preferences.spec.ts](src/specs/preferences.spec.ts)                                     | `@macos_sanity` (kubeconfig test only)       | Kubeconfig text persists across preference-page navigation; no real kubeconfig required. Terminal scrollback preference: default `1000`, change persists across navigation, reset to default.           |
 | [navigation-history-smoke.spec.ts](src/specs/navigation-history-smoke.spec.ts)           | `@smoke`, `@windows_sanity`, `@macos_sanity` | Back/forward, command-palette actions, history branching and dropdowns.                                                                                                                                 |
 | [search-bar-smoke.spec.ts](src/specs/search-bar-smoke.spec.ts)                           | `@smoke`, `@windows_sanity`, `@macos_sanity` | Search UI, keyboard interaction, commands and page navigation; arrow-key check skips if fewer than two results.                                                                                         |
 | [help-menu-smoke.spec.ts](src/specs/help-menu-smoke.spec.ts)                             | `@smoke`, `@windows_sanity`, `@macos_sanity` | Configured product help items, dismiss behavior, links and commands; dedicated `help-menu` profile.                                                                                                     |
@@ -404,6 +404,7 @@ and registry-push suites clear images through `ensureNoImagesPresentCLI`.
 | [image-smoke.spec.ts](src/specs/image-smoke.spec.ts)                               | `@smoke`                                        | Pull/search/cancel/details/rename/delete, build/staged build, prune, save/load tar; clears images at setup.                                                                                                                |
 | [image-search.spec.ts](src/specs/image-search.spec.ts)                             | `@smoke`, `@windows_sanity`                     | Search, tag selection, relevance and pull results; clears images at setup.                                                                                                                                                 |
 | [container-smoke.spec.ts](src/specs/container-smoke.spec.ts)                       | `@smoke`                                        | Create/details/terminal/navigation/start/stop/delete, export/import, filter/prune and bulk start.                                                                                                                          |
+| [terminal-scrollback.spec.ts](src/specs/terminal-scrollback.spec.ts)               | None                                            | Sets `terminal.integrated.scrollback` to 150, prints 500 lines in an alpine container's Terminal tab and checks that lines beyond the buffer are discarded; best-effort cleanup (see Notes).                               |
 | [pod-smoke.spec.ts](src/specs/pod-smoke.spec.ts)                                   | `@smoke`                                        | Pull frontend/backend, run containers, podify, inspect, application connectivity, lifecycle and pruning. Needs reachable published application ports.                                                                      |
 | [volume-smoke.spec.ts](src/specs/volume-smoke.spec.ts)                             | `@smoke`; basic workflow also `@windows_sanity` | Create/details/delete/filter/prune plus bootc-image-builder volumes and container mount/file I/O; includes a large image pull.                                                                                             |
 | [network-smoke.spec.ts](src/specs/network-smoke.spec.ts)                           | `@smoke`                                        | Default bridge, custom subnet creation, container attachment/inspect, details deletion and filtering; skips if Podman CLI is absent or below `5.7.0`.                                                                      |
@@ -433,6 +434,13 @@ Compose runtime checks may install Compose on non-macOS hosts and skip
 affected steps after API rate limits. Ensure Compose is already usable where
 installation checks are skipped. Teardown removes its frontend/backend
 containers and images.
+
+The terminal scrollback suite sets `terminal.integrated.scrollback` to `150`
+and creates the `scrollback-container` container from the alpine image. Its
+teardown is best-effort: the preference reset and the container/image removal
+run independently and failures are only logged, so a failed run can leave the
+container or image behind (an image still used by another container is not
+deleted) or, if the reset fails, the preference at `150`.
 
 The comprehensive navigation suite currently skips its Kubernetes navigation,
 stopped-machine, extension-webview, and attached-TTY regression placeholders;
@@ -597,6 +605,7 @@ free, and run these before destructive machine lifecycle workflows.
 | [z-podman-machine-onboarding.spec.ts](src/specs/z-podman-machine-onboarding.spec.ts)                     | `@pdmachine`    | Delete default machine, onboarding defaults/provider/privileges, create/details/stop/start/restart/edit, optional final deletion.                                |
 | [z-podman-machine-resources.spec.ts](src/specs/z-podman-machine-resources.spec.ts)                       | `@pdmachine`    | Stop default machine, create/start/restart/delete machines through Resources; skips Hyper-V. User-mode networking variant is Windows-only; its restart skips CI. |
 | [z-podman-machine-tests.spec.ts](src/specs/z-podman-machine-tests.spec.ts)                               | `@pdmachine`    | Provider-page navigation, default/rootless machine switching and cleanup.                                                                                        |
+| [z-podman-machine-local-image.spec.ts](src/specs/z-podman-machine-local-image.spec.ts)                   | `@pdmachine`    | Create/start/delete a machine from a local image (airgap asset or `MACHINE_IMAGE_PATH`); airgap scenario skips Hyper-V.                                          |
 | [environment-filter.spec.ts](src/specs/environment-filter.spec.ts)                                       | `@pdmachine`    | Second running machine and environment-specific pod/volume filtering; skips Hyper-V.                                                                             |
 | [enhanced-dashboard.spec.ts](src/specs/enhanced-dashboard.spec.ts)                                       | `@experimental` | Experimental Dashboard toggle, CLI/UI machine detection/creation and dummy Kubernetes/VM connections; downloads a dummy resource extension from Quay.            |
 
@@ -612,6 +621,14 @@ onboarding specs; unset/other values keep it. This flag is also read in
 Dashboard setup paths, but never bypasses the `TEST_PODMAN_MACHINE` gate.
 It is not a general cleanup switch for every machine suite.
 
+Local-image suite extras:
+
+| Variable / prerequisite                                                                                          | Meaning                                                                                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Airgap asset at `extensions/podman/packages/extension/assets/podman-image-{arch}.zst`                             | Required for the airgap-embedded scenario; produced when the app is built with `AIRGAP_DOWNLOAD=1`. Absent file skips that scenario.                                                                    |
+| `MACHINE_IMAGE_PATH`                                                                                             | Absolute path to an externally provided machine image for the second scenario; unset/empty skips it.                                                                                                    |
+| `CONTAINERS_MACHINE_PROVIDER=hyperv`                                                                             | Skips the airgap-embedded scenario (Windows airgap download embeds the WSL disktype only). With no `MACHINE_IMAGE_PATH`, the whole local-image file is skipped so hooks do not stop the default machine. |
+
 ### Execution
 
 ```bash
@@ -621,7 +638,10 @@ TEST_PODMAN_MACHINE=true pnpm test:e2e:experimental:run
 
 The experimental command selects the enhanced Dashboard, not all tests that
 happen to enable experimental features. The feedback-dialog and Docker
-compatibility specs retain their own smoke selection.
+compatibility specs retain their own smoke selection. To run only the
+local-image suite, use `pnpm test:e2e:suite z-podman-machine-local-image`
+(with `TEST_PODMAN_MACHINE=true`, and `AIRGAP_DOWNLOAD=1` on the prior build
+when exercising the airgap scenario).
 
 ### Notes
 
@@ -638,7 +658,7 @@ before reusing the host, especially after `MACHINE_CLEANUP=true`.
 
 ### Metadata and purpose
 
-All use `@managed-configuration`, application UI, and a
+The JSON policy suites use `@managed-configuration`, application UI, and a
 `managed-configuration` runner profile. No working engine is required by their
 assertions.
 
@@ -683,6 +703,51 @@ points and lock proxy/registry values. Run on a dedicated host or restore its
 policy files before ordinary suites. Teardown closes the app and does not
 remove policies or restore host registry files. The combined suite marks the
 Zoom Level reset case as expected to fail (`test.fail`, #16000).
+
+### macOS per-user preferences
+
+#### Metadata and purpose
+
+[managed-configuration-macos-user.spec.ts](src/special-specs/managed-configuration/managed-configuration-macos-user.spec.ts)
+uses `@managed-configuration` and the `managed-configuration-macos-user` runner
+profile. It runs only on macOS and requires no container engine.
+
+The suite tests per-user overrides, ignored per-user locks, preserved JSON
+locks, session edits, and per-user values after an application restart.
+
+#### Preconditions and inputs
+
+- The host requires the JSON policy fixtures from the preceding section.
+- `/Library/Managed Preferences/<username>` must exist and permit writes from
+  the test account. `<username>` is the account's short name.
+- The account directory must not contain
+  `io.podman_desktop.PodmanDesktop.plist`. The setup refuses to overwrite an
+  existing policy.
+
+The CI workflow creates the account directory and assigns it to the test
+account. Local runs require the same directory access before the suite starts.
+
+The setup copies
+[user-preferences.plist](resources/managed-configuration/user-preferences.plist)
+into the account directory. `RunnerOptions` supplies `system` for Appearance
+and `false` for the feedback dialog in the initial user settings.
+
+#### Execution
+
+Run from the repository root after the E2E build:
+
+```bash
+pnpm test:e2e:suite managed-configuration-macos-user -g @managed-configuration
+```
+
+The full managed configuration command also selects this suite. Other
+platforms skip it.
+
+#### Notes
+
+The test closes the application in `finally`. The teardown removes only the
+plist that the setup created. It retains the account directory and the JSON
+policies. The suite does not test device plists or an MDM deployment.
 
 ## Remote connections, stress, and visual capture
 
