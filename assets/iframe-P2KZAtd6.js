@@ -1,0 +1,1 @@
+import{t as e}from"./iframe-BVBodC_b.js";e();
