@@ -6205,6 +6205,29 @@ test('listInfos with provider', async () => {
 });
 
 describe('importContainer', () => {
+  const importImageMock = vi.fn();
+  const provider = {
+    name: 'podman',
+    endpoint: {
+      socketPath: '/endpoint1.sock',
+    },
+  } as ProviderContainerConnectionInfo;
+
+  beforeEach(() => {
+    containerRegistry.addInternalProvider('podman', {
+      name: 'podman',
+      id: 'podman',
+      connection: {
+        name: 'podman',
+        type: 'podman',
+        endpoint: {
+          socketPath: '/endpoint1.sock',
+        },
+      },
+      api: { importImage: importImageMock } as unknown as Dockerode,
+    } as InternalContainerProvider);
+  });
+
   test('throw if there is no matching engine', async () => {
     await expect(
       containerRegistry.importContainer({
@@ -6220,31 +6243,10 @@ describe('importContainer', () => {
     ).rejects.toThrowError('no running provider for the matching container');
   });
   test('expect importImage to be called with imageTag added by user', async () => {
-    const importImageMock = vi.fn();
-    const fakeDockerode = {
-      importImage: importImageMock,
-    } as unknown as Dockerode;
-    containerRegistry.addInternalProvider('podman', {
-      name: 'podman',
-      id: 'podman',
-      connection: {
-        name: 'podman',
-        type: 'podman',
-        endpoint: {
-          socketPath: '/endpoint1.sock',
-        },
-      },
-      api: fakeDockerode,
-    } as InternalContainerProvider);
     await containerRegistry.importContainer({
       archivePath: 'archive.tar',
       imageTag: 'image:v1',
-      provider: {
-        name: 'podman',
-        endpoint: {
-          socketPath: '/endpoint1.sock',
-        },
-      } as ProviderContainerConnectionInfo,
+      provider,
     });
     expect(importImageMock).toBeCalledWith('archive.tar', {
       repo: 'image',
@@ -6252,31 +6254,10 @@ describe('importContainer', () => {
     });
   });
   test('expect importImage to be called with latest tag if it is not specified by user', async () => {
-    const importImageMock = vi.fn();
-    const fakeDockerode = {
-      importImage: importImageMock,
-    } as unknown as Dockerode;
-    containerRegistry.addInternalProvider('podman', {
-      name: 'podman',
-      id: 'podman',
-      connection: {
-        name: 'podman',
-        type: 'podman',
-        endpoint: {
-          socketPath: '/endpoint1.sock',
-        },
-      },
-      api: fakeDockerode,
-    } as InternalContainerProvider);
     await containerRegistry.importContainer({
       archivePath: 'archive.tar',
       imageTag: 'image',
-      provider: {
-        name: 'podman',
-        endpoint: {
-          socketPath: '/endpoint1.sock',
-        },
-      } as ProviderContainerConnectionInfo,
+      provider,
     });
     expect(importImageMock).toBeCalledWith('archive.tar', {
       repo: 'image',
@@ -6288,31 +6269,10 @@ describe('importContainer', () => {
     { imageTag: 'localhost:5000/image', repo: 'localhost:5000/image', tag: 'latest' },
     { imageTag: 'registry.example.com:8443/team/image:v2', repo: 'registry.example.com:8443/team/image', tag: 'v2' },
   ])('expect importImage to keep the registry port in the repo for $imageTag', async ({ imageTag, repo, tag }) => {
-    const importImageMock = vi.fn();
-    const fakeDockerode = {
-      importImage: importImageMock,
-    } as unknown as Dockerode;
-    containerRegistry.addInternalProvider('podman', {
-      name: 'podman',
-      id: 'podman',
-      connection: {
-        name: 'podman',
-        type: 'podman',
-        endpoint: {
-          socketPath: '/endpoint1.sock',
-        },
-      },
-      api: fakeDockerode,
-    } as InternalContainerProvider);
     await containerRegistry.importContainer({
       archivePath: 'archive.tar',
       imageTag,
-      provider: {
-        name: 'podman',
-        endpoint: {
-          socketPath: '/endpoint1.sock',
-        },
-      } as ProviderContainerConnectionInfo,
+      provider,
     });
     expect(importImageMock).toBeCalledWith('archive.tar', { repo, tag });
   });
