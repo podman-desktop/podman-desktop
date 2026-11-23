@@ -2,6 +2,7 @@
 import { createEventDispatcher, onDestroy, onMount, type Snippet } from 'svelte';
 
 import { tabWithinParent } from '../utils/dialog-utils';
+import { defaultButtonOnEnter } from './default-button-attachment';
 
 const dispatch = createEventDispatcher();
 
@@ -83,7 +84,8 @@ function handleMousedown(e: MouseEvent): void {
     aria-label={name}
     aria-modal="true"
     tabindex={getTabIndex()}
-    bind:this={modal}>
+    bind:this={modal}
+    {@attach defaultButtonOnEnter}>
     {@render children?.()}
   </div>
 </div>
