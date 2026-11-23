@@ -34,7 +34,7 @@ beforeAll(() => {
 });
 
 describe('QuickPickInput', () => {
-  test('Expect that esc key is sending an answer', async () => {
+  test.each([false, true])('Escape cancels a quick pick with ignoreFocusOut=%s', async ignoreFocusOut => {
     const idRequest = 123;
 
     const quickPickOptions: QuickPickOptions = {
@@ -44,6 +44,7 @@ describe('QuickPickInput', () => {
       prompt: '',
       id: idRequest,
       onSelectCallback: false,
+      ignoreFocusOut,
     };
 
     vi.mocked(window.events.receive).mockImplementation(
@@ -64,6 +65,41 @@ describe('QuickPickInput', () => {
 
     // and not for showInputBox
     expect(window.sendShowInputBoxValue).not.toBeCalled();
+  });
+
+  test('Escape cancels an input box with ignoreFocusOut=true', async () => {
+    const idRequest = 123;
+    const inputBoxOptions: InputBoxOptions = {
+      multiline: false,
+      validate: false,
+      placeHolder: 'Enter a value',
+      prompt: '',
+      id: idRequest,
+      ignoreFocusOut: true,
+    };
+
+    vi.mocked(window.events.receive).mockImplementation(
+      (message: string, callback: (options: InputBoxOptions) => void) => {
+        if (message === 'showInputBox:add') {
+          callback(inputBoxOptions);
+        }
+        return { dispose: vi.fn() };
+      },
+    );
+
+    render(QuickPickInput);
+
+    await userEvent.type(screen.getByRole('textbox'), 'Do not submit');
+    screen.getByText(/'Escape' to cancel/);
+
+    await userEvent.click(screen.getByLabelText('fade-bg'));
+    expect(window.sendShowInputBoxValue).not.toHaveBeenCalled();
+    screen.getByRole('dialog');
+
+    await userEvent.keyboard('{Escape}');
+    expect(window.sendShowInputBoxValue).toHaveBeenCalledOnce();
+    expect(window.sendShowInputBoxValue).toHaveBeenCalledWith(idRequest);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   test('Expect that title is displayed', async () => {

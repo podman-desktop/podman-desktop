@@ -26,7 +26,7 @@ const dispatch = createEventDispatcher<{ click: undefined }>();
   class="hover:bg-[var(--pd-button-close-hover-bg)] hover:bg-opacity-10 transition-all rounded-[4px] p-1 no-underline cursor-pointer outline-transparent focus:outline-[var(--pd-button-focus-ring)] disabled:opacity-50 disabled:cursor-default {className}"
   {disabled}
   onclick={onclick}
-  title="Close"
+  title={disabled ? undefined : 'Close'}
   aria-label="Close">
   <Icon icon={faTimes} />
 </button>

@@ -31,9 +31,22 @@ let {
 function shouldFocusContainer(): boolean {
   return initialButtonFocus === 'none';
 }
+
+function handleModalClose(): void {
+  // Keep Dialog's dismissal guards separate from shared Modal behavior.
+  if (ignoreFocusOut || closeDisabled) {
+    return;
+  }
+
+  onclose();
+}
 </script>
 
-<Modal name={title} onclose={onclose} focusContainer={shouldFocusContainer()} {ignoreFocusOut}>
+<Modal
+  name={title}
+  onclose={handleModalClose}
+  focusContainer={shouldFocusContainer()}
+  ignoreFocusOut={ignoreFocusOut || closeDisabled}>
   <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
     {@render icon?.()}
     <h1 class="grow text-lg font-bold">{title}</h1>

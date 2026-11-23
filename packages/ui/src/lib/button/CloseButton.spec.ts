@@ -58,13 +58,21 @@ test('Check onclick action', async () => {
   expect(clickMock).toBeCalled();
 });
 
-test('Disable the close action', async () => {
+test('Disable the close action and tooltip until re-enabled', async () => {
   const onclick = vi.fn();
-  render(CloseButton, { onclick, disabled: true });
+  const { rerender } = render(CloseButton, { onclick, disabled: true });
 
   const button = screen.getByRole('button', { name: 'Close' });
   expect(button).toBeDisabled();
+  expect(button).not.toHaveAttribute('title');
 
   await userEvent.click(button);
   expect(onclick).not.toHaveBeenCalled();
+
+  await rerender({ disabled: false });
+  expect(button).toBeEnabled();
+  expect(button).toHaveAttribute('title', 'Close');
+
+  await userEvent.click(button);
+  expect(onclick).toHaveBeenCalledOnce();
 });
