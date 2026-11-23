@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
-import { Button, FilteredEmptyScreen, NavPage, SearchInput } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, FilteredEmptyScreen, NavPage, SearchInput } from '@podman-desktop/ui-svelte';
 
 import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
 import InstalledExtensionList from '/@/lib/extensions/InstalledExtensionList.svelte';
@@ -11,6 +11,7 @@ import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { CatalogInstallStatusFilter } from './catalog-install-status-filter';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
 import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte';
 import { ExtensionsUtils } from './extensions-utils';
@@ -57,6 +58,27 @@ const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
 
 let filteredCatalogItems: number = $derived(enhancedCatalogExtensions.length - filteredCatalogExtensions.length);
 
+const filterSummary = $derived.by(() => {
+  switch (screen) {
+    case 'installed':
+      return { filtered: filteredInstalledItems, total: $combinedInstalledExtensions.length };
+    case 'catalog':
+      return { filtered: filteredCatalogItems, total: enhancedCatalogExtensions.length };
+    default:
+      return undefined;
+  }
+});
+
+const installStatusFilter = $derived(new CatalogInstallStatusFilter(searchTerm));
+
+function getInstallStatus(): string {
+  return installStatusFilter.value;
+}
+
+function changeInstallStatus(status: string): void {
+  searchTerm = installStatusFilter.withStatus(status);
+}
+
 function closeModal(): void {
   installManualImageModal = false;
 }
@@ -72,7 +94,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} searchEnabled={screen !== 'catalog'} title="extensions">
+<NavPage bind:searchTerm={searchTerm} searchEnabled={screen !== 'installed' && screen !== 'catalog'} title="extensions">
   {#snippet additionalActions()}
     {#if enableCustomExtensions}
       <Button
@@ -82,15 +104,6 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
         icon={faCloudDownload}
         title="Install manually an extension"
         aria-label="Install custom">Install custom...</Button>
-    {/if}
-  {/snippet}
-
-  {#snippet bottomAdditionalActions()}
-    <!-- display filter out items-->
-    {#if filteredInstalledItems > 0 && screen === 'installed'}
-      <div class="text-sm text-[var(--pd-content-text)]">
-        Filtered out {filteredInstalledItems} items of {$combinedInstalledExtensions.length}
-      </div>
     {/if}
   {/snippet}
 
@@ -120,16 +133,38 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
  {/snippet}
 
   {#snippet content()}
-  {#if screen === 'catalog' && enableCatalog}
-    <div class="sticky top-0 z-10 flex shrink-0 flex-row bg-(--pd-content-bg) pb-4" role="region" aria-label="search">
+  {#if screen === 'installed' || (screen === 'catalog' && enableCatalog)}
+    <div
+      class="sticky top-0 z-10 flex shrink-0 flex-row bg-(--pd-content-bg) pb-4"
+      class:flex-wrap={screen === 'catalog'}
+      class:items-center={screen === 'catalog'}
+      class:gap-y-2={screen === 'catalog'}
+      role="region"
+      aria-label="search">
       <div class="pl-5 w-72">
         <SearchInput bind:searchTerm={searchTerm} title="extensions" />
       </div>
-      {#if filteredCatalogItems > 0}
-        <div class="flex flex-1 items-center px-5 text-sm text-[var(--pd-content-text)]">
-          Filtered out {filteredCatalogItems} items of {enhancedCatalogExtensions.length}
+      {#if screen === 'catalog'}
+        <div class="flex items-center gap-2 pl-5">
+          <Dropdown
+            class="w-40"
+            bind:value={getInstallStatus, changeInstallStatus}
+            options={CatalogInstallStatusFilter.OPTIONS}>
+            {#snippet left()}
+              <span class="sr-only">Install status </span>
+            {/snippet}
+          </Dropdown>
         </div>
       {/if}
+      <div
+        class="flex items-center px-5 text-sm text-(--pd-content-text)"
+        class:flex-1={screen !== 'catalog'}
+        class:whitespace-nowrap={screen === 'catalog'}
+        role="status">
+        {#if filterSummary && filterSummary.filtered > 0}
+          Filtered out {filterSummary.filtered} items of {filterSummary.total}
+        {/if}
+      </div>
     </div>
   {/if}
   <div class="flex min-w-full grow">

@@ -16,11 +16,19 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { join } from 'node:path';
+import { isAbsolute, join, relative, sep } from 'node:path';
 
-import type { FontDefinition, IconDefinition, IconInfo, IconsContribution } from '@desktop-framework/api';
+import {
+  type FontDefinition,
+  IconContributionSchema,
+  type IconDefinition,
+  IconIdSchema,
+  type IconInfo,
+  type IconsContribution,
+} from '@desktop-framework/api';
 import { ApiSenderType } from '@desktop-framework/api/api-sender';
 import { inject, injectable } from 'inversify';
+import { z } from 'zod';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { isWindows } from '/@/util.js';
@@ -55,16 +63,25 @@ export class IconRegistry {
 
   public registerIconContribution(extension: AnalyzedExtension, icons: IconsContribution): void {
     // register each font and icon
-    Object.entries(icons).forEach(([iconId, iconContribution]) => {
+    Object.entries(icons).forEach(([iconId, rawIconContribution]) => {
+      // the manifest is kept even when it does not match its schema, so check each icon here:
+      // id and values end up in a stylesheet
+      const iconIdResult = IconIdSchema.safeParse(iconId);
+      if (!iconIdResult.success) {
+        console.warn(`Invalid icon id ${iconId}. ${z.prettifyError(iconIdResult.error)}`);
+        return;
+      }
+      const iconResult = IconContributionSchema.safeParse(rawIconContribution);
+      if (!iconResult.success) {
+        console.warn(`Invalid contributes.icons for icon id ${iconId}. ${z.prettifyError(iconResult.error)}`);
+        return;
+      }
+      const iconContribution = iconResult.data;
+
       // is there any default icon?
       const defaultAttributes = iconContribution.default;
       if (!defaultAttributes) {
         console.warn(`Expected contributes.icons.default for icon id ${iconId} to be defined.`);
-        return;
-      }
-      // check we have a font character
-      if (!defaultAttributes.fontCharacter) {
-        console.warn(`Expected contributes.icons.default.fontCharacter for icon id ${iconId} to be defined.`);
         return;
       }
 
@@ -86,7 +103,12 @@ export class IconRegistry {
       const iconFontLocation = join(extension.path, defaultAttributes.fontPath);
 
       // check that this location is inside the extension folder
-      if (!iconFontLocation.startsWith(extension.path)) {
+      const relativeFontLocation = relative(extension.path, iconFontLocation);
+      if (
+        relativeFontLocation === '..' ||
+        relativeFontLocation.startsWith(`..${sep}`) ||
+        isAbsolute(relativeFontLocation)
+      ) {
         console.warn(
           `Expected contributes.icons.default.fontPath for icon id ${iconId} to be included inside extension's folder (${extension.path}).`,
         );

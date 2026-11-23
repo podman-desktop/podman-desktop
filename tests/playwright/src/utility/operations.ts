@@ -441,7 +441,8 @@ export async function deletePodmanMachine(page: Page, machineVisibleName: string
 
     // Delete the machine
     await podmanResourceCard.performConnectionAction(ResourceElementActions.Delete);
-    await playExpect(podmanResourceCard.resourceElement).toBeHidden({ timeout: 60_000 });
+    // WSL machine deletion can take over a minute when the distro does not shut down promptly
+    await playExpect(podmanResourceCard.resourceElement).toBeHidden({ timeout: 120_000 });
   });
 }
 
@@ -790,17 +791,6 @@ export async function setDockerCompatibilityFeature(page: Page, enable: boolean)
 
   //Close the preferences bar
   await settingsBar.expandPreferencesTab();
-}
-
-export async function setStatusBarProvidersFeature(
-  page: Page,
-  navigationBar: NavigationBar,
-  enable: boolean,
-): Promise<void> {
-  await navigationBar.openSettings();
-  const settingsBar = new SettingsBar(page);
-  const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
-  await experimentalPage.setExperimentalCheckbox(experimentalPage.statusBarProvidersCheckbox, enable);
 }
 
 export async function setEnhancedDashboardFeature(

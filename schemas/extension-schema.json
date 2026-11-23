@@ -351,7 +351,8 @@
             "icons": {
               "type": "object",
               "propertyNames": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[\\w-]+$"
               },
               "additionalProperties": {
                 "type": "object",
@@ -363,10 +364,12 @@
                     "type": "object",
                     "properties": {
                       "fontPath": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^[\\w ./-]+$"
                       },
                       "fontCharacter": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^(?:\\\\[0-9a-fA-F]{1,6}|[^\\\\'\"\\p{Cc}])$"
                       }
                     },
                     "required": ["fontCharacter"],

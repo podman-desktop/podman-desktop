@@ -20,28 +20,21 @@ import '@testing-library/jest-dom/vitest';
 
 import { ExperimentalTasksSettings } from '@desktop-framework/api';
 import { render } from '@testing-library/svelte';
-import { tick } from 'svelte';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import Providers from '/@/lib/statusbar/Providers.svelte';
 import StatusBar from '/@/lib/statusbar/StatusBar.svelte';
 import { isHighContrast } from '/@/stores/appearance';
-import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { statusBarEntries } from '/@/stores/statusbar';
 import { tasksInfo } from '/@/stores/tasks';
 
 // mock providers component
 vi.mock(import('./Providers.svelte'));
 
-const callbacks = new Map<string, (arg: unknown) => void>();
-
 beforeEach(() => {
   vi.resetAllMocks();
 
   Object.defineProperty(window, 'isExperimentalConfigurationEnabled', { value: vi.fn() });
-  onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
-    callbacks.set(message, callback);
-  });
 
   // reset stores
   statusBarEntries.set([]);
@@ -61,14 +54,12 @@ beforeEach(() => {
 test('onMount should call isExperimentalConfigurationEnabled', async () => {
   render(StatusBar);
 
-  await vi.waitFor(() => expect(window.isExperimentalConfigurationEnabled).toBeCalledTimes(2));
+  await vi.waitFor(() => expect(window.isExperimentalConfigurationEnabled).toHaveBeenCalledTimes(1));
 
-  expect(window.isExperimentalConfigurationEnabled).nthCalledWith(
+  expect(window.isExperimentalConfigurationEnabled).toHaveBeenNthCalledWith(
     1,
     `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`,
   );
-
-  expect(window.isExperimentalConfigurationEnabled).nthCalledWith(2, `statusbarProviders.showProviders`);
 });
 
 test('tasks should be visible when isExperimentalConfigurationEnabled is true', async () => {
@@ -91,9 +82,7 @@ test('tasks should not be visible when isExperimentalConfigurationEnabled is fal
   expect(status).toBeNull();
 });
 
-test('providers should be visible when isExperimentalConfigurationEnabled is true', async () => {
-  vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
-
+test('providers are always rendered', async () => {
   render(StatusBar);
 
   await vi.waitFor(() => {
@@ -117,50 +106,4 @@ test('statusbar has data-pd-force-theme set to hc-dark in high-contrast mode', a
 
   const statusBar = getByRole('contentinfo');
   expect(statusBar).toHaveAttribute('data-pd-force-theme', 'hc-dark');
-});
-
-describe('providers', () => {
-  test('providers should not be visible when isExperimentalConfigurationEnabled is false', () => {
-    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(false);
-
-    render(StatusBar);
-
-    expect(Providers).not.toHaveBeenCalled();
-  });
-
-  test('providers should show up when configuration changes from false to true', async () => {
-    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
-    render(StatusBar);
-
-    await vi.waitFor(() => expect(window.isExperimentalConfigurationEnabled).toBeCalledTimes(1));
-
-    expect(Providers).not.toHaveBeenCalled();
-
-    callbacks.get(`statusbarProviders.showProviders`)?.({
-      detail: { key: `statusbarProviders.showProviders`, value: {} },
-    });
-
-    await vi.waitFor(() => expect(Providers).toHaveBeenCalled());
-  });
-
-  test('providers are hidden when configuration changes from true to false', async () => {
-    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValueOnce(false);
-    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValueOnce(true);
-
-    render(StatusBar);
-
-    await vi.waitFor(() => {
-      expect(Providers).toHaveBeenCalled();
-    });
-
-    vi.mocked(Providers).mockReset();
-
-    callbacks.get(`statusbarProviders.showProviders`)?.({
-      detail: { key: `statusbarProviders.showProviders`, value: undefined },
-    });
-
-    await tick();
-
-    expect(Providers).not.toHaveBeenCalled();
-  });
 });

@@ -31,7 +31,7 @@ test.use({
   runnerOptions: new RunnerOptions({
     customFolder: 'experimental-feature-feedback',
     customSettings: {
-      'statusbarProviders.showProviders': {
+      'dashboard.enhancedDashboard': {
         remindAt: REMIND_AT_IN_THE_PAST,
         disabled: false,
       },

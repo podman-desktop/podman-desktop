@@ -201,6 +201,7 @@ export class ExtensionsUtils {
           iconHref: icon?.data,
           publisherDisplayName,
           isInstalled,
+          installedExtension: installed,
           installedVersion,
           shortDescription,
           categories,

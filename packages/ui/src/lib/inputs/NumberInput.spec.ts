@@ -144,6 +144,12 @@ test('Expect maximum value works', async () => {
   expect(increment).toBeDisabled();
 });
 
+test('Expect out-of-range error to be the accessible description', async () => {
+  renderInput('test', 101, false, 10, 100);
+
+  expect(screen.getByRole('textbox')).toHaveAccessibleDescription('The value cannot be greater than 100');
+});
+
 test('Expect integer support works', async () => {
   renderInput('test', 99, false, 10, 100, 'integer');
 

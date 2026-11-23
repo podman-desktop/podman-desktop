@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { autoUpdate, computePosition } from '@floating-ui/dom';
+import { autoUpdate, computePosition, flip, shift } from '@floating-ui/dom';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -62,6 +62,22 @@ test('applies the class prop to the inner tooltip element', () => {
   expect(screen.getByRole('tooltip')).toHaveClass('custom-class');
 });
 
+test('uses the tooltip theme colors on the inner tooltip element', () => {
+  render(TooltipPopup, { reference, id: 'my-tooltip', tip: 'hello' });
+
+  const tooltip = screen.getByRole('tooltip');
+  expect(tooltip).toHaveClass('bg-[var(--pd-tooltip-bg)]');
+  expect(tooltip).toHaveClass('text-[var(--pd-tooltip-text)]');
+  expect(tooltip).toHaveClass('border-[var(--pd-tooltip-inner-border)]');
+  expect(tooltip).toHaveClass('backdrop-blur-sm');
+});
+
+test('renders above other content', () => {
+  render(TooltipPopup, { reference, id: 'my-tooltip', tip: 'hello' });
+
+  expect(screen.getByRole('tooltip').parentElement).toHaveClass('z-[9999]');
+});
+
 test('renders tipSnippet when no tip is given', () => {
   const tipSnippet = createRawSnippet(() => ({ render: (): string => '<span>snippet content</span>' }));
   render(TooltipPopup, { reference, id: 'my-tooltip', tipSnippet });
@@ -88,6 +104,13 @@ test('positions relative to the reference with top placement by default', async 
       expect.objectContaining({ placement: 'top' }),
     ),
   );
+});
+
+test('flips only on the main axis and leaves cross-axis overflow to shift', async () => {
+  render(TooltipPopup, { reference, id: 'my-tooltip', tip: 'hello' });
+
+  await waitFor(() => expect(flip).toHaveBeenCalledWith(expect.objectContaining({ crossAxis: false })));
+  expect(shift).toHaveBeenCalled();
 });
 
 test('positions with the given placement', async () => {

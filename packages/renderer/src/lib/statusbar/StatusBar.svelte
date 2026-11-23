@@ -1,11 +1,10 @@
 <script lang="ts">
 import type { StatusBarEntry } from '@desktop-framework/api';
 import { ExperimentalTasksSettings } from '@desktop-framework/api';
-import { onDestroy, onMount } from 'svelte';
+import { onMount } from 'svelte';
 
 import TaskIndicator from '/@/lib/statusbar/TaskIndicator.svelte';
 import { isHighContrast } from '/@/stores/appearance';
-import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { statusBarEntries } from '/@/stores/statusbar';
 
 import Providers from './Providers.svelte';
@@ -15,19 +14,6 @@ let leftEntries: StatusBarEntry[] = $state([]);
 let rightEntries: StatusBarEntry[] = $state([]);
 
 let experimentalTaskStatusBar: boolean = $state(false);
-let experimentalProvidersStatusBar: boolean = $state(false);
-
-function onDidChangeConfigurationCallback(e: Event): void {
-  if (!('detail' in e) || !e.detail || typeof e.detail !== 'object') {
-    return;
-  }
-  if ('key' in e.detail && 'value' in e.detail) {
-    const detail = e.detail as { key: string; value: boolean };
-    if ('statusbarProviders.showProviders' === detail.key) {
-      experimentalProvidersStatusBar = detail.value;
-    }
-  }
-}
 
 onMount(async () => {
   statusBarEntries.subscribe(value => {
@@ -69,13 +55,6 @@ onMount(async () => {
   experimentalTaskStatusBar = await window.isExperimentalConfigurationEnabled(
     `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`,
   );
-  experimentalProvidersStatusBar = await window.isExperimentalConfigurationEnabled('statusbarProviders.showProviders');
-
-  onDidChangeConfiguration.addEventListener('statusbarProviders.showProviders', onDidChangeConfigurationCallback);
-});
-
-onDestroy(() => {
-  onDidChangeConfiguration.removeEventListener('statusbarProviders.showProviders', onDidChangeConfigurationCallback);
 });
 </script>
 
@@ -85,9 +64,7 @@ onDestroy(() => {
   aria-label="Status Bar"
   data-pd-force-theme={$isHighContrast ? 'hc-dark' : 'dark'}>
   <div class="flex flex-nowrap gap-x-1.5 h-full text-ellipsis whitespace-nowrap">
-    {#if experimentalProvidersStatusBar}
-      <Providers/>
-    {/if}
+    <Providers/>
     {#each leftEntries as entry, index (index)}
       <StatusBarItem entry={entry} />
     {/each}
