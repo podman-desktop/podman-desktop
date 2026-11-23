@@ -213,6 +213,40 @@ test.describe
         .toBe(defaultMachineDisplayName);
     });
 
+    test('Environment filter is visible on the Containers page', async ({ navigationBar }) => {
+      const containers = await navigationBar.openContainers();
+      await playExpect(containers.heading).toBeVisible();
+      await playExpect
+        .poll(async () => await containers.isEnvironmentFilterVisible(), { timeout: 30_000 })
+        .toBeTruthy();
+    });
+
+    test('Filtering containers by environment', async ({ navigationBar }) => {
+      // environmentFilterContainer was started on the default machine by the pod filtering test
+      const containers = await navigationBar.openContainers();
+      await playExpect(containers.heading).toBeVisible();
+      await playExpect
+        .poll(async () => await containers.containerExists(environmentFilterContainer), { timeout: 15_000 })
+        .toBeTruthy();
+
+      await test.step(`Filter by ${secondMachineDisplayName} shows no containers`, async () => {
+        await containers.filterByEnvironment(secondMachineDisplayName);
+        await playExpect.poll(async () => await containers.countRowsFromTable(), { timeout: 10_000 }).toBe(0);
+      });
+
+      await test.step(`Filter by ${defaultMachineDisplayName} shows the started container`, async () => {
+        await containers.filterByEnvironment(defaultMachineDisplayName);
+        await playExpect
+          .poll(async () => await containers.countRowsFromTable(), { timeout: 10_000 })
+          .toBeGreaterThanOrEqual(1);
+        await playExpect
+          .poll(async () => await containers.containerExists(environmentFilterContainer), { timeout: 10_000 })
+          .toBeTruthy();
+      });
+
+      await containers.clearFilterByEnvironment();
+    });
+
     test('Environment filter is visible on the Images page', async ({ navigationBar }) => {
       const images = await navigationBar.openImages();
       await playExpect(images.heading).toBeVisible();
