@@ -27,7 +27,7 @@
     "@storybook/addon-svelte-csf": "5.1.6",
     "@storybook/addon-themes": "^10.6.7",
     "@storybook/svelte-vite": "^10.6.7",
-    "@sveltejs/package": "^3.0.2",
+    "@sveltejs/package": "^3.0.3",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tailwindcss/vite": "^4.3.5",
     "@tsconfig/svelte": "^5.0.9",
