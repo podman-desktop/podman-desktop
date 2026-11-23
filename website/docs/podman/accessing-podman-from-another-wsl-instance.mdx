@@ -55,7 +55,7 @@ To communicate with the remote Podman Machine, you need a Podman client.
    Download and unpack the binary:
 
    ```shell-session
-   $ wget https://github.com/podman-container-tools/podman/releases/latest/download/podman-remote-static-linux_amd64.tar.gz
+   $ wget -O podman-remote-static-linux_amd64.tar.gz https://github.com/podman-container-tools/podman/releases/latest/download/podman-remote-static-linux_amd64.tar.gz
    $ sudo tar -C /usr/local -xzf podman-remote-static-linux_amd64.tar.gz
    ```
 
@@ -78,7 +78,7 @@ To communicate with the remote Podman Machine, you need a Podman client.
 
    :::
 
-   To run `docker` commands such as `docker-compose` in this distribution, also link the client as `docker`. The [Docker command aliasing page](/docs/migrating-from-docker/aliasing-the-docker-cli) covers that setup in full.
+   To run `docker` commands in this distribution, also link the client as `docker`. The [Docker command aliasing page](/docs/migrating-from-docker/aliasing-the-docker-cli) covers that setup in full, including the separate step that provides a Compose command.
 
 </li>
 <li>
