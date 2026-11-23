@@ -1017,8 +1017,8 @@ importers:
         specifier: ^3.24.1
         version: 3.24.1(eslint@10.15.0(jiti@2.7.0)(supports-color@8.1.1))(svelte@5.58.0(@typescript-eslint/types@8.70.0))
       filesize:
-        specifier: ^11.0.34
-        version: 11.0.34
+        specifier: ^11.0.35
+        version: 11.0.35
       humanize-duration:
         specifier: ^3.35.1
         version: 3.35.1
@@ -8185,8 +8185,8 @@ packages:
   filelist@1.0.4:
     resolution: {integrity: sha512-w1cEuf3S+DrLCQL7ET6kz+gmlJdbq9J7yXCSjK/OZCPA+qEN1WyF4ZAf0YYJa4/shHJra2t/d/r8SV4Ji+x+8Q==}
 
-  filesize@11.0.34:
-    resolution: {integrity: sha512-IlP6n9IeHCAmwM/iOMQz1NgJ3g3uLvp8JMl0oWEfPmULJhuh73XYQNWEqFitklYbBrlxaIHRMuMPcIUnkgTtuw==}
+  filesize@11.0.35:
+    resolution: {integrity: sha512-nYIrQN/m4a0VYYoUeENvFf8mCDaB9PNbKETinw4DRdBcX5yB2nY3YtFz9iMfg/YDQWyYPOn/THVtsqLN/IH0Ag==}
     engines: {node: '>= 10.8.0'}
 
   fill-range@7.1.1:
@@ -21020,7 +21020,7 @@ snapshots:
     dependencies:
       minimatch: 5.1.9
 
-  filesize@11.0.34: {}
+  filesize@11.0.35: {}
 
   fill-range@7.1.1:
     dependencies:
