@@ -1223,8 +1223,8 @@ importers:
         specifier: ^8.73.0
         version: 8.73.0(@typescript-eslint/parser@8.73.0(eslint@10.15.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.15.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
       autoprefixer:
-        specifier: ^10.6.2
-        version: 10.6.2(postcss@8.5.33)
+        specifier: ^10.7.0
+        version: 10.7.0(postcss@8.5.33)
       cross-env:
         specifier: 10.1.0
         version: 10.1.0
@@ -6318,8 +6318,8 @@ packages:
     resolution: {integrity: sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==}
     engines: {node: '>= 4.0.0'}
 
-  autoprefixer@10.6.2:
-    resolution: {integrity: sha512-VOw9/yGTGwPPgzFcODtcv6zhEPIeIWkRSe10L2ri2f5vZ7ID7lCt6jZzRF5/ubgOZ+szYydmEF5AYsA5jxX1tA==}
+  autoprefixer@10.7.0:
+    resolution: {integrity: sha512-M4rWhYFPp8YSAfqLDT/wRN9trfe/Z/aZLPxrLQJUQRTPrChss2T+hmgaV5770J52bLuGOMzt6Hjl8tEb6YWv5Q==}
     engines: {node: ^10 || ^12 || >=14}
     hasBin: true
     peerDependencies:
@@ -6634,6 +6634,9 @@ packages:
 
   caniuse-lite@1.0.30001810:
     resolution: {integrity: sha512-TITQPUkaz+aVk5GL6NhOdwk1aEaNTSDPsGFWrTuhKGtjTF70jL/Oht2W4c6rXUe5fu7Ie19VIahAXHIIiWWNeg==}
+
+  caniuse-lite@1.0.30001826:
+    resolution: {integrity: sha512-wTB+9tIbLro/BCXwLuNV1meHE4L9dS6dArMDwgYfNBPMYScqClHyGunhkCSDtHhe/69Xl0sHlKgBVZ+fNsYtWA==}
 
   castable-video@1.1.11:
     resolution: {integrity: sha512-LCRTK6oe7SB1SiUQFzZCo6D6gcEzijqBTVIuj3smKpQdesXM18QTbCVqWgh9MfOeQgTx/i9ji5jGcdqNPeWg2g==}
@@ -18837,10 +18840,10 @@ snapshots:
 
   at-least-node@1.0.0: {}
 
-  autoprefixer@10.6.2(postcss@8.5.33):
+  autoprefixer@10.7.0(postcss@8.5.33):
     dependencies:
       browserslist: 4.28.9
-      caniuse-lite: 1.0.30001810
+      caniuse-lite: 1.0.30001826
       fraction.js: 5.3.4
       picocolors: 1.1.1
       postcss: 8.5.33
@@ -19194,6 +19197,8 @@ snapshots:
       lodash.uniq: 4.5.0
 
   caniuse-lite@1.0.30001810: {}
+
+  caniuse-lite@1.0.30001826: {}
 
   castable-video@1.1.11:
     dependencies:
@@ -19680,7 +19685,7 @@ snapshots:
 
   cssnano-preset-advanced@6.1.2(postcss@8.5.33):
     dependencies:
-      autoprefixer: 10.6.2(postcss@8.5.33)
+      autoprefixer: 10.7.0(postcss@8.5.33)
       browserslist: 4.28.9
       cssnano-preset-default: 6.1.2(postcss@8.5.33)
       postcss: 8.5.33
@@ -24117,7 +24122,7 @@ snapshots:
       '@csstools/postcss-text-decoration-shorthand': 4.0.3(postcss@8.5.33)
       '@csstools/postcss-trigonometric-functions': 4.0.9(postcss@8.5.33)
       '@csstools/postcss-unset-value': 4.0.0(postcss@8.5.33)
-      autoprefixer: 10.6.2(postcss@8.5.33)
+      autoprefixer: 10.7.0(postcss@8.5.33)
       browserslist: 4.28.9
       css-blank-pseudo: 7.0.1(postcss@8.5.33)
       css-has-pseudo: 7.0.3(postcss@8.5.33)
