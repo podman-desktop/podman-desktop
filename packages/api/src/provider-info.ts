@@ -27,7 +27,7 @@ import type {
   ProviderStatus,
 } from '@desktop-framework/extension-api';
 
-export type LifecycleMethod = 'start' | 'stop' | 'delete' | 'edit';
+export type LifecycleMethod = 'start' | 'stop' | 'restart' | 'delete' | 'edit';
 
 export interface ProviderContainerConnectionInfo {
   connectionType: 'container';

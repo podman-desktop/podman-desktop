@@ -2701,6 +2701,42 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'provider-registry:restartProviderConnectionLifecycle',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        providerId: string,
+        providerConnectionInfo: ProviderConnectionInfo,
+        loggerId: string,
+      ): Promise<void> => {
+        const task = taskManager.createTask({
+          title: `Restarting ${providerConnectionInfo.name}`,
+          action: {
+            name: 'Go to task >',
+            execute: () => {
+              navigationManager.navigateToProviderConnection(providerId, providerConnectionInfo);
+            },
+          },
+        });
+
+        const logger = this.getLogHandler('provider-registry:taskConnection-onData', loggerId);
+        return providerRegistry
+          .restartProviderConnection(providerId, providerConnectionInfo, logger)
+          .then(result => {
+            task.status = 'success';
+            return result;
+          })
+          .catch((err: unknown) => {
+            task.error = `Something went wrong while restarting container provider: ${err}`;
+            logger.error(err);
+            throw err;
+          })
+          .finally(() => {
+            logger.onEnd();
+          });
+      },
+    );
+
+    this.ipcHandle(
       'provider-registry:editProviderConnectionLifecycle',
       async (
         _listener: Electron.IpcMainInvokeEvent,
