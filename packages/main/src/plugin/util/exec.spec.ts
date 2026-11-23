@@ -630,6 +630,86 @@ describe('exec', () => {
       'Command execution failed with exit code 1: permission denied',
     );
   });
+  describe('flatpak', () => {
+    function mockSpawn(): ReturnType<typeof vi.mocked<typeof spawn>> {
+      return vi.mocked(spawn).mockReturnValue({
+        stdout: { on: vi.fn(), setEncoding: vi.fn() },
+        stderr: { on: vi.fn(), setEncoding: vi.fn() },
+        on: vi.fn().mockImplementation((event: string, cb: (arg0: number) => void) => {
+          if (event === 'close') {
+            cb(0);
+          }
+        }),
+        unref: vi.fn(),
+      } as unknown as ChildProcess);
+    }
+
+    test.each([
+      { command: '/app/bin/foo', cwd: undefined },
+      { command: './bin/foo', cwd: '/app' },
+      { command: 'bin/foo', cwd: '/app' },
+      { command: '../app/bin/foo', cwd: '/usr' },
+    ])('should spawn $command (cwd: $cwd) directly as it is bundled in the flatpak', async ({ command, cwd }) => {
+      const spawnMock = mockSpawn();
+
+      await exec.exec(command, ['arg1'], { env: { FLATPAK_ID: 'true', var1: 'value1' }, cwd });
+
+      expect(spawnMock).toHaveBeenCalledWith(
+        command,
+        ['arg1'],
+        expect.objectContaining({ cwd, env: expect.objectContaining({ var1: 'value1' }) }),
+      );
+    });
+
+    test.each([
+      { command: 'foo', cwd: '/app' },
+      { command: './bin/foo', cwd: '/home/user' },
+      { command: '/usr/bin/foo', cwd: undefined },
+      { command: '/application/foo', cwd: undefined },
+      { command: '/app/../usr/bin/foo', cwd: undefined },
+      { command: '/app', cwd: undefined },
+    ])('should spawn $command (cwd: $cwd) on the host with flatpak-spawn', async ({ command, cwd }) => {
+      const spawnMock = mockSpawn();
+
+      await exec.exec(command, ['arg1'], { env: { FLATPAK_ID: 'true', var1: 'value1' }, cwd });
+
+      expect(spawnMock).toHaveBeenCalledWith(
+        'flatpak-spawn',
+        ['--host', '--env=FLATPAK_ID=true', '--env=var1=value1', command, 'arg1'],
+        expect.anything(),
+      );
+    });
+
+    test('should spawn a detached bundled binary directly', async () => {
+      vi.mocked(isLinux).mockReturnValue(true);
+      const spawnMock = mockSpawn();
+
+      await exec.exec('/app/bin/foo', ['arg1'], { env: { FLATPAK_ID: 'true' }, detached: true });
+
+      expect(spawnMock).toHaveBeenCalledWith('/app/bin/foo', ['arg1'], expect.objectContaining({ detached: true }));
+    });
+
+    test('should keep using flatpak-spawn for admin commands even if the binary is bundled', async () => {
+      vi.mocked(isLinux).mockReturnValue(true);
+      const spawnMock = mockSpawn();
+
+      await exec.exec('/app/bin/foo', ['arg1'], { env: { FLATPAK_ID: 'true' }, isAdmin: true });
+
+      expect(spawnMock).toHaveBeenCalledWith(
+        'flatpak-spawn',
+        ['--host', '--env=FLATPAK_ID=true', 'pkexec', '/app/bin/foo', 'arg1'],
+        expect.anything(),
+      );
+    });
+
+    test('should not change behavior when not running in flatpak', async () => {
+      const spawnMock = mockSpawn();
+
+      await exec.exec('/usr/bin/foo', ['arg1']);
+
+      expect(spawnMock).toHaveBeenCalledWith('/usr/bin/foo', ['arg1'], expect.anything());
+    });
+  });
 });
 
 describe('getInstallationPath', () => {
