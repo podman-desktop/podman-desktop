@@ -84,7 +84,10 @@ const buttonDisabledClass =
 
 // a getter, so a visible tooltip updates its text in place when the props change
 function getTooltipText(): string {
-  return tooltip || title;
+  // always read title, the aria-label the attachment compares the text with,
+  // so a title-only change also updates aria-describedby
+  const ariaLabel = title;
+  return tooltip || ariaLabel;
 }
 
 function handleClick(): void {
