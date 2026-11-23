@@ -42,10 +42,11 @@ test('has no role, so it is not announced as an alert', () => {
 });
 
 test('describes the control that points aria-describedby at it', () => {
-  render(HelperText, { id: 'reason', children });
+  const { container } = render(HelperText, { id: 'reason', children });
   const button = document.createElement('button');
   button.setAttribute('aria-describedby', 'reason');
-  document.body.append(button);
+  // inside the rendered container, so testing-library removes it after the test
+  container.append(button);
 
   expect(button).toHaveAccessibleDescription('Choose a Containerfile');
 });
@@ -54,4 +55,16 @@ test('adds a custom class next to the default ones', () => {
   render(HelperText, { id: 'reason', class: 'mt-2', children });
 
   expect(screen.getByText('Choose a Containerfile').parentElement).toHaveClass('text-sm', 'mt-2');
+});
+
+test('passes native attributes through to the paragraph', () => {
+  render(HelperText, { id: 'reason', 'aria-live': 'polite', children });
+
+  expect(screen.getByText('Choose a Containerfile').parentElement).toHaveAttribute('aria-live', 'polite');
+});
+
+test('does not add an undefined class when none is given', () => {
+  render(HelperText, { id: 'reason', children });
+
+  expect(screen.getByText('Choose a Containerfile').parentElement?.className).not.toContain('undefined');
 });
