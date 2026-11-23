@@ -55,7 +55,7 @@ To communicate with the remote Podman Machine, you need a Podman client.
    Download and unpack the binary:
 
    ```shell-session
-   $ wget https://github.com/podman-container-tools/podman/releases/download/v4.9.1/podman-remote-static-linux_amd64.tar.gz
+   $ wget https://github.com/podman-container-tools/podman/releases/latest/download/podman-remote-static-linux_amd64.tar.gz
    $ sudo tar -C /usr/local -xzf podman-remote-static-linux_amd64.tar.gz
    ```
 
@@ -77,6 +77,8 @@ To communicate with the remote Podman Machine, you need a Podman client.
    Do not use an alias to rename the `podman-remote` binary. Tools such as `podman-compose` start `podman` as a separate process, which does not read your shell aliases, and then fail with `failed to check if podman is installed: [Errno 2] No such file or directory: 'podman'`.
 
    :::
+
+   To run `docker` commands such as `docker-compose` in this distribution, also link the client as `docker`. The [Docker command aliasing page](/docs/migrating-from-docker/aliasing-the-docker-cli) covers that setup in full.
 
 </li>
 <li>
