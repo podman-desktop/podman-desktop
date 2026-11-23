@@ -40,11 +40,17 @@ To communicate with the remote Podman Machine, you need a Podman client.
 
    To benefit from the latest features, such as `podman kube` subcommands, use a recent Podman version rather than the `podman` package from the distribution.
 
-   The Podman client is available with a full `podman` installation or with the `podman-remote` version 4.x and higher. On Ubuntu it is generally easier to install `podman-remote`.
+   The Podman client is available with a full `podman` installation or with the `podman-remote` version 4.x and higher.
 
    With `podman-remote` you also enable the remote mode by default.
 
-   Check for the latest release which includes the `podman-remote` binary from the [Podman releases page](https://github.com/podman-container-tools/podman/releases/latest).
+   Some distributions package a recent `podman-remote` themselves, and maintain it with the other system packages. For example, on Fedora:
+
+   ```shell-session
+   $ sudo dnf install podman-remote podman-compose
+   ```
+
+   If your distribution has no recent `podman-remote`, use the latest release from the [Podman releases page](https://github.com/podman-container-tools/podman/releases/latest), which includes the `podman-remote` binary.
 
    Download and unpack the binary:
 
@@ -53,12 +59,24 @@ To communicate with the remote Podman Machine, you need a Podman client.
    $ sudo tar -C /usr/local -xzf podman-remote-static-linux_amd64.tar.gz
    ```
 
-   Make this executable as `podman` with the following addition to `.bashrc`:
+   Make the client available as `podman`, using a symbolic link rather than a shell alias:
 
    ```shell-session
-   $ export PATH="$PATH:/usr/local/bin"
-   $ alias podman='podman-remote-static-linux_amd64'
+   $ sudo mkdir -p /usr/local/bin
+   $ sudo ln -s "$(command -v podman-remote)" /usr/local/bin/podman
    ```
+
+   For the downloaded binary, link it from its unpacked location instead:
+
+   ```shell-session
+   $ sudo ln -s /usr/local/bin/podman-remote-static-linux_amd64 /usr/local/bin/podman
+   ```
+
+   :::note
+
+   Do not use an alias to rename the `podman-remote` binary. Tools such as `podman-compose` start `podman` as a separate process, which does not read your shell aliases, and then fail with `failed to check if podman is installed: [Errno 2] No such file or directory: 'podman'`.
+
+   :::
 
 </li>
 <li>
