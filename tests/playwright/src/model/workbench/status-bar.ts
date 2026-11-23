@@ -76,7 +76,7 @@ export class StatusBar extends BasePage {
   }
 
   public async getProviderButton(providerName: string): Promise<Locator> {
-    await playExpect(this.pinProvidersButton, 'status bar providers must be turned on').toBeVisible();
+    await playExpect(this.pinProvidersButton, 'status bar must have pinnable providers').toBeVisible();
     return this.content.getByRole('button', { name: providerName, exact: true });
   }
 

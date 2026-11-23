@@ -248,7 +248,6 @@ import { RegistryInit } from './registry-init.js';
 import { ReleaseNotesBannerInit } from './release-notes-banner-init.js';
 import { SafeStorageRegistry } from './safe-storage/safe-storage-registry.js';
 import { PinRegistry } from './statusbar/pin-registry.js';
-import { StatusbarProvidersInit } from './statusbar/statusbar-providers-init.js';
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
@@ -660,10 +659,6 @@ export class PluginSystem {
     container.bind<DockerCompatibility>(DockerCompatibility).toSelf().inSingletonScope();
     const dockerCompatibility = container.get<DockerCompatibility>(DockerCompatibility);
     dockerCompatibility.init();
-
-    container.bind<StatusbarProvidersInit>(StatusbarProvidersInit).toSelf().inSingletonScope();
-    const statusbarProviders = container.get<StatusbarProvidersInit>(StatusbarProvidersInit);
-    statusbarProviders.init();
 
     container.bind<DashboardService>(DashboardService).toSelf().inSingletonScope();
     container.get<DashboardService>(DashboardService);
