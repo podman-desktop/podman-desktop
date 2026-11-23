@@ -3189,3 +3189,183 @@ test('getConnectionFactories should return the connection factories', async () =
     images: provider2Images,
   });
 });
+
+describe('restartProviderConnection', () => {
+  const restartMock = vi.fn();
+  const startMock = vi.fn();
+  const stopMock = vi.fn();
+  let containerConnection: ProviderContainerConnectionInfo;
+
+  beforeEach(() => {
+    const provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+    containerConnection = {
+      connectionType: 'container',
+      name: 'connection',
+      displayName: 'connection',
+      type: 'podman',
+      endpoint: {
+        socketPath: '/endpoint1.sock',
+      },
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
+      status: 'started',
+    };
+
+    provider.registerContainerProviderConnection({
+      name: 'connection',
+      displayName: 'connection',
+      type: 'podman',
+      lifecycle: {
+        start: startMock,
+        stop: stopMock,
+        restart: restartMock,
+      },
+      endpoint: {
+        socketPath: '/endpoint1.sock',
+      },
+      status() {
+        return 'started';
+      },
+    });
+  });
+
+  test('should expose restart in the lifecycle methods', () => {
+    const [providerInfo] = providerRegistry.getProviderInfos();
+
+    expect(providerInfo?.containerConnections[0]?.lifecycleMethods).toEqual(['start', 'stop', 'restart']);
+  });
+
+  test('should call restart and send stopped, starting then started events for a container connection', async () => {
+    vi.mocked(containerRegistry.isApiAttached).mockReturnValue(true);
+    const statuses: string[] = [];
+    providerRegistry.onDidUpdateContainerConnection(event => statuses.push(event.status));
+
+    await providerRegistry.restartProviderConnection('0', containerConnection);
+
+    expect(restartMock).toHaveBeenCalledOnce();
+    expect(startMock).not.toHaveBeenCalled();
+    expect(stopMock).not.toHaveBeenCalled();
+    expect(statuses).toEqual(['stopped', 'starting', 'started']);
+  });
+
+  test('should wait for the API to be attached again before sending the started event', async () => {
+    vi.mocked(containerRegistry.isApiAttached).mockReturnValue(false);
+    let apiAttached: ((id: string) => void) | undefined;
+    vi.mocked(containerRegistry.onApiAttached).mockImplementation(callback => {
+      apiAttached = callback;
+      return Disposable.noop();
+    });
+    const statuses: string[] = [];
+    providerRegistry.onDidUpdateContainerConnection(event => statuses.push(event.status));
+
+    await providerRegistry.restartProviderConnection('0', containerConnection);
+    expect(statuses).toEqual(['stopped', 'starting']);
+
+    apiAttached?.('internal.connection');
+    expect(statuses).toEqual(['stopped', 'starting', 'started']);
+  });
+
+  test('should persist the error and rethrow when restart fails', async () => {
+    restartMock.mockRejectedValue(new Error('restart failed'));
+    const onDidUpdateMock = vi.fn();
+    providerRegistry.onDidUpdateContainerConnection(onDidUpdateMock);
+
+    await expect(providerRegistry.restartProviderConnection('0', containerConnection)).rejects.toThrow(
+      'restart failed',
+    );
+
+    expect(onDidUpdateMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        status: 'starting',
+        error: 'restart failed',
+      }),
+    );
+    const [providerInfo] = providerRegistry.getProviderInfos();
+    expect(providerInfo?.containerConnections[0]?.error).toBe('restart failed');
+  });
+
+  test('should clear a previous error when restart succeeds', async () => {
+    vi.mocked(containerRegistry.isApiAttached).mockReturnValue(true);
+    restartMock.mockRejectedValueOnce(new Error('restart failed'));
+    await expect(providerRegistry.restartProviderConnection('0', containerConnection)).rejects.toThrow();
+
+    await providerRegistry.restartProviderConnection('0', containerConnection);
+
+    const [providerInfo] = providerRegistry.getProviderInfos();
+    expect(providerInfo?.containerConnections[0]?.error).toBeUndefined();
+  });
+
+  test('should send stopped then started events for a Kubernetes connection', async () => {
+    const provider = providerRegistry.createProvider('id2', 'name2', {
+      id: 'internal2',
+      name: 'internal2',
+      status: 'installed',
+    });
+    provider.registerKubernetesProviderConnection({
+      name: 'kube',
+      lifecycle: {
+        restart: restartMock,
+      },
+      endpoint: {
+        apiURL: 'endpoint',
+      },
+      status() {
+        return 'started';
+      },
+    });
+    const kubernetesConnection: ProviderKubernetesConnectionInfo = {
+      connectionType: 'kubernetes',
+      name: 'kube',
+      endpoint: { apiURL: 'endpoint' },
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
+      status: 'started',
+    };
+    const statuses: string[] = [];
+    providerRegistry.onDidUpdateKubernetesConnection(event => statuses.push(event.status));
+
+    await providerRegistry.restartProviderConnection('1', kubernetesConnection);
+
+    expect(restartMock).toHaveBeenCalledOnce();
+    expect(statuses).toEqual(['stopped', 'started']);
+  });
+
+  test('should throw when the connection does not support restart', async () => {
+    const provider = providerRegistry.createProvider('id2', 'name2', {
+      id: 'internal2',
+      name: 'internal2',
+      status: 'installed',
+    });
+    provider.registerContainerProviderConnection({
+      name: 'no-restart',
+      type: 'podman',
+      lifecycle: {
+        start: startMock,
+        stop: stopMock,
+      },
+      endpoint: {
+        socketPath: '/endpoint2.sock',
+      },
+      status() {
+        return 'started';
+      },
+    });
+
+    await expect(
+      providerRegistry.restartProviderConnection('1', {
+        ...containerConnection,
+        name: 'no-restart',
+        endpoint: { socketPath: '/endpoint2.sock' },
+      }),
+    ).rejects.toThrow('The container connection does not support restart lifecycle');
+    expect(restartMock).not.toHaveBeenCalled();
+  });
+});

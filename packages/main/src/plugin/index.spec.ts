@@ -839,7 +839,11 @@ describe.each<{
 
 describe.each<{
   handler: string;
-  methodName: 'startProviderConnection' | 'stopProviderConnection' | 'deleteProviderConnection';
+  methodName:
+    | 'startProviderConnection'
+    | 'stopProviderConnection'
+    | 'restartProviderConnection'
+    | 'deleteProviderConnection';
   expectedTitle: string;
   expectedActionName: string;
   expectedError: string;
@@ -857,6 +861,13 @@ describe.each<{
     expectedTitle: 'Stopping name1',
     expectedActionName: 'Go to task >',
     expectedError: 'Something went wrong while stopping container provider: Error: an error',
+  },
+  {
+    handler: 'provider-registry:restartProviderConnectionLifecycle',
+    methodName: 'restartProviderConnection',
+    expectedTitle: 'Restarting name1',
+    expectedActionName: 'Go to task >',
+    expectedError: 'Something went wrong while restarting container provider: Error: an error',
   },
   {
     handler: 'provider-registry:deleteProviderConnectionLifecycle',
