@@ -335,10 +335,6 @@ describe('locked configuration handling', () => {
     const userConfig = {
       'proxy.http': 'https://127.0.0.1:8081',
       'telemetry.check': true, // User wants telemetry check enabled
-      'statusbarProviders.showProviders': {
-        remindAt: 1758312136049,
-        disabled: false,
-      },
       'releaseNotesBanner.show': '1.21.0',
       'compose.binary.installComposeSystemWide': true,
       'kubectl.binary.installKubectlSystemWide': true,

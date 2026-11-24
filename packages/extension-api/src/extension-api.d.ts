@@ -378,6 +378,15 @@ declare module '@podman-desktop/api' {
   export interface ProviderConnectionLifecycle {
     start?(startContext: LifecycleContext, logger?: Logger): Promise<void>;
     stop?(stopContext: LifecycleContext, logger?: Logger): Promise<void>;
+    /**
+     * Restart the connection in a single operation.
+     *
+     * Optional: when a connection does not implement it, callers can use {@link stop} followed by {@link start} instead.
+     *
+     * @param restartContext the lifecycle context of the connection
+     * @param logger the logger receiving the restart output
+     */
+    restart?(restartContext: LifecycleContext, logger?: Logger): Promise<void>;
     delete?(logger?: Logger): Promise<void>;
     edit?(
       editContext: LifecycleContext,

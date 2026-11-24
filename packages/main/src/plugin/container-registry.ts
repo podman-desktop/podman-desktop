@@ -41,6 +41,7 @@ import type {
   ImageInfo,
   ImageInspectInfo,
   ImageLoadOptions,
+  ImageLocation,
   ImagesSaveOptions,
   ImageUpdateInfo,
   ImageUpdateResult,
@@ -126,6 +127,14 @@ interface JSONEvent {
   Actor?: { ID: string };
 }
 
+// listeners added on a container stream by attachContainer()
+interface AttachStreamListeners {
+  stream: NodeJS.ReadWriteStream;
+  data: (chunk: Buffer) => void;
+  error: (err: unknown) => void;
+  end: () => void;
+}
+
 @injectable()
 export class ContainerProviderRegistry {
   private readonly _onEvent = new Emitter<containerDesktopAPI.ContainerJSONEvent>();
@@ -182,6 +191,8 @@ export class ContainerProviderRegistry {
   // map of streams per container id
   protected streamsPerContainerId: Map<string, NodeJS.ReadWriteStream> = new Map();
   protected streamsOutputPerContainerId: Map<string, Buffer[]> = new Map();
+  // listeners added by the latest attachContainer() call per container id
+  protected attachListenersPerContainerId: Map<string, AttachStreamListeners> = new Map();
 
   useLibpodApiForImageList(): boolean {
     return this.configurationRegistry
@@ -308,6 +319,7 @@ export class ContainerProviderRegistry {
     const cleanStreamMap = (containerId: unknown): void => {
       this.streamsPerContainerId.delete(String(containerId));
       this.streamsOutputPerContainerId.delete(String(containerId));
+      this.attachListenersPerContainerId.delete(String(containerId));
     };
 
     this.apiSender.receive('container-stopped-event', (containerId: unknown) => {
@@ -761,6 +773,19 @@ export class ContainerProviderRegistry {
     this.telemetryService.track('listContainers', { total: flattenedContainers.length, ...telemetryOptions });
 
     return flattenedContainers;
+  }
+
+  async getImageInfo(engineId: string, imageId: string): Promise<ImageInfo> {
+    const provider = this.internalProviders.get(engineId);
+    if (!provider) {
+      throw new Error('no engine matching this engine');
+    }
+    const images = await this.listImages({ provider: provider.connection });
+    const image = images.find(image => image.engineId === engineId && image.Id === imageId);
+    if (!image) {
+      throw new Error(`Image ${imageId} not found on engine ${engineId}`);
+    }
+    return image;
   }
 
   // list images will prefer to use libpod API of the provider if podman
@@ -1415,8 +1440,13 @@ export class ContainerProviderRegistry {
         const statusCode = (error as any)?.statusCode;
         if (statusCode === 403) {
           error.message = `access to image "${imageName}" is denied (403 error). Can also be that image does not exist.`;
-        } else if (statusCode === 500 || statusCode === 401) {
-          error.message = `access to image "${imageName}" is denied (${statusCode} error). Can also be that the registry requires authentication.`;
+        } else if (statusCode === 401) {
+          error.message = `access to image "${imageName}" is denied (401 error). Can also be that the registry requires authentication.`;
+        } else if (statusCode === 500) {
+          const reason = this.getEngineErrorReason(error);
+          error.message = reason
+            ? `unable to pull image "${imageName}": ${reason}`
+            : `unable to pull image "${imageName}" (500 error).`;
         }
       }
       telemetryOptions = { error: error };
@@ -1424,6 +1454,69 @@ export class ContainerProviderRegistry {
     } finally {
       this.telemetryService.track('pullImage', { imageName: this.getImageHash(imageName), ...telemetryOptions });
     }
+  }
+
+  /**
+   * Extracts the explanation reported by the container engine. Returns the root cause of the error if available, otherwise undefined.
+   */
+  protected getEngineErrorReason(error: Error): string | undefined {
+    // cut the prefix '(HTTP code 500) server error - <reason>' and get the reason part
+    const reason = error.message.replace(/^\(HTTP code \d+\)\s.*?\s-\s/, '').trim();
+    if (reason.length === 0) {
+      return undefined;
+    }
+
+    // the reason is string of wrapped errors: 'outer: inner: root cause'
+    // pop the last layer, which is the root cause
+    return reason.split(/:\s+/).pop()?.trim();
+  }
+
+  /**
+   * Asks a connection's engine which of its images a reference points at. The engine resolves the
+   * reference the same way its CLI does, so short names, tags and digests all work, and it answers
+   * with the image id the images list reports. Returns undefined when the engine holds no such image.
+   */
+  async resolveImage(
+    providerContainerConnectionInfo: ProviderContainerConnectionInfo | containerDesktopAPI.ContainerProviderConnection,
+    reference: string,
+  ): Promise<ImageLocation | undefined> {
+    let telemetryOptions = {};
+    const provider = this.getMatchingContainerProvider(providerContainerConnectionInfo);
+    if (!provider.api) {
+      throw new Error('no running provider for the matching container');
+    }
+    try {
+      const { Id, RepoTags } = await provider.api.getImage(reference).inspect();
+      return { Id, engineId: provider.id, repoTag: this.matchRepoTag(reference, RepoTags ?? []) };
+    } catch (error: unknown) {
+      // a 404 means the engine holds no such image, which is an answer; anything else went wrong
+      if ((error as { statusCode?: number })?.statusCode !== 404) {
+        telemetryOptions = { error: error };
+        throw error;
+      }
+      return undefined;
+    } finally {
+      this.telemetryService.track('resolveImage', telemetryOptions);
+    }
+  }
+
+  /**
+   * Picks the repository tag a reference names among the ones the engine reports for the image it
+   * resolved to. The image is already identified, so the tag alone tells them apart; a reference
+   * pinning a digest names none of them.
+   */
+  protected matchRepoTag(reference: string, repoTags: string[]): string | undefined {
+    if (reference.includes('@')) {
+      return undefined;
+    }
+    const tag = this.referenceTag(reference);
+    return repoTags.find(repoTag => this.referenceTag(repoTag) === tag);
+  }
+
+  // a colon only opens a tag when no path separator follows it, a registry port carries one too
+  protected referenceTag(reference: string): string {
+    const index = reference.lastIndexOf(':');
+    return index > 0 && !reference.includes('/', index) ? reference.slice(index + 1) : 'latest';
   }
 
   getImageHash(imageName: string): string {
@@ -1789,7 +1882,9 @@ export class ContainerProviderRegistry {
         ...originalConfiguration,
         ...overrideParameters,
       };
-      return libPod.createPodmanContainer(configuration);
+      const result = await libPod.createPodmanContainer(configuration);
+      // libpod serializes a nil Go slice as `null`, normalize it to match the declared type
+      return { ...result, Warnings: result.Warnings ?? [] };
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;
@@ -2308,17 +2403,36 @@ export class ContainerProviderRegistry {
     let attachStream = this.streamsPerContainerId.get(containerId);
 
     const setupStream = (stream: NodeJS.ReadWriteStream): void => {
-      stream.on('data', chunk => {
-        onData(chunk.toString('utf-8'));
-      });
+      // remove only the listeners added by a previous call on this stream,
+      // the ones added by attachToContainer() need to stay
+      const previousListeners = this.attachListenersPerContainerId.get(containerId);
+      if (previousListeners?.stream === stream) {
+        stream.off('data', previousListeners.data);
+        stream.off('error', previousListeners.error);
+        stream.off('end', previousListeners.end);
+        // the previous caller will not receive anything anymore, let it clean up
+        previousListeners.end();
+      }
 
-      stream.on('error', err => {
-        onError(String(err));
-      });
-
-      stream.on('end', () => {
-        onEnd();
-      });
+      const listeners: AttachStreamListeners = {
+        stream,
+        data: (chunk: Buffer): void => {
+          onData(chunk.toString('utf-8'));
+        },
+        error: (err: unknown): void => {
+          onError(String(err));
+        },
+        end: (): void => {
+          if (this.attachListenersPerContainerId.get(containerId) === listeners) {
+            this.attachListenersPerContainerId.delete(containerId);
+          }
+          onEnd();
+        },
+      };
+      stream.on('data', listeners.data);
+      stream.on('error', listeners.error);
+      stream.on('end', listeners.end);
+      this.attachListenersPerContainerId.set(containerId, listeners);
 
       // do we have previous data?
       const previousData = this.streamsOutputPerContainerId.get(containerId);
@@ -2497,10 +2611,11 @@ export class ContainerProviderRegistry {
     }
 
     // convert env from array of string to an object with key being the env name
+    // the value may be empty or contain '=' signs, entries without '=' are skipped
     const updatedEnv = options.Env?.reduce((acc: { [key: string]: string }, env) => {
-      const [key, value] = env.split('=');
-      if (key && value) {
-        acc[key] = value;
+      const [key, ...values] = env.split('=');
+      if (key && values.length > 0) {
+        acc[key] = values.join('=');
       }
       return acc;
     }, {});
@@ -2621,6 +2736,8 @@ export class ContainerProviderRegistry {
       devices: updatedDevices,
       secrets: options.Secrets,
       secret_env: options.SecretEnv,
+      terminal: options.Tty,
+      stdin: options.OpenStdin,
     };
 
     const container = await engine.libpodApi.createPodmanContainer(podmanOptions);

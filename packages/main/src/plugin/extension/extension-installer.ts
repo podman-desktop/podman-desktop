@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
-import { cp, rm } from 'node:fs/promises';
+import { cp, mkdtemp, rm } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
@@ -39,6 +39,7 @@ import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { MessageBox } from '/@/plugin/message-box.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
+import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
 @injectable()
@@ -74,21 +75,19 @@ export class ExtensionInstaller {
     // files or folder to grab
     const filesExtension: string[] = [];
 
-    // do we have binaries in ${tmpFolderPath}/extension folder ?
-    if (fs.existsSync(`${tmpFolderPath}/extension`)) {
-      // list all files in the binaries/${platform} folder
-      const extensionFolder = `${tmpFolderPath}/extension/`;
+    const extensionFolder = `${tmpFolderPath}/extension/`;
 
-      // grab files from that directory using fs promises
-      const extensionFiles = await fs.promises.readdir(extensionFolder, { withFileTypes: true });
+    // a Podman Desktop extension image must ship its files in the /extension folder
+    if (!fs.existsSync(extensionFolder)) {
+      throw new Error('Malformed extension: the image does not contain an /extension folder');
+    }
 
-      // add all files
-      for (const file of extensionFiles) {
-        // if it's a file, add it to the files list
-        //if (file.isFile()) {
-        filesExtension.push(file.name);
-        //}
-      }
+    // grab files from that directory using fs promises
+    const extensionFiles = await fs.promises.readdir(extensionFolder, { withFileTypes: true });
+
+    // add all files
+    for (const file of extensionFiles) {
+      filesExtension.push(file.name);
     }
 
     // copy all files
@@ -159,9 +158,6 @@ export class ExtensionInstaller {
     // remove all special characters from the image name
     const imageNameWithoutSpecialChars = imageNameWithoutTag.replace(/[^a-zA-Z0-9]/g, '');
 
-    // tmp folder
-    const tmpFolderPath = path.join(os.tmpdir(), `/tmp/${imageNameWithoutSpecialChars}-tmp`);
-
     // final folder
     const finalFolderPath = path.join(unpackedFolder, imageNameWithoutSpecialChars);
 
@@ -179,26 +175,36 @@ export class ExtensionInstaller {
       }
     }
 
-    sendLog('Downloading and extract layers...');
-    await this.imageRegistry.downloadAndExtractImage(imageName, tmpFolderPath, event => {
-      sendLog(event.message);
-      onProgress?.(event.progress);
-    });
+    // unique tmp folder, so concurrent installs of the same image do not share (and clean up) each other's files
+    const tmpFolderPath = await mkdtemp(path.join(os.tmpdir(), `${imageNameWithoutSpecialChars}-`));
 
-    sendLog('Filtering image content...');
-    if (isPDExtension) {
-      await this.extractExtensionFiles(tmpFolderPath, finalFolderPath);
-    } else if (isDDExtension) {
-      await this.#dockerDesktopInstaller.extractExtensionFiles(
-        tmpFolderPath,
-        finalFolderPath,
-        sendLog,
-        catatlogExtensionId,
-      );
+    try {
+      sendLog('Downloading and extract layers...');
+      await this.imageRegistry.downloadAndExtractImage(imageName, tmpFolderPath, event => {
+        sendLog(event.message);
+        onProgress?.(event.progress);
+      });
+
+      sendLog('Filtering image content...');
+      if (isPDExtension) {
+        await this.extractExtensionFiles(tmpFolderPath, finalFolderPath);
+      } else if (isDDExtension) {
+        await this.#dockerDesktopInstaller.extractExtensionFiles(
+          tmpFolderPath,
+          finalFolderPath,
+          sendLog,
+          catatlogExtensionId,
+        );
+      }
+    } finally {
+      // delete the tmp folder, whether the installation succeeded or not
+      // a cleanup failure must not hide the error of the installation
+      try {
+        await rm(tmpFolderPath, { recursive: true, force: true });
+      } catch (error: unknown) {
+        console.error(`Unable to remove the temporary folder ${tmpFolderPath}`, error);
+      }
     }
-
-    // delete the tmp folder
-    fs.rmSync(tmpFolderPath, { recursive: true });
 
     if (isPDExtension) {
       let analyzedExtension: AnalyzedExtension | undefined;
@@ -312,7 +318,30 @@ export class ExtensionInstaller {
     const task = this.taskManager.createTask({
       title: `Installing extension ${imageName}`,
     });
+    return this.installFromImageInTask(
+      task,
+      sendLog,
+      sendError,
+      sendEnd,
+      imageName,
+      extensionAnalyzed,
+      catalogExtensionId,
+    );
+  }
 
+  /**
+   * Install the extension from the image, reporting the installation in the given task,
+   * e.g. the task of an update which also covers the removal of the current version.
+   */
+  async installFromImageInTask(
+    task: Task,
+    sendLog: (message: string) => void,
+    sendError: (message: string) => void,
+    sendEnd: (message: string) => void,
+    imageName: string,
+    extensionAnalyzed?: (extension: AnalyzedExtension) => void,
+    catalogExtensionId?: string,
+  ): Promise<void> {
     const wrappedSendError = (message: string): void => {
       sendError(message);
       task.error = message;

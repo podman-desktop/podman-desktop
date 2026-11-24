@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,4 +44,17 @@ test('check that value of a dotted key is correctly returned', async () => {
 
   const value = context.getValue('key.first');
   expect(value).toBe('value');
+});
+
+test('check that clone returns a new instance holding the same values', async () => {
+  const context = new ContextUI();
+  context.setValue('key', 'value');
+
+  const cloned = context.clone();
+  expect(cloned).not.toBe(context);
+  expect(cloned.getValue('key')).toBe('value');
+
+  // updating the clone does not modify the original instance
+  cloned.setValue('another', 'value');
+  expect(context.getValue('another')).toBeUndefined();
 });

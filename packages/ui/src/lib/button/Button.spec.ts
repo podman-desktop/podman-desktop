@@ -140,7 +140,7 @@ test('Check disabled/in-progress link button styling', async () => {
 });
 
 test('Check tab button styling', async () => {
-  render(Button, { type: 'tab' });
+  render(Button, { type: 'tab', selected: false });
 
   const button = screen.getByRole('button');
   expect(button).toBeInTheDocument();
@@ -271,6 +271,11 @@ test('Icon-only button with aria-label should not throw', () => {
   expect(screen.getByRole('button')).toBeInTheDocument();
 });
 
+test('Icon-only button with aria-labelledby should not throw', () => {
+  expect(() => render(Button, { icon: faTrash, 'aria-labelledby': 'delete-label' })).not.toThrow();
+  expect(screen.getByRole('button')).toBeInTheDocument();
+});
+
 test('Icon button with title should not throw', () => {
   expect(() => render(Button, { icon: faTrash, title: 'Delete' })).not.toThrow();
   expect(screen.getByRole('button')).toBeInTheDocument();
@@ -328,10 +333,41 @@ const RING_TYPES: [ButtonType, string][] = [
 test.each(RING_TYPES.flatMap(([type, ring]) => [false, true].map(pressed => [type, pressed, ring] as const)))(
   'Check %s button (pressed: %s) uses its focus ring token',
   (type, pressed, ringClass) => {
-    render(Button, { type, pressed });
+    render(Button, { type, pressed, selected: false });
 
     const button = screen.getByRole('button');
     expect(button).toHaveClass(ringClass);
     expect(button).toHaveClass('focus-visible:outline-offset-2');
   },
 );
+
+// The @ts-expect-error is checked by `pnpm typecheck:ui` (svelte-check also covers spec files), not by vitest
+test('Tab button without the selected prop is rejected by the types and still renders', () => {
+  // @ts-expect-error a tab button without `selected` must not typecheck
+  render(Button, { type: 'tab' });
+  expect(screen.getByRole('button')).toBeInTheDocument();
+});
+
+test('Button passes data attributes and native attributes to the button element', () => {
+  render(Button, { 'data-testid': 'my-button', 'data-default': '', name: 'my-name' });
+
+  const button = screen.getByRole('button');
+  expect(button).toHaveAttribute('data-testid', 'my-button');
+  expect(button).toHaveAttribute('data-default');
+  expect(button).toHaveAttribute('name', 'my-name');
+});
+
+test('Button uses the passthrough aria-pressed only when pressed is unset', () => {
+  const { unmount } = render(Button, { 'aria-pressed': 'mixed' });
+  expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'mixed');
+  unmount();
+
+  render(Button, { pressed: true, 'aria-pressed': false });
+  expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('Button own aria attributes win over passthrough ones', () => {
+  render(Button, { inProgress: true, 'aria-disabled': false });
+
+  expect(screen.getByRole('button')).toHaveAttribute('aria-disabled', 'true');
+});

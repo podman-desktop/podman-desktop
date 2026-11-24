@@ -19,20 +19,11 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { afterEach, expect, test, vi } from 'vitest';
 
 import DropdownMenu from './DropdownMenu.svelte';
-
-class ResizeObserver {
-  observe = vi.fn();
-  disconnect = vi.fn();
-  unobserve = vi.fn();
-}
-
-beforeEach(() => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).ResizeObserver = ResizeObserver;
-});
+import DropdownMenuTest from './DropdownMenuTest.svelte';
 
 afterEach(() => {
   vi.resetAllMocks();
@@ -58,4 +49,20 @@ test('Expect the detailed background style when shown as a menu action item', ()
   const toggleMenuButton = screen.getByRole('button', { name: 'kebab menu' });
   expect(toggleMenuButton).toHaveClass('bg-[var(--pd-button-detailed-bg)]');
   expect(toggleMenuButton).toHaveClass('px-3');
+});
+
+test.each(['{Enter}', ' '])('Expect keyboard selection of an item with %s to run it and close the menu', async key => {
+  const onClick = vi.fn();
+  render(DropdownMenuTest, { onClick });
+
+  await userEvent.tab();
+  expect(screen.getByRole('button', { name: 'kebab menu' })).toHaveFocus();
+  await userEvent.keyboard('{Enter}');
+
+  await userEvent.tab();
+  expect(screen.getByRole('button', { name: 'Item 1' })).toHaveFocus();
+  await userEvent.keyboard(key);
+
+  expect(onClick).toHaveBeenCalledOnce();
+  expect(screen.queryByRole('button', { name: 'Item 1' })).not.toBeInTheDocument();
 });

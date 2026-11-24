@@ -26,10 +26,15 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
 import * as extension from '/@/extension';
 import { findRunningMachine } from '/@/extension';
+import type { MachineJSON } from '/@/types';
+import { PodmanBinary } from '/@/utils/podman-binary';
+import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 import * as util from '/@/utils/util';
 
 vi.mock(import('/@/extension'));
 vi.mock(import('node:fs'));
+vi.mock(import('/@/utils/podman-binary'));
+vi.mock(import('/@/utils/podman-machine-lifecycle'));
 vi.mock(
   import('/@/utils/util'),
   (): Partial<typeof util> => ({
@@ -37,6 +42,8 @@ vi.mock(
     execPodman: vi.fn(),
   }),
 );
+
+let socketCompatClass: DarwinSocketCompatibility;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -56,11 +63,12 @@ beforeEach(() => {
   Object.defineProperty(process, 'platform', {
     value: 'darwin',
   });
+
+  socketCompatClass = new DarwinSocketCompatibility(new PodmanBinary(), new PodmanMachineLifecycle());
 });
 
 test('darwin: compatibility mode binary not found failure', async () => {
   // Mock that the binary is not found
-  const socketCompatClass = new DarwinSocketCompatibility();
   const spyFindPodmanHelper = vi.spyOn(socketCompatClass, 'findPodmanHelper');
   spyFindPodmanHelper.mockReturnValue('');
 
@@ -70,8 +78,6 @@ test('darwin: compatibility mode binary not found failure', async () => {
 });
 
 test('darwin: DarwinSocketCompatibility class, test runMacHelperCommandWithAdminPriv ran within runCommand', async () => {
-  const socketCompatClass = new DarwinSocketCompatibility();
-
   // Mock that the binary is found
   const spyFindPodmanHelper = vi.spyOn(socketCompatClass, 'findPodmanHelper');
   spyFindPodmanHelper.mockReturnValue('/opt/podman/bin/podman-mac-helper');
@@ -88,12 +94,23 @@ test('darwin: DarwinSocketCompatibility class, test runMacHelperCommandWithAdmin
 });
 
 test('darwin: DarwinSocketCompatibility class, test promptRestart ran within runCommand', async () => {
-  const socketCompatClass = new DarwinSocketCompatibility();
-
   vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
 
   const spyFindRunningMachine = vi.mocked(extension.findRunningMachine);
-  spyFindRunningMachine.mockResolvedValue('default');
+  const runningMachine: MachineJSON = {
+    Name: 'default',
+    CPUs: 2,
+    Memory: '2048',
+    DiskSize: '100',
+    Running: true,
+    Starting: false,
+    Default: true,
+    VMType: 'libkrun',
+    Port: 0,
+    RemoteUsername: 'core',
+    IdentityPath: '',
+  };
+  spyFindRunningMachine.mockResolvedValue(runningMachine);
 
   // Mock that enable ran successfully
   const spyEnable = vi.spyOn(socketCompatClass, 'runCommand');
@@ -104,14 +121,11 @@ test('darwin: DarwinSocketCompatibility class, test promptRestart ran within run
   // Run the command
   await socketCompatClass.enable();
 
-  // Expect that promptRestart was ran
-  expect(spyPromptRestart).toHaveBeenCalled();
+  // Expect that promptRestart was ran with the running machine name and its provider
+  expect(spyPromptRestart).toHaveBeenCalledExactlyOnceWith('default', 'libkrun');
 });
 
 test('darwin: mock fs.existsSync returns /usr/local/bin/podman-mac-helper', async () => {
-  // Mock that the binary is found
-  const socketCompatClass = new DarwinSocketCompatibility();
-
   // Run findPodmanHelper
   const binaryPath = socketCompatClass.findPodmanHelper();
 
@@ -133,9 +147,6 @@ describe('tooltip', () => {
       text: 'Enable macOS Docker socket compatibility for Podman.',
     },
   ])('text should be $text when isEnabled is $enabled', ({ enabled, text }) => {
-    // Mock that the binary is found
-    const socketCompatClass = new DarwinSocketCompatibility();
-
     vi.spyOn(socketCompatClass, 'isEnabled').mockReturnValue(enabled);
 
     expect(socketCompatClass.tooltipText()).toEqual(text);
@@ -146,8 +157,6 @@ describe('isEnabled', () => {
   test('should return true if corresponding file exists', () => {
     vi.mocked(existsSync).mockReturnValue(true);
 
-    const socketCompatClass = new DarwinSocketCompatibility();
-
     expect(socketCompatClass.isEnabled()).toBeTruthy();
     expect(existsSync).toHaveBeenCalledExactlyOnceWith(
       `/Library/LaunchDaemons/com.github.containers.podman.helper-${userInfo().username}.plist`,
@@ -156,8 +165,6 @@ describe('isEnabled', () => {
 
   test('should return false if corresponding file does not exist', () => {
     vi.mocked(existsSync).mockReturnValue(false);
-
-    const socketCompatClass = new DarwinSocketCompatibility();
 
     expect(socketCompatClass.isEnabled()).toBeFalsy();
     expect(existsSync).toHaveBeenCalledExactlyOnceWith(
@@ -174,7 +181,6 @@ describe('runMacHelperCommandWithAdminPriv', () => {
       command: 'foo',
     });
 
-    const socketCompatClass = new DarwinSocketCompatibility();
     await socketCompatClass.runMacHelperCommandWithAdminPriv('foo', ['bar']);
 
     expect(extensionApi.process.exec).toHaveBeenCalledExactlyOnceWith('foo', ['bar'], { isAdmin: true });
@@ -187,8 +193,6 @@ describe('runMacHelperCommandWithAdminPriv', () => {
       command: 'foo',
     });
 
-    const socketCompatClass = new DarwinSocketCompatibility();
-
     await expect(() => {
       return socketCompatClass.runMacHelperCommandWithAdminPriv('foo', ['bar']);
     }).rejects.toThrowError('Unable to run command: Error: Error: foo');
@@ -199,27 +203,49 @@ describe('promptRestart', () => {
   const PODMAN_MACHINE_MOCK = 'podman-machine-default';
 
   test('should ask the user to confirm', async () => {
-    const socketCompatClass = new DarwinSocketCompatibility();
-
     await socketCompatClass.promptRestart(PODMAN_MACHINE_MOCK);
 
     expect(window.showInformationMessage).toHaveBeenCalledExactlyOnceWith(expect.any(String), 'Yes', 'Cancel');
   });
 
-  test('should exec stop & start with user confirmation', async () => {
+  test('should restart the machine with its provider and the installed podman version on user confirmation', async () => {
     vi.mocked(window.showInformationMessage).mockResolvedValue('Yes');
-    const socketCompatClass = new DarwinSocketCompatibility();
+    vi.mocked(PodmanBinary.prototype.getBinaryInfo).mockResolvedValue({ version: '6.1.0' });
+
+    await socketCompatClass.promptRestart(PODMAN_MACHINE_MOCK, 'libkrun');
+
+    expect(PodmanMachineLifecycle.prototype.restart).toHaveBeenCalledExactlyOnceWith({
+      machineName: PODMAN_MACHINE_MOCK,
+      vmType: 'libkrun',
+      podmanVersion: '6.1.0',
+    });
+    expect(util.execPodman).not.toHaveBeenCalled();
+  });
+
+  test('should restart the machine without a podman version when the binary is not found', async () => {
+    vi.mocked(window.showInformationMessage).mockResolvedValue('Yes');
+    vi.mocked(PodmanBinary.prototype.getBinaryInfo).mockResolvedValue(undefined);
 
     await socketCompatClass.promptRestart(PODMAN_MACHINE_MOCK);
 
-    expect(util.execPodman).toHaveBeenCalledWith(['machine', 'stop', PODMAN_MACHINE_MOCK]);
-    expect(util.execPodman).toHaveBeenCalledWith(['machine', 'start', PODMAN_MACHINE_MOCK]);
+    expect(PodmanMachineLifecycle.prototype.restart).toHaveBeenCalledExactlyOnceWith({
+      machineName: PODMAN_MACHINE_MOCK,
+      vmType: undefined,
+      podmanVersion: undefined,
+    });
+  });
+
+  test('should not restart the machine when the user cancels', async () => {
+    vi.mocked(window.showInformationMessage).mockResolvedValue('Cancel');
+
+    await socketCompatClass.promptRestart(PODMAN_MACHINE_MOCK);
+
+    expect(PodmanBinary.prototype.getBinaryInfo).not.toHaveBeenCalled();
+    expect(PodmanMachineLifecycle.prototype.restart).not.toHaveBeenCalled();
   });
 });
 
 test('darwin: test promptRestart IS NOT ran when findRunningMachine returns undefined for enable AND disable', async () => {
-  const socketCompatClass = new DarwinSocketCompatibility();
-
   // Mock that enable ran successfully
   vi.spyOn(socketCompatClass, 'runCommand').mockResolvedValue(undefined);
 

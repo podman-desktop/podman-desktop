@@ -97,6 +97,37 @@ test('Expect dropdown opens when trigger button is clicked', async () => {
   expect(screen.getByText('Fourth Item')).toBeInTheDocument();
 });
 
+test('Expect items have aria-label and aria-pressed matching their enabled state', async () => {
+  render(ListOrganizer, {
+    items: mockItems,
+    title: 'Manage Layout',
+  });
+
+  await fireEvent.click(screen.getByTitle('Manage Layout'));
+
+  expect(screen.getByRole('button', { name: 'First Item' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByRole('button', { name: 'Third Item' })).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('Expect aria-pressed is updated when item enabled state changes', async () => {
+  const component = render(ListOrganizer, {
+    items: mockItems,
+    title: 'Manage Layout',
+    enableToggle: true,
+  });
+
+  await fireEvent.click(screen.getByTitle('Manage Layout'));
+  expect(screen.getByRole('button', { name: 'Third Item' })).toHaveAttribute('aria-pressed', 'false');
+
+  await component.rerender({
+    items: mockItems.map(item => (item.id === 'item3' ? { ...item, enabled: true } : item)),
+    title: 'Manage Layout',
+    enableToggle: true,
+  });
+
+  expect(screen.getByRole('button', { name: 'Third Item' })).toHaveAttribute('aria-pressed', 'true');
+});
+
 test.skip('Expect dropdown closes when clicking outside', async () => {
   render(ListOrganizer, {
     items: mockItems,

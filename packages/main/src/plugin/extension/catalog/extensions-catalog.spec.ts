@@ -216,6 +216,26 @@ test('should fetch fetchable extensions', async () => {
   expect(console.error).not.toBeCalled();
 });
 
+test.each([
+  { preview: false, expected: false },
+  { preview: true, expected: true },
+  { preview: undefined, expected: false },
+])('should expose a boolean preview flag when the catalog has $preview', async ({ preview, expected }) => {
+  const extension = {
+    ...fakePublishedExtension1,
+    versions: fakePublishedExtension1.versions.map(version => ({ ...version, preview })),
+  };
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.json({ extensions: [extension] })),
+  );
+  server.listen({ onUnhandledFrame: 'error' });
+
+  const extensions = await extensionsCatalog.getExtensions();
+
+  expect(extensions[0]?.versions[0]?.preview).toBe(expected);
+  expect(await extensionsCatalog.getFetchableExtensions()).toHaveLength(expected ? 0 : 1);
+});
+
 test('should not fetch fetchable extensions if internet connection is taking too much time', async () => {
   // Use a shorter timeout for this test
   const originalTimeout = ExtensionsCatalog.FETCH_TIMEOUT;
@@ -695,4 +715,37 @@ test('should fetch README from first non-preview version', async () => {
   const result = await extensionsCatalog.fetchReadme('foo.fooName');
 
   expect(result).toBe(stableReadmeContent);
+});
+
+test('should use a version without a preview flag for both installation and README', async () => {
+  const readmeUri = 'https://example.com/extensions/foo/fooName/1.0.0/README.md';
+  const readmeContent = '# Stable README';
+  const extension = {
+    ...fakePublishedExtension1,
+    versions: [
+      {
+        version: '2.0.0',
+        preview: true,
+        lastUpdated: '2021-02-01T00:00:00.000Z',
+        ociUri: 'oci-registry.foo/foo/preview',
+        files: [fooAssetIcon],
+      },
+      {
+        version: '1.0.0',
+        lastUpdated: '2021-01-01T00:00:00.000Z',
+        ociUri: 'oci-registry.foo/foo/stable',
+        files: [{ assetType: 'README', data: readmeUri }, fooAssetIcon],
+      },
+    ],
+  };
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.json({ extensions: [extension] })),
+    http.get(readmeUri, () => HttpResponse.text(readmeContent)),
+  );
+  server.listen({ onUnhandledFrame: 'error' });
+
+  expect(await extensionsCatalog.getFetchableExtensions()).toEqual([
+    { extensionId: 'foo.fooName', link: 'oci-registry.foo/foo/stable', version: '1.0.0' },
+  ]);
+  expect(await extensionsCatalog.fetchReadme('foo.fooName')).toBe(readmeContent);
 });

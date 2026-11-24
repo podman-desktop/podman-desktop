@@ -42,6 +42,7 @@ export class ContainerDetailsPage extends DetailsPage {
   readonly exportPathInput: Locator;
   readonly exportBrowseButton: Locator;
   readonly confirmExportButton: Locator;
+  readonly infraContainerBanner: Locator;
 
   static readonly SUMMARY_TAB = 'Summary';
   static readonly LOGS_TAB = 'Logs';
@@ -76,6 +77,7 @@ export class ContainerDetailsPage extends DetailsPage {
     this.exportPathInput = page.locator('#input-export-container-name');
     this.exportBrowseButton = page.getByLabel('Browse... output file');
     this.confirmExportButton = page.getByRole('button', { name: 'Export container', exact: true });
+    this.infraContainerBanner = this.tabContent.getByText(/This is an infra container that manages the pod/);
   }
 
   async getState(): Promise<string> {

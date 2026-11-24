@@ -20,6 +20,8 @@ import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
 import type {
+  ImageFilesystemLayersUI,
+  ImageInfo,
   ImageUpdateInfo,
   ImageUpdateResult,
   NotificationCardOptions,
@@ -28,7 +30,7 @@ import type {
 } from '@desktop-framework/api';
 import { ApiSenderType } from '@desktop-framework/api/api-sender';
 import type { PlayKubeInfo } from '@desktop-framework/api/libpod';
-import type { PullEvent } from '@desktop-framework/extension-api';
+import type { ImageChecks, PullEvent } from '@desktop-framework/extension-api';
 import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { Container as InversifyContainer } from 'inversify';
@@ -39,6 +41,7 @@ import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
 import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
 import type { TrayMenu } from '/@/tray-menu.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
 
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
@@ -46,10 +49,14 @@ import { ContainerProviderRegistry } from './container-registry.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
+import { ImageCheckerImpl } from './image-checker.js';
+import { ImageFilesRegistry } from './image-files-registry.js';
 import { ImageRegistry } from './image-registry.js';
 import type { LoggerWithEnd } from './index.js';
 import { PluginSystem } from './index.js';
 import { LockedConfiguration } from './locked-configuration.js';
+import { MacManagedConfiguration } from './mac-managed-configuration.js';
+import { ManagedConfiguration } from './managed-configuration.js';
 import type { MessageBox } from './message-box.js';
 import { NavigationManager } from './navigation/navigation-manager.js';
 import { ProviderRegistry } from './provider-registry.js';
@@ -83,6 +90,8 @@ function getHandler<T>(name: string): T {
   return handler as T;
 }
 
+vi.mock(import('/@/util.js'), { spy: true });
+vi.mock(import('./proxy-system.js'));
 vi.mock(import('/@/plugin/updater.js'), importOriginal => mockOriginalClass(importOriginal, 'Updater'));
 vi.mock(import('/@/plugin/extension/extension-loader.js'), importOriginal =>
   mockOriginalClass(importOriginal, 'ExtensionLoader'),
@@ -101,8 +110,14 @@ vi.mock(import('./navigation/navigation-manager.js'), importOriginal =>
 );
 vi.mock(import('./provider-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ProviderRegistry'));
 vi.mock(import('./image-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageRegistry'));
+vi.mock(import('./image-checker.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageCheckerImpl'));
+vi.mock(import('./image-files-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageFilesRegistry'));
+vi.mock(import('./mac-managed-configuration.js'), importOriginal =>
+  mockOriginalClass(importOriginal, 'MacManagedConfiguration'),
+);
 
 let pluginSystem: TestPluginSystem;
+const onConfigurationInit = vi.fn<(container: InversifyContainer) => void>();
 
 class TestPluginSystem extends PluginSystem {
   override async initConfigurationRegistry(
@@ -110,6 +125,8 @@ class TestPluginSystem extends PluginSystem {
     notifications: NotificationCardOptions[],
     configurationRegistryEmitter: Emitter<ConfigurationRegistry>,
   ): Promise<ConfigurationRegistry> {
+    onConfigurationInit(container);
+
     if (!container.isBound(ConfigurationRegistry)) {
       container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
     }
@@ -141,6 +158,9 @@ let webContents: WebContents;
 
 beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(isMac).mockReturnValue(false);
+  vi.mocked(isLinux).mockReturnValue(true);
+  vi.mocked(isWindows).mockReturnValue(false);
   handlers = new Map<string, unknown>();
 
   emitter = new EventEmitter();
@@ -163,6 +183,7 @@ beforeEach(async () => {
   vi.mocked(app.getVersion).mockReturnValue('100.0.0');
   vi.mocked(Updater.prototype.init).mockReturnValue(new Disposable(vi.fn()));
   vi.mocked(ExtensionLoader.prototype.listExtensions).mockResolvedValue([]);
+  vi.mocked(MacManagedConfiguration.prototype.getSettings).mockResolvedValue({ defaults: {}, user: {}, locked: [] });
 
   vi.mocked(ProviderRegistry.prototype.getProviderInfos).mockReturnValue([]);
   vi.mocked(ContainerProviderRegistry.prototype.listContainers).mockResolvedValue([]);
@@ -183,6 +204,46 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await inversifyContainer.unbindAllAsync();
+});
+
+test.each(['linux', 'windows'])('omit macOS configuration on %s', async platform => {
+  vi.mocked(isLinux).mockReturnValue(platform === 'linux');
+  vi.mocked(isWindows).mockReturnValue(platform === 'windows');
+  vi.mocked(MacManagedConfiguration.prototype.getSettings).mockClear();
+
+  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+
+  const container = onConfigurationInit.mock.lastCall?.[0];
+  assert(container);
+  expect(container.isBound(MacManagedConfiguration)).toBe(false);
+  expect(container.isBound(ManagedConfiguration)).toBe(false);
+  expect(MacManagedConfiguration.prototype.getSettings).not.toHaveBeenCalled();
+});
+
+test('apply macOS preferences before the registry event', async () => {
+  vi.mocked(isMac).mockReturnValue(true);
+  vi.mocked(isLinux).mockReturnValue(false);
+  vi.mocked(MacManagedConfiguration.prototype.getSettings).mockClear();
+  vi.mocked(MacManagedConfiguration.prototype.getSettings).mockResolvedValue({
+    defaults: { 'test.device': 'device' },
+    user: { 'test.device': 'user', 'test.user': 'user' },
+    locked: ['test.device'],
+  });
+  const configurationRegistryEmitter = new Emitter<ConfigurationRegistry>();
+  const onConfiguration = vi.fn();
+  configurationRegistryEmitter.event(registry => {
+    onConfiguration(registry.getConfiguration('test').get('device'), registry.getConfiguration('test').get('user'));
+  });
+
+  await pluginSystem.initExtensions(configurationRegistryEmitter);
+
+  expect(MacManagedConfiguration.prototype.getSettings).toHaveBeenCalledOnce();
+  expect(onConfiguration).toHaveBeenCalledWith('device', 'user');
+
+  const container = onConfigurationInit.mock.lastCall?.[0];
+  assert(container);
+  expect(container.get(ManagedConfiguration)).toBeInstanceOf(MacManagedConfiguration);
+  expect(container.get(ManagedConfiguration)).toBe(container.get(MacManagedConfiguration));
 });
 
 test('Should queue events until we are ready', async () => {
@@ -328,7 +389,47 @@ test('Check SecurityRestrictions on known domains', async () => {
   expect(shell.openExternal).toBeCalledWith('https://www.podman-desktop.io');
 });
 
-test('Check no securityRestrictions on open external files', async () => {
+test.each(['https://podman.io', 'https://docs.podman-desktop.io', 'http://localhost:8080', 'http://127.0.0.1'])(
+  'Check SecurityRestrictions skips confirmation for exact domain or subdomain %s',
+  async url => {
+    const showMessageBoxMock = vi.fn();
+    const messageBox = {
+      showMessageBox: showMessageBoxMock,
+    } as unknown as MessageBox;
+
+    await pluginSystem.setupSecurityRestrictionsOnLinks(messageBox);
+
+    const value = await securityRestrictionCurrentHandler.handler?.(url);
+    expect(value).toBeTruthy();
+
+    expect(showMessageBoxMock).not.toBeCalled();
+    expect(shell.openExternal).toBeCalledWith(url);
+  },
+);
+
+test.each([
+  'https://evilpodman.io',
+  'https://notlocalhost.com',
+  'https://evilpodman-desktop.io',
+  'https://podman.io.evil.com',
+])('Check SecurityRestrictions asks confirmation for look-alike domain %s', async url => {
+  const showMessageBoxMock = vi.fn();
+  const messageBox = {
+    showMessageBox: showMessageBoxMock,
+  } as unknown as MessageBox;
+
+  await pluginSystem.setupSecurityRestrictionsOnLinks(messageBox);
+
+  showMessageBoxMock.mockResolvedValue({ response: 'Cancel' });
+
+  const value = await securityRestrictionCurrentHandler.handler?.(url);
+  expect(value).toBeFalsy();
+
+  expect(showMessageBoxMock).toBeCalledWith(expect.objectContaining({ detail: url }));
+  expect(shell.openExternal).not.toBeCalled();
+});
+
+test('Check SecurityRestrictions asks confirmation on open external files', async () => {
   const showMessageBoxMock = vi.fn();
   const messageBox = {
     showMessageBox: showMessageBoxMock,
@@ -337,15 +438,14 @@ test('Check no securityRestrictions on open external files', async () => {
   // configure
   await pluginSystem.setupSecurityRestrictionsOnLinks(messageBox);
 
+  showMessageBoxMock.mockResolvedValue({ response: 'Cancel' });
+
   // call with a file link
   const value = await securityRestrictionCurrentHandler.handler?.('file:///foobar');
-  expect(value).toBeTruthy();
+  expect(value).toBeFalsy();
 
-  expect(showMessageBoxMock).not.toBeCalled();
-
-  // expect openExternal has been called
-  expect(shell.openExternal).toBeCalledWith(expect.stringContaining('file://'));
-  expect(shell.openExternal).toBeCalledWith(expect.stringContaining('foobar'));
+  expect(showMessageBoxMock).toBeCalledWith(expect.objectContaining({ detail: 'file:///foobar' }));
+  expect(shell.openExternal).not.toBeCalled();
 });
 
 test('Should apiSender handle local receive events', async () => {
@@ -739,7 +839,11 @@ describe.each<{
 
 describe.each<{
   handler: string;
-  methodName: 'startProviderConnection' | 'stopProviderConnection' | 'deleteProviderConnection';
+  methodName:
+    | 'startProviderConnection'
+    | 'stopProviderConnection'
+    | 'restartProviderConnection'
+    | 'deleteProviderConnection';
   expectedTitle: string;
   expectedActionName: string;
   expectedError: string;
@@ -757,6 +861,13 @@ describe.each<{
     expectedTitle: 'Stopping name1',
     expectedActionName: 'Go to task >',
     expectedError: 'Something went wrong while stopping container provider: Error: an error',
+  },
+  {
+    handler: 'provider-registry:restartProviderConnectionLifecycle',
+    methodName: 'restartProviderConnection',
+    expectedTitle: 'Restarting name1',
+    expectedActionName: 'Go to task >',
+    expectedError: 'Something went wrong while restarting container provider: Error: an error',
   },
   {
     handler: 'provider-registry:deleteProviderConnectionLifecycle',
@@ -1321,15 +1432,21 @@ describe('updateImages handler', () => {
     });
     expect(task.state).toBe('completed');
     expect(task.status).toBe('success');
-    expect(task.name).toBe('Image update: nginx: Image updated successfully; redis: Already up to date');
+    expect(task.name).toBe('Image update: 1 updated, 1 up to date');
   });
 
   test.each([
-    { status: 'updated', updated: true, message: 'Image updated successfully', taskStatus: 'success' },
-    { status: 'normal', updated: false, message: 'Already up to date', taskStatus: 'success' },
-    { status: 'skipped', updated: false, message: 'Image has no tags', taskStatus: 'success' },
-    { status: 'error', updated: false, message: 'Registry unavailable', taskStatus: 'failure' },
-  ] as const)('records a single-image $status result in the task', async ({ status, updated, message, taskStatus }) => {
+    {
+      status: 'updated',
+      updated: true,
+      message: 'Image updated successfully',
+      taskStatus: 'success',
+      summary: '1 updated',
+    },
+    { status: 'normal', updated: false, message: 'Already up to date', taskStatus: 'success', summary: '1 up to date' },
+    { status: 'skipped', updated: false, message: 'Image has no tags', taskStatus: 'success', summary: '1 skipped' },
+    { status: 'error', updated: false, message: 'Registry unavailable', taskStatus: 'failure', summary: '1 failed' },
+  ] as const)('records a $status result', async ({ status, updated, message, taskStatus, summary }) => {
     const handle = getHandler<UpdateImagesHandler>('container-provider-registry:updateImages');
     const results: ImageUpdateResult[] = [{ imageRef: 'nginx:latest', status, updated, message }];
     const { promise, resolve } = Promise.withResolvers<ImageUpdateResult[]>();
@@ -1350,7 +1467,7 @@ describe('updateImages handler', () => {
 
     expect(task.state).toBe('completed');
     expect(task.status).toBe(taskStatus);
-    expect(task.name).toBe(`Image update: nginx:latest: ${message}`);
+    expect(task.name).toBe(`Image update: ${summary}`);
     if (taskStatus === 'failure') {
       expect(task.error).toBe('nginx:latest: Registry unavailable');
     } else {
@@ -1358,12 +1475,15 @@ describe('updateImages handler', () => {
     }
   });
 
-  test('marks partial failures as failed while preserving every tag result', async () => {
+  test('summarizes tag outcomes and includes details only for failures', async () => {
     const handle = getHandler<UpdateImagesHandler>('container-provider-registry:updateImages');
     const results: ImageUpdateResult[] = [
       { imageRef: 'nginx:latest', updated: true, status: 'updated', message: 'Updated' },
+      { imageRef: 'nginx:alpine', updated: true, status: 'updated', message: 'Updated' },
       { imageRef: 'nginx:stable', updated: false, status: 'normal', message: 'Already up to date' },
+      { imageRef: 'sha256:untagged', updated: false, status: 'skipped', message: 'Image has no tags' },
       { imageRef: 'other:latest', updated: false, status: 'error', message: 'Registry unavailable' },
+      { imageRef: 'private:latest', updated: false, status: 'error', message: 'Unauthorized' },
     ];
     vi.mocked(ContainerProviderRegistry.prototype.updateImages).mockResolvedValue(results);
 
@@ -1371,10 +1491,8 @@ describe('updateImages handler', () => {
 
     expect(task.state).toBe('completed');
     expect(task.status).toBe('failure');
-    expect(task.error).toBe('other:latest: Registry unavailable');
-    expect(task.name).toBe(
-      'Image update: nginx:latest: Updated; nginx:stable: Already up to date; other:latest: Registry unavailable',
-    );
+    expect(task.error).toBe('other:latest: Registry unavailable\nprivate:latest: Unauthorized');
+    expect(task.name).toBe('Image update: 2 updated, 1 up to date, 1 skipped, 2 failed');
   });
 
   test('completes the task when no results are returned', async () => {
@@ -1588,4 +1706,102 @@ test('navigation:getSearchableRoutes handler should delegate to navigationManage
 
   expect(NavigationManager.prototype.getSearchableRoutes).toHaveBeenCalled();
   expect(result).toEqual({ result: mockRoutes });
+});
+
+describe('image handlers resolving the image by engine and image id', () => {
+  const fakeImage: ImageInfo = {
+    Id: 'sha256:abc',
+    ParentId: '',
+    RepoTags: ['quay.io/podman/hello:latest'],
+    Created: 0,
+    Size: 0,
+    VirtualSize: 0,
+    SharedSize: 0,
+    Labels: {},
+    Containers: 0,
+    engineId: 'podman.podman',
+    engineName: 'podman',
+    engineType: 'podman',
+    Digest: 'sha256:abc',
+  };
+
+  type ImageHandler<T> = (
+    _listener: unknown,
+    id: string,
+    engineId: string,
+    imageId: string,
+    tokenId?: number,
+  ) => Promise<{ result?: T; error?: Error }>;
+
+  test('image-checker:check resolves the image and delegates to the checker', async () => {
+    const fakeChecks: ImageChecks = { checks: [] };
+    vi.mocked(ContainerProviderRegistry.prototype.getImageInfo).mockResolvedValue(fakeImage);
+    vi.mocked(ImageCheckerImpl.prototype.check).mockResolvedValue(fakeChecks);
+
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
+    const { result: tokenId } = await createTokenHandler();
+    const handle = getHandler<ImageHandler<ImageChecks>>('image-checker:check');
+
+    const result = await handle(undefined, 'provider1', 'podman.podman', 'sha256:abc', tokenId);
+
+    expect(ContainerProviderRegistry.prototype.getImageInfo).toHaveBeenCalledExactlyOnceWith(
+      'podman.podman',
+      'sha256:abc',
+    );
+    expect(ImageCheckerImpl.prototype.check).toHaveBeenCalledExactlyOnceWith(
+      'provider1',
+      fakeImage,
+      expect.objectContaining({ isCancellationRequested: false }),
+    );
+    expect(result.result).toEqual(fakeChecks);
+  });
+
+  test('image-checker:check returns the error when the image is not found', async () => {
+    vi.mocked(ContainerProviderRegistry.prototype.getImageInfo).mockRejectedValue(
+      new Error('Image sha256:abc not found on engine podman.podman'),
+    );
+    const handle = getHandler<ImageHandler<ImageChecks>>('image-checker:check');
+
+    const result = await handle(undefined, 'provider1', 'podman.podman', 'sha256:abc');
+
+    assert(result.error instanceof Error);
+    expect(result.error.message).toBe('Image sha256:abc not found on engine podman.podman');
+    expect(ImageCheckerImpl.prototype.check).not.toHaveBeenCalled();
+  });
+
+  test('image-files:getFilesystemLayers resolves the image and delegates to the registry', async () => {
+    const fakeLayers: ImageFilesystemLayersUI = { layers: [] };
+    vi.mocked(ContainerProviderRegistry.prototype.getImageInfo).mockResolvedValue(fakeImage);
+    vi.mocked(ImageFilesRegistry.prototype.getFilesystemLayers).mockResolvedValue(fakeLayers);
+
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
+    const { result: tokenId } = await createTokenHandler();
+    const handle = getHandler<ImageHandler<ImageFilesystemLayersUI>>('image-files:getFilesystemLayers');
+
+    const result = await handle(undefined, 'provider1', 'podman.podman', 'sha256:abc', tokenId);
+
+    expect(ContainerProviderRegistry.prototype.getImageInfo).toHaveBeenCalledExactlyOnceWith(
+      'podman.podman',
+      'sha256:abc',
+    );
+    expect(ImageFilesRegistry.prototype.getFilesystemLayers).toHaveBeenCalledExactlyOnceWith(
+      'provider1',
+      fakeImage,
+      expect.objectContaining({ isCancellationRequested: false }),
+    );
+    expect(result.result).toEqual(fakeLayers);
+  });
+
+  test('image-files:getFilesystemLayers returns the error when the image is not found', async () => {
+    vi.mocked(ContainerProviderRegistry.prototype.getImageInfo).mockRejectedValue(
+      new Error('Image sha256:abc not found on engine podman.podman'),
+    );
+    const handle = getHandler<ImageHandler<ImageFilesystemLayersUI>>('image-files:getFilesystemLayers');
+
+    const result = await handle(undefined, 'provider1', 'podman.podman', 'sha256:abc');
+
+    assert(result.error instanceof Error);
+    expect(result.error.message).toBe('Image sha256:abc not found on engine podman.podman');
+    expect(ImageFilesRegistry.prototype.getFilesystemLayers).not.toHaveBeenCalled();
+  });
 });

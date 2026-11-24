@@ -146,12 +146,13 @@ onMount(async () => {
   for (let field of configurationKeys) {
     const id = field.id;
     if (id) {
-      data[id] = field.default;
+      data[id] = existingFormData?.[id] ?? field.default;
     }
   }
   if (!connectionInfo) {
     try {
       connectionAuditResult = await window.auditConnectionParameters(providerInfo.internalId, data);
+      isValid = connectionAuditResult.records.filter(record => record.type === 'error').length === 0;
     } catch (e: unknown) {
       console.warn(e && typeof e === 'object' && 'message' in e ? e.message : e);
     }
@@ -582,7 +583,9 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
                   {#if configurationKey.description}
                     {configurationKey.description}:
                   {:else if configurationKey.markdownDescription && configurationKey.type !== 'markdown'}
-                    <Markdown markdown={configurationKey.markdownDescription} />
+                    <div class="[&>section]:pb-0 [&_p]:text-inherit">
+                      <Markdown markdown={configurationKey.markdownDescription} />
+                    </div>
                   {/if}
                   {#if configurationKey.format === 'memory' || configurationKey.format === 'diskSize' || configurationKey.format === 'cpu'}
                     <div class="text-[var(--pd-content-text)]">

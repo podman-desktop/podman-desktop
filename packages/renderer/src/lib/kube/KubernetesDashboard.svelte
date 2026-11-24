@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { IDisposable, ResourceCount } from '@desktop-framework/api';
 import type { KubernetesObject } from '@kubernetes/client-node';
-import { Expandable, Link } from '@podman-desktop/ui-svelte';
+import { Expandable } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import { listenActiveResourcesCount } from '/@/lib/kube/active-resources-count-listen';
@@ -172,10 +172,6 @@ const activeCounts = $derived.by(() => {
     };
   }
 });
-
-async function openKubernetesDocumentation(): Promise<void> {
-  await window.openExternal('https://podman-desktop.io/docs/kubernetes');
-}
 </script>
 
 <div class="flex flex-col w-full h-full">
@@ -197,7 +193,6 @@ async function openKubernetesDocumentation(): Promise<void> {
             <div>Here you can manage and interact with Kubernetes clusters with features like connecting to clusters, and
               viewing workloads like deployments and services.</div>
             <div>Get up and running by clicking one of the menu items!</div>
-            <div><Link class="place-self-start" on:click={openKubernetesDocumentation}>Kubernetes documentation</Link></div>
           </div>
         </Expandable>
        </div>

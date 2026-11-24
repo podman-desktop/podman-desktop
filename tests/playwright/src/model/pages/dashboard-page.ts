@@ -19,6 +19,7 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import { ListOrganizerComponent } from '/@/model/components/list-organizer-component';
 import type { PodmanVirtualizationProviders } from '/@/model/core/types';
 
 import { BasePage } from './base-page';
@@ -55,6 +56,11 @@ export class DashboardPage extends BasePage {
   readonly errorDetailsButton: Locator;
   readonly noContainerEngineLabel: Locator;
   readonly k8sVmConnectionLabel: Locator;
+
+  // layout manager
+  readonly layoutOrganizer: ListOrganizerComponent;
+  readonly learningCenterSection: Locator;
+  readonly exploreFeaturesSection: Locator;
 
   // contants
   readonly ACTUAL_STATE = 'Actual State';
@@ -96,6 +102,25 @@ export class DashboardPage extends BasePage {
       'No container engine (machine) created yet. Create one to run containers and pods.',
     );
     this.k8sVmConnectionLabel = this.systemOverview.getByText('Kubernetes/VM connections:');
+
+    // Layout manager
+    this.layoutOrganizer = new ListOrganizerComponent(
+      page,
+      this.header,
+      'Configure Dashboard Sections',
+      'Reset Layout',
+    );
+    this.learningCenterSection = this.content.getByRole('button', { name: 'Learning Center', exact: true });
+    this.exploreFeaturesSection = this.content.getByRole('button', { name: 'Explore Features', exact: true });
+  }
+
+  public async isSectionAbove(upperSection: Locator, lowerSection: Locator): Promise<boolean> {
+    const upperBox = await upperSection.boundingBox();
+    const lowerBox = await lowerSection.boundingBox();
+    if (!upperBox || !lowerBox) {
+      return false;
+    }
+    return upperBox.y < lowerBox.y;
   }
 
   getNavigateToConnectionButton(connectionName: string): Locator {

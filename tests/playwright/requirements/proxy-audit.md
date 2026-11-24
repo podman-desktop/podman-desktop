@@ -45,14 +45,13 @@ of these end-to-end against a local logging-only stub proxy.
 | --- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------ |
 | 10  | `extensions/podman/packages/extension/src/extension.ts:2180` `createMachine()` -> `podman machine init` | Downloads the machine's base VM disk image               | "Create new Podman machine" wizard (onboarding or Settings > Resources) | Untested - depends on `podman`/`gvproxy`'s own proxy support |
 | 11  | `extensions/kind/src/create-cluster.ts:318` -> `kind create cluster`                                    | Pulls the kind node image via kind's embedded containerd | Kubernetes > **"Create a Kind Cluster"** dialog                         | Untested - depends on `kind`'s embedded runtime              |
-| 12  | `extensions/lima/src/limactl.ts` -> `limactl` subprocess                                                | Downloads Lima VM base images                            | Lima VM creation flow (macOS only)                                      | Untested - depends on `limactl`                              |
 
 ## Confirmed NOT proxied (real product gaps, found via live E2E runs)
 
 | #   | Code                                                                                           | What it does                                                   | UI trigger                                                | Status                                                                                                                                                                                                                                        |
 | --- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 13  | `packages/main/src/plugin/kubernetes/*.ts` (`@kubernetes/client-node`)                         | Kubernetes API calls (context reachability, resource browsing) | Settings > Kubernetes contexts; Kubernetes resource pages | Confirmed bypasses proxy entirely - raw DNS lookup failure observed (`getaddrinfo ENOTFOUND`), no proxy wiring anywhere in this code                                                                                                          |
-| 14  | `packages/main/src/plugin/container-registry.ts` `pullImage()` -> Podman engine's own REST API | Actual image/container pulls                                   | Images > "Pull an Image"                                  | Confirmed doesn't reach a host-bound proxy - the pull happens inside the Podman machine's own VM/network namespace; proxy settings only propagate there after a machine restart, and even then need the VM's gateway address, not `127.0.0.1` |
+| 12  | `packages/main/src/plugin/kubernetes/*.ts` (`@kubernetes/client-node`)                         | Kubernetes API calls (context reachability, resource browsing) | Settings > Kubernetes contexts; Kubernetes resource pages | Confirmed bypasses proxy entirely - raw DNS lookup failure observed (`getaddrinfo ENOTFOUND`), no proxy wiring anywhere in this code                                                                                                          |
+| 13  | `packages/main/src/plugin/container-registry.ts` `pullImage()` -> Podman engine's own REST API | Actual image/container pulls                                   | Images > "Pull an Image"                                  | Confirmed doesn't reach a host-bound proxy - the pull happens inside the Podman machine's own VM/network namespace; proxy settings only propagate there after a machine restart, and even then need the VM's gateway address, not `127.0.0.1` |
 
 ## Not real outbound network calls (proxy irrelevant)
 
@@ -122,7 +121,7 @@ settings are correct and usable, just not applied on the very first Manual switc
 
 ### Bug 2 (tracked upstream): image pulls never see the proxy even after a machine restart
 
-Row 14's `test.skip()` links to
+Row 13's `test.skip()` links to
 [podman-desktop#17249](https://github.com/podman-desktop/podman-desktop/issues/17249): the proxy
 env is only written into the VM's systemd config during `podman machine start` (via SSH), but the
 Podman user service inside the VM starts before that SSH session is available, so it boots with the

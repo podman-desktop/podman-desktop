@@ -96,6 +96,34 @@ test('should expect icon to be ContainerIcon if no context/view is passed', asyn
   expect(typeof imageinfoUIs[0].icon !== 'string').toBe(true);
 });
 
+test('should return untagged row when RepoTags is empty array', async () => {
+  const imageInfo = {
+    Id: 'sha256:dangling1234567890',
+    Size: 456,
+    RepoTags: [],
+  } as unknown as ImageInfo;
+  const imageinfoUIs = imageUtils.getImagesInfoUI(imageInfo, []);
+  expect(imageinfoUIs).toHaveLength(1);
+  expect(imageinfoUIs[0].name).toBe('<none>');
+  expect(imageinfoUIs[0].tag).toBe('');
+  expect(imageinfoUIs[0].status).toBe('UNUSED');
+});
+
+test('should describe an image carrying no repo tag as <none>', async () => {
+  // an image pulled by digest, or left untagged by a retag, reports an empty RepoTags
+  const imageInfo = {
+    Id: 'sha256:1234',
+    Size: 123,
+    RepoTags: [],
+    RepoDigests: ['docker.io/library/alpine@sha256:abc'],
+  } as unknown as ImageInfo;
+
+  const imageInfoUIs = imageUtils.getImagesInfoUI(imageInfo, []);
+  expect(imageInfoUIs).toHaveLength(1);
+  expect(imageInfoUIs[0].name).toBe('<none>');
+  expect(imageInfoUIs[0].tag).toBe('');
+});
+
 test('check parsing of image info without labels', async () => {
   const context = new ContextUI();
   const imageInfo = {
@@ -217,6 +245,27 @@ describe('inUse', () => {
   test('should not expect inUse with empty containers list', async () => {
     const isUsed = imageUtils.getInUse(imageInfoHello, 'quay.io/podman/hello:latest', []);
     expect(isUsed).toBeFalsy();
+  });
+
+  test.each([
+    ['engine-a', true],
+    ['engine-b', false],
+  ])('should evaluate inUse when container runs on %s (expected: %s)', async (containerEngineId, expected) => {
+    const imageOnEngineA = {
+      Id: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
+      RepoTags: ['quay.io/podman/hello:latest'],
+      engineId: 'engine-a',
+    } as unknown as ImageInfo;
+
+    const container = {
+      Id: 'container1',
+      image: 'quay.io/podman/hello:latest',
+      imageId: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
+      engineId: containerEngineId,
+    } as unknown as ContainerInfoUI;
+
+    const isUsed = imageUtils.getInUse(imageOnEngineA, 'quay.io/podman/hello:latest', [container]);
+    expect(isUsed).toBe(expected);
   });
 });
 

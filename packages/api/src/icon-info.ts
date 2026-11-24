@@ -31,17 +31,31 @@ export interface IconInfo {
   definition: IconDefinition;
 }
 
-export const IconsContributionSchema = z.record(
-  z.string(),
-  z.object({
-    description: z.string().optional(),
-    default: z
-      .object({
-        fontPath: z.string().optional(),
-        fontCharacter: z.string(),
-      })
-      .optional(),
-  }),
-);
+// values below are written into a stylesheet by the renderer: they must not be able to end a CSS string or selector
+
+// letters, digits, '-' and '_'
+export const IconIdSchema = z.string().regex(/^[\w-]+$/, 'icon id may only contain letters, digits, "-" and "_"');
+
+export const IconContributionSchema = z.object({
+  description: z.string().optional(),
+  default: z
+    .object({
+      // letters, digits, spaces, '-', '_', '.' and '/'
+      fontPath: z
+        .string()
+        .regex(/^[\w ./-]+$/, 'fontPath may only contain letters, digits, spaces, "-", "_", "." and "/"')
+        .optional(),
+      // a CSS escape such as \EA01, or a single character other than a backslash, a quote or a control character
+      fontCharacter: z
+        .string()
+        .regex(
+          /^(?:\\[0-9a-fA-F]{1,6}|[^\\'"\p{Cc}])$/u,
+          'fontCharacter must be a CSS escape such as \\EA01 or a single character',
+        ),
+    })
+    .optional(),
+});
+
+export const IconsContributionSchema = z.record(IconIdSchema, IconContributionSchema);
 
 export type IconsContribution = z.output<typeof IconsContributionSchema>;

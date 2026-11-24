@@ -45,7 +45,7 @@ name: e2e-full-pr
 on:
   # pull_request_target is used so that the workflow always runs in the
   # context of the base (upstream) repo, giving it full access to its
-  # secrets — including PODMANDESKTOP_CI_BOT_TOKEN — even when the PR
+  # secrets — including PODMAN_DESKTOP_BOT_TOKEN — even when the PR
   # originates from a fork.  It is safe here because the workflow never
   # checks out or executes any code from the PR branch.
   pull_request_target:
@@ -78,20 +78,18 @@ jobs:
     steps:
       - name: Check token availability
         env:
-          TOKEN: ${{ secrets.PODMANDESKTOP_CI_BOT_TOKEN }}
+          TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
         run: |
           if [ -z "${TOKEN}" ]; then
-            echo "::error::PODMANDESKTOP_CI_BOT_TOKEN is not available."
-            echo "This workflow dispatches cross-repo and requires a bot token."
-            echo "GitHub does not pass secrets to pull_request workflows from forks."
-            echo "Once this workflow is merged to main it will be migrated to"
-            echo "pull_request_target which has access to secrets for fork PRs too."
+            echo "::error::PODMAN_DESKTOP_BOT_TOKEN is not available."
+            echo "This workflow dispatches cross-repo and requires a bot token"
+            echo "with write access to podman-desktop/e2e."
             exit 1
           fi
 
       - name: Trigger and watch HyperV E2E workflow in podman-desktop/e2e
         env:
-          GH_TOKEN: ${{ secrets.PODMANDESKTOP_CI_BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
           # PR context is passed through env vars rather than being interpolated
           # directly into the script, preventing shell injection via crafted
           # branch or fork names.
@@ -137,20 +135,18 @@ jobs:
     steps:
       - name: Check token availability
         env:
-          TOKEN: ${{ secrets.PODMANDESKTOP_CI_BOT_TOKEN }}
+          TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
         run: |
           if [ -z "${TOKEN}" ]; then
-            echo "::error::PODMANDESKTOP_CI_BOT_TOKEN is not available."
-            echo "This workflow dispatches cross-repo and requires a bot token."
-            echo "GitHub does not pass secrets to pull_request workflows from forks."
-            echo "Once this workflow is merged to main it will be migrated to"
-            echo "pull_request_target which has access to secrets for fork PRs too."
+            echo "::error::PODMAN_DESKTOP_BOT_TOKEN is not available."
+            echo "This workflow dispatches cross-repo and requires a bot token"
+            echo "with write access to podman-desktop/e2e."
             exit 1
           fi
 
       - name: Trigger and watch WSL E2E workflow in podman-desktop/e2e
         env:
-          GH_TOKEN: ${{ secrets.PODMANDESKTOP_CI_BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
           # PR context is passed through env vars rather than being interpolated
           # directly into the script, preventing shell injection via crafted
           # branch or fork names.

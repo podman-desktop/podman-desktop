@@ -42,7 +42,7 @@ export class StatusBar extends BasePage {
       'Kind not found on your system, click to download and install it',
     );
     this.kubernetesContext = this.content.getByTitle('Current Kubernetes Context');
-    this.versionButton = this.content.getByRole('button', { name: /^v\d+\.\d+\.\d+(-\w+)?$/ });
+    this.versionButton = this.content.getByRole('button', { name: /^v\d+\.\d+\.\d+(-\w+)?(.\d+)?.*$/ });
     this.updateButtonTitle = this.content.getByRole('button').and(this.content.getByTitle('Update available'));
     this.shareYourFeedbackButton = this.content.getByRole('button').and(this.content.getByTitle('Share your feedback'));
     this.troubleshootingButton = this.content.getByRole('button').and(this.content.getByTitle('Troubleshooting'));
@@ -76,7 +76,7 @@ export class StatusBar extends BasePage {
   }
 
   public async getProviderButton(providerName: string): Promise<Locator> {
-    await playExpect(this.pinProvidersButton, 'status bar providers must be turned on').toBeVisible();
+    await playExpect(this.pinProvidersButton, 'status bar must have pinnable providers').toBeVisible();
     return this.content.getByRole('button', { name: providerName, exact: true });
   }
 

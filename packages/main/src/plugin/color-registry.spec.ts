@@ -344,6 +344,23 @@ test('initContent registers content-sub-header with high contrast values', async
   }
 });
 
+test('initContent registers the dashboard card colors, white in the light theme', async () => {
+  colorRegistry.initColors();
+
+  const expected = {
+    light: tailwindColorPalette.white,
+    dark: tailwindColorPalette.charcoal[600],
+    'hc-light': tailwindColorPalette.accent1[50],
+    'hc-dark': tailwindColorPalette.neutral[800],
+  };
+  for (const id of ['content-dashboard-card-bg', 'content-dashboard-card-hover-bg']) {
+    for (const [theme, value] of Object.entries(expected)) {
+      const color = colorRegistry.listColors(theme).find(c => c.id === id);
+      expect(color?.value, `${id} ${theme}`).toBe(value);
+    }
+  }
+});
+
 test('initDropdown registers dropdown-border', async () => {
   colorRegistry.initColors();
 
@@ -356,6 +373,31 @@ test('initDropdown registers dropdown-border', async () => {
   const dropdownBorderDark = colorsDark.find(c => c.id === 'dropdown-border');
   expect(dropdownBorderDark).toBeDefined();
   expect(dropdownBorderDark?.value).toBe('transparent');
+});
+
+test('initDropdown registers dropdown-separator and dropdown-label-text', async () => {
+  colorRegistry.initColors();
+
+  const expected = {
+    'dropdown-separator': {
+      light: tailwindColorPalette.gray[600],
+      dark: tailwindColorPalette.charcoal[400],
+      'hc-light': tailwindColorPalette.black,
+      'hc-dark': tailwindColorPalette.white,
+    },
+    'dropdown-label-text': {
+      light: tailwindColorPalette.charcoal[100],
+      dark: tailwindColorPalette.gray[800],
+      'hc-light': tailwindColorPalette.black,
+      'hc-dark': tailwindColorPalette.white,
+    },
+  };
+  for (const [id, themes] of Object.entries(expected)) {
+    for (const [theme, value] of Object.entries(themes)) {
+      const color = colorRegistry.listColors(theme).find(c => c.id === id);
+      expect(color?.value, `${id} ${theme}`).toBe(value);
+    }
+  }
 });
 
 describe('registerColor', () => {

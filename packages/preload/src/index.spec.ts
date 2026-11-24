@@ -263,6 +263,44 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     expect(result).toEqual([{ routeId: 'ext.dashboard', label: 'Dashboard', icon: 'icon.png' }]);
   });
 
+  test('imageCheck', async () => {
+    const checks = { checks: [] };
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: checks });
+
+    const imageCheckExposure = getInMainWorld('imageCheck');
+
+    const result = await imageCheckExposure('provider1', 'podman.podman', 'sha256:abc', 42);
+
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith(
+      'image-checker:check',
+      'provider1',
+      'podman.podman',
+      'sha256:abc',
+      42,
+    );
+
+    expect(result).toEqual(checks);
+  });
+
+  test('imageGetFilesystemLayers', async () => {
+    const layers = { layers: [] };
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: layers });
+
+    const imageGetFilesystemLayersExposure = getInMainWorld('imageGetFilesystemLayers');
+
+    const result = await imageGetFilesystemLayersExposure('provider1', 'podman.podman', 'sha256:abc', 42);
+
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith(
+      'image-files:getFilesystemLayers',
+      'provider1',
+      'podman.podman',
+      'sha256:abc',
+      42,
+    );
+
+    expect(result).toEqual(layers);
+  });
+
   test('logger passed to createVmProviderConnection is called during provider-registry:taskConnection-onData', async () => {
     vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
     const createVmProviderConnectionExposure = getInMainWorld('createVmProviderConnection');
@@ -283,6 +321,25 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     const logger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void = vi.fn();
     await startProviderConnectionLifecycleExposure('internal', {}, 'key1', logger);
     expect(ipcRenderer.invoke).toHaveBeenCalledOnce();
+
+    const id = vi.mocked(ipcRenderer.invoke).mock.calls[0][3];
+    const taskConnectionOnDataExposure = getRendererOn('provider-registry:taskConnection-onData');
+    const data = { data: 'data' };
+    taskConnectionOnDataExposure({} as IpcRendererEvent, id, 'log', data);
+    expect(logger).toHaveBeenCalledWith('key1', 'log', data);
+  });
+
+  test('logger passed to restartProviderConnectionLifecycle is called during provider-registry:taskConnection-onData', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+    const restartProviderConnectionLifecycleExposure = getInMainWorld('restartProviderConnectionLifecycle');
+    const logger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void = vi.fn();
+    await restartProviderConnectionLifecycleExposure('internal', {}, 'key1', logger);
+    expect(ipcRenderer.invoke).toHaveBeenCalledExactlyOnceWith(
+      'provider-registry:restartProviderConnectionLifecycle',
+      'internal',
+      {},
+      expect.any(Number),
+    );
 
     const id = vi.mocked(ipcRenderer.invoke).mock.calls[0][3];
     const taskConnectionOnDataExposure = getRendererOn('provider-registry:taskConnection-onData');

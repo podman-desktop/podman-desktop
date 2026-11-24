@@ -31,17 +31,23 @@ import { VirtualizationFirmwareCheck } from '/@/checks/windows/virtualization-fi
 import { WinBitCheck } from '/@/checks/windows/win-bit-check';
 import { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
 import { WinVersionCheck } from '/@/checks/windows/win-version-check';
+import { WSLPodmanVersionCheck } from '/@/checks/windows/wsl-podman-version-check';
 import { WSLVersionCheck } from '/@/checks/windows/wsl-version-check';
 import { WSL2Check } from '/@/checks/windows/wsl2-check';
 import { PodmanCleanupMacOS } from '/@/cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
+import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
+import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
+import { WslHelper } from '/@/helpers/wsl-helper';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { PodmanInstall } from '/@/installer/podman-install';
 import { WinInstaller } from '/@/installer/win-installer';
 import { WinPlatform } from '/@/platforms/win-platform';
 import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
+import { WSLPodmanVersionNotification } from '/@/platforms/windows/wsl-podman-version-notification';
 import { PodmanProvider } from '/@/providers/podman-provider';
+import { ExtensionNotifications } from '/@/utils/notifications';
 import { PodmanBinary } from '/@/utils/podman-binary';
 import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 import { PodmanWindowsLegacyInstaller } from '/@/utils/podman-windows-legacy-installer';
@@ -77,8 +83,10 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(HyperVCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(VirtualizationFirmwareCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(VirtualMachinePlatformCheck).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(WslHelper).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WSLVersionCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WSL2Check).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(WSLPodmanVersionCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(HyperVRunningCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(HyperVInstalledCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(UserAdminCheck).toSelf().inSingletonScope();
@@ -86,15 +94,19 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(PodmanDesktopElevatedCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(PodmanProvider).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(RosettaProvisioner).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(ExtensionNotifications).toSelf().inSingletonScope();
 
     if (envAPI.isWindows) {
       this.#inversifyContainer.bind(Installer).to(WinInstaller).inSingletonScope();
       this.#inversifyContainer.bind(ProviderCleanupSymbol).to(PodmanCleanupWindows).inSingletonScope();
       this.#inversifyContainer.bind(HyperVPrep).toSelf().inSingletonScope();
       this.#inversifyContainer.bind(StartupSymbol).toService(HyperVPrep);
+      this.#inversifyContainer.bind(WSLPodmanVersionNotification).toSelf().inSingletonScope();
+      this.#inversifyContainer.bind(StartupSymbol).toService(WSLPodmanVersionNotification);
     } else if (envAPI.isMac) {
       this.#inversifyContainer.bind(Installer).to(MacOSInstaller).inSingletonScope();
       this.#inversifyContainer.bind(ProviderCleanupSymbol).to(PodmanCleanupMacOS).inSingletonScope();
+      this.#inversifyContainer.bind(SocketCompatibility).to(DarwinSocketCompatibility).inSingletonScope();
     }
 
     // instantiate all startup services

@@ -56,6 +56,7 @@ import type {
   ImageInfo,
   ImageInspectInfo,
   ImageLoadOptions,
+  ImageLocation,
   ImageSearchOptions,
   ImageSearchResult,
   ImagesSaveOptions,
@@ -152,7 +153,7 @@ import type {
   V1Secret,
   V1Service,
 } from '@kubernetes/client-node';
-import checkDiskSpacePkg from 'check-disk-space';
+import { checkDiskSpace } from 'check-disk-space';
 import type Dockerode from 'dockerode';
 import type { IpcMainEvent } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
@@ -169,6 +170,8 @@ import { ExtensionsExternal } from '/@/plugin/extension/local/extensions-externa
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
+import { MacManagedConfiguration } from '/@/plugin/mac-managed-configuration.js';
+import { ManagedConfiguration } from '/@/plugin/managed-configuration.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
@@ -218,6 +221,7 @@ import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension/extension-development-folders.js';
 import { ExtensionInstaller } from './extension/extension-installer.js';
+import { ExtensionPlatformService } from './extension/extension-platform.js';
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
 import { FeedbackHandler } from './feedback-handler.js';
@@ -244,7 +248,6 @@ import { RegistryInit } from './registry-init.js';
 import { ReleaseNotesBannerInit } from './release-notes-banner-init.js';
 import { SafeStorageRegistry } from './safe-storage/safe-storage-registry.js';
 import { PinRegistry } from './statusbar/pin-registry.js';
-import { StatusbarProvidersInit } from './statusbar/statusbar-providers-init.js';
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
@@ -263,11 +266,6 @@ import { ViewRegistry } from './view-registry.js';
 import { DevToolsManager } from './webview/devtools-manager.js';
 import { WebviewRegistry } from './webview/webview-registry.js';
 import { WelcomeInit } from './welcome/welcome-init.js';
-
-// workaround for ESM
-const checkDiskSpace: (path: string) => Promise<{ free: number }> = checkDiskSpacePkg as unknown as (
-  path: string,
-) => Promise<{ free: number }>;
 
 export const UPDATER_UPDATE_AVAILABLE_ICON = 'fa fa-exclamation-triangle';
 
@@ -506,10 +504,10 @@ export class PluginSystem {
       const urlObject = new URL(url);
       const validDomains = ['podman-desktop.io', 'podman.io', 'localhost', '127.0.0.1'];
       const skipConfirmationUrl = validDomains.some(
-        domain => urlObject.hostname.endsWith(domain) || urlObject.hostname === domain,
+        domain => urlObject.hostname === domain || urlObject.hostname.endsWith(`.${domain}`),
       );
 
-      if (skipConfirmationUrl || urlObject.protocol === 'file:') {
+      if (skipConfirmationUrl) {
         await shell.openExternal(url);
         return true;
       }
@@ -584,6 +582,10 @@ export class PluginSystem {
     container.bind<DefaultConfiguration>(DefaultConfiguration).toSelf().inSingletonScope();
     container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
     container.bind<LockedConfiguration>(LockedConfiguration).toSelf().inSingletonScope();
+    if (isMac()) {
+      container.bind<MacManagedConfiguration>(MacManagedConfiguration).toSelf().inSingletonScope();
+      container.bind<ManagedConfiguration>(ManagedConfiguration).toService(MacManagedConfiguration);
+    }
     container.bind<IConfigurationRegistry>(IConfigurationRegistry).toService(ConfigurationRegistry);
     const configurationRegistry = await this.initConfigurationRegistry(
       container,
@@ -657,10 +659,6 @@ export class PluginSystem {
     container.bind<DockerCompatibility>(DockerCompatibility).toSelf().inSingletonScope();
     const dockerCompatibility = container.get<DockerCompatibility>(DockerCompatibility);
     dockerCompatibility.init();
-
-    container.bind<StatusbarProvidersInit>(StatusbarProvidersInit).toSelf().inSingletonScope();
-    const statusbarProviders = container.get<StatusbarProvidersInit>(StatusbarProvidersInit);
-    statusbarProviders.init();
 
     container.bind<DashboardService>(DashboardService).toSelf().inSingletonScope();
     container.get<DashboardService>(DashboardService);
@@ -1375,6 +1373,17 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'container-provider-registry:resolveImage',
+      async (
+        _listener,
+        providerContainerConnectionInfo: ProviderContainerConnectionInfo,
+        reference: string,
+      ): Promise<ImageLocation | undefined> => {
+        return containerProviderRegistry.resolveImage(providerContainerConnectionInfo, reference);
+      },
+    );
+
+    this.ipcHandle(
       'container-provider-registry:pullImage',
       async (
         _listener,
@@ -1446,9 +1455,18 @@ export class PluginSystem {
 
         try {
           const results = await containerProviderRegistry.updateImages(images, abortController?.signal);
-          const summary = results.map(result => `${result.imageRef}: ${result.message}`).join('; ');
-          task.name = `Image update: ${summary || 'No images updated'}`;
           const failures = results.filter(result => result.status === 'error');
+          const counts = {
+            updated: results.filter(result => result.status === 'updated').length,
+            'up to date': results.filter(result => result.status === 'normal').length,
+            skipped: results.filter(result => result.status === 'skipped').length,
+            failed: failures.length,
+          };
+          const summary = Object.entries(counts)
+            .filter(([, count]) => count > 0)
+            .map(([status, count]) => `${count} ${status}`)
+            .join(', ');
+          task.name = `Image update: ${summary || 'No images updated'}`;
           if (abortController?.signal.aborted) {
             task.status = 'canceled';
           } else if (failures.length > 0) {
@@ -2683,6 +2701,42 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'provider-registry:restartProviderConnectionLifecycle',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        providerId: string,
+        providerConnectionInfo: ProviderConnectionInfo,
+        loggerId: string,
+      ): Promise<void> => {
+        const task = taskManager.createTask({
+          title: `Restarting ${providerConnectionInfo.name}`,
+          action: {
+            name: 'Go to task >',
+            execute: () => {
+              navigationManager.navigateToProviderConnection(providerId, providerConnectionInfo);
+            },
+          },
+        });
+
+        const logger = this.getLogHandler('provider-registry:taskConnection-onData', loggerId);
+        return providerRegistry
+          .restartProviderConnection(providerId, providerConnectionInfo, logger)
+          .then(result => {
+            task.status = 'success';
+            return result;
+          })
+          .catch((err: unknown) => {
+            task.error = `Something went wrong while restarting container provider: ${err}`;
+            logger.error(err);
+            throw err;
+          })
+          .finally(() => {
+            logger.onEnd();
+          });
+      },
+    );
+
+    this.ipcHandle(
       'provider-registry:editProviderConnectionLifecycle',
       async (
         _listener: Electron.IpcMainInvokeEvent,
@@ -3421,7 +3475,8 @@ export class PluginSystem {
       async (
         _listener,
         id: string,
-        image: ImageInfo,
+        engineId: string,
+        imageId: string,
         tokenId?: number,
       ): Promise<containerDesktopAPI.ImageChecks | undefined> => {
         let token;
@@ -3429,6 +3484,7 @@ export class PluginSystem {
           const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
           token = tokenSource?.token;
         }
+        const image = await containerProviderRegistry.getImageInfo(engineId, imageId);
         return imageChecker.check(id, image, token);
       },
     );
@@ -3442,7 +3498,8 @@ export class PluginSystem {
       async (
         _listener,
         id: string,
-        image: ImageInfo,
+        engineId: string,
+        imageId: string,
         tokenId?: number,
       ): Promise<ImageFilesystemLayersUI | undefined> => {
         let token;
@@ -3450,6 +3507,7 @@ export class PluginSystem {
           const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
           token = tokenSource?.token;
         }
+        const image = await containerProviderRegistry.getImageInfo(engineId, imageId);
         return imageFiles.getFilesystemLayers(id, image, token);
       },
     );
@@ -3567,6 +3625,7 @@ export class PluginSystem {
     const dockerExtensionAdapter = new DockerPluginAdapter(contributionManager, containerProviderRegistry);
     dockerExtensionAdapter.init();
 
+    container.bind<ExtensionPlatformService>(ExtensionPlatformService).toSelf().inSingletonScope();
     container.bind<ExtensionInstaller>(ExtensionInstaller).toSelf().inSingletonScope();
     const extensionInstaller = container.get(ExtensionInstaller);
     await extensionInstaller.init();

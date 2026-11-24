@@ -36,6 +36,8 @@ import { createNavigationVolumeEntry } from './navigation-registry-volume.svelte
 
 export interface NavigationRegistryEntry {
   name: string;
+  /** The parent name, composed with `name` only when a qualified label or identifier is needed. */
+  parentName?: string;
   icon: {
     iconImage?: string | { readonly light: string; readonly dark: string };
     iconComponent?: Component;

@@ -475,7 +475,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
 
 {#if showNewRegistryForm}
   <Dialog
-    title="Add Registry"
+    title="Add registry"
     onclose={(): void => {
       setNewRegistryFormVisible(false);
     }}>

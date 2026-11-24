@@ -21,9 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import type { ContextGeneralState, ContextPermission, KubeContext, ResourceCount } from '@desktop-framework/api';
 import type { KubernetesObject, V1Deployment } from '@kubernetes/client-node';
 import { render, screen } from '@testing-library/svelte';
-import userEvent from '@testing-library/user-event';
 import { readable, writable } from 'svelte/store';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
 import { listenActiveResourcesCount } from '/@/lib/kube/active-resources-count-listen';
@@ -53,15 +52,6 @@ vi.mock(import('/@/lib/kube/active-resources-count-listen'));
 vi.mock(import('/@/stores/kubernetes-context-permission'));
 vi.mock(import('/@/stores/kubernetes-no-current-context'));
 
-const openExternalMock = vi.fn();
-
-// fake the window object
-beforeAll(() => {
-  Object.defineProperty(window, 'openExternal', {
-    value: openExternalMock,
-  });
-});
-
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
@@ -86,17 +76,6 @@ test('Verify basic page', async () => {
 
   const title = screen.getByText('Dashboard');
   expect(title).toBeInTheDocument();
-});
-
-test('Verify documentation link works', async () => {
-  render(KubernetesDashboard);
-
-  const docs = screen.getByText('Kubernetes documentation');
-  expect(docs).toBeInTheDocument();
-
-  expect(openExternalMock).not.toHaveBeenCalled();
-  await userEvent.click(docs);
-  expect(openExternalMock).toHaveBeenCalledWith('https://podman-desktop.io/docs/kubernetes');
 });
 
 test('Verify basic page with cluster', async () => {

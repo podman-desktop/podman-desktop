@@ -33,6 +33,7 @@ export class ContainersPage extends MainPage {
   readonly createContainerButton: Locator;
   readonly pruneConfirmationButton: Locator;
   readonly runAllContainersButton: Locator;
+  readonly stopSelectedContainersButton: Locator;
   readonly createDialog: Locator;
   readonly createDialogCloseButton: Locator;
   readonly createDialogContainerOrDockerfileButton: Locator;
@@ -50,13 +51,14 @@ export class ContainersPage extends MainPage {
       name: 'Yes',
     });
     this.runAllContainersButton = this.page.getByLabel('Run selected containers and pods');
+    this.stopSelectedContainersButton = this.page.getByLabel('Stop selected containers and pods');
     this.createDialog = this.page.getByRole('dialog', {
-      name: 'Create a new container',
+      name: 'Create container',
       exact: true,
     });
     this.createDialogCloseButton = this.createDialog.getByLabel('Close');
     this.createDialogContainerOrDockerfileButton = this.createDialog.getByRole('button', {
-      name: 'Use Containerfile',
+      name: 'Build from Containerfile',
     });
     this.createDialogExistingImageButton = this.createDialog.getByRole('button', {
       name: 'Use existing image',
@@ -184,6 +186,22 @@ export class ContainersPage extends MainPage {
     return test.step('Start all containers', async () => {
       await this.checkAllRows();
       await this.runAllContainersButton.click();
+      return this;
+    });
+  }
+
+  async stopSelectedContainers(names: string[]): Promise<ContainersPage> {
+    return test.step(`Stop selected containers: ${names}`, async () => {
+      for (const containerName of names) {
+        const containerRow = await this.getContainerRowByName(containerName);
+        if (containerRow === undefined) {
+          throw Error(`Container: '${containerName}' does not exist`);
+        }
+        const checkbox = containerRow.getByRole('checkbox');
+        await checkbox.check();
+        await playExpect(checkbox).toBeChecked();
+      }
+      await this.stopSelectedContainersButton.click();
       return this;
     });
   }
