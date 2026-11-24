@@ -1353,6 +1353,9 @@ export class ExtensionLoader implements IAsyncDisposable {
       stopContainer(engineId: string, id: string) {
         return containerProviderRegistry.stopContainer(engineId, id);
       },
+      restartContainer(engineId: string, id: string) {
+        return containerProviderRegistry.restartContainer(engineId, id);
+      },
       deleteContainer(engineId: string, id: string) {
         return containerProviderRegistry.deleteContainer(engineId, id);
       },

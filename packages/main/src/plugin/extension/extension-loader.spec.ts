@@ -236,6 +236,7 @@ const containerProviderRegistry: ContainerProviderRegistry = {
   removePod: vi.fn(),
   getContainerStats: vi.fn(),
   stopContainerStats: vi.fn(),
+  restartContainer: vi.fn(),
   listImages: vi.fn(),
   podmanListImages: vi.fn(),
   listInfos: vi.fn(),
@@ -2905,6 +2906,26 @@ describe('containerEngine', async () => {
 
       expect(containerProviderRegistry.buildImage).toHaveBeenCalledWith('context', expect.any(Function), expected);
     });
+  });
+
+  test('restartContainer delegates to the container provider registry', async () => {
+    vi.mocked(containerProviderRegistry.restartContainer).mockResolvedValue(undefined);
+
+    const api = createApi();
+
+    await api.containerEngine.restartContainer('dummyEngineId', 'dummyContainerId');
+
+    expect(containerProviderRegistry.restartContainer).toHaveBeenCalledWith('dummyEngineId', 'dummyContainerId');
+  });
+
+  test('restartContainer propagates errors from the container provider registry', async () => {
+    vi.mocked(containerProviderRegistry.restartContainer).mockRejectedValue(new Error('restart failed'));
+
+    const api = createApi();
+
+    await expect(api.containerEngine.restartContainer('dummyEngineId', 'dummyContainerId')).rejects.toThrow(
+      'restart failed',
+    );
   });
 
   test('statsContainer ', async () => {

@@ -264,6 +264,25 @@ async function updateClusters(
             throw err;
           }
         },
+        restart: async (context, logger): Promise<void> => {
+          try {
+            if (context || logger) {
+              await extensionApi.containerEngine.logsContainer(
+                cluster.engineId,
+                cluster.id,
+                getLoggerCallback(context, logger),
+              );
+            }
+            await extensionApi.containerEngine.restartContainer(cluster.engineId, cluster.id);
+            if (connection.error !== undefined) {
+              connection.error = undefined;
+            }
+          } catch (err) {
+            connection.error = err instanceof Error ? err.message : String(err);
+            console.error(err);
+            throw err;
+          }
+        },
         delete: async (logger): Promise<void> => {
           try {
             const env: { [key: string]: string } = {};

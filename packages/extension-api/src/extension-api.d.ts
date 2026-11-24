@@ -4083,6 +4083,14 @@ declare module '@podman-desktop/api' {
     export function stopContainer(engineId: string, id: string): Promise<void>;
 
     /**
+     * Restart an existing container
+     *
+     * @param engineId the id of the engine managing the container, obtained from the result of {@link containerEngine.listContainers}
+     * @param id the id of the container on this engine, obtained from the result of {@link containerEngine.listContainers} or as the result of {@link containerEngine.createContainer}
+     */
+    export function restartContainer(engineId: string, id: string): Promise<void>;
+
+    /**
      * Delete an existing container
      *
      * @param engineId the id of the engine managing the container, obtained from the result of {@link containerEngine.listContainers}

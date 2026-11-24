@@ -839,6 +839,59 @@ describe('connection lifecycle error propagation', () => {
     });
   });
 
+  describe('restart', () => {
+    test('should expose restart in the connection lifecycle', () => {
+      expect(registeredConnection.lifecycle?.restart).toBeDefined();
+    });
+
+    test('should clear connection.error on successful restart', async () => {
+      registeredConnection.error = 'previous error';
+      vi.mocked(podmanDesktopApi.containerEngine.restartContainer).mockResolvedValue(undefined);
+
+      await registeredConnection.lifecycle!.restart!({} as extensionApi.LifecycleContext, undefined);
+
+      expect(registeredConnection.error).toBeUndefined();
+      expect(podmanDesktopApi.containerEngine.restartContainer).toHaveBeenCalledWith('engine-1', 'container-id-1');
+    });
+
+    test('should stream the container logs when a logger is provided', async () => {
+      vi.mocked(podmanDesktopApi.containerEngine.restartContainer).mockResolvedValue(undefined);
+
+      await registeredConnection.lifecycle!.restart!(
+        {} as extensionApi.LifecycleContext,
+        {
+          log: vi.fn(),
+        } as unknown as extensionApi.Logger,
+      );
+
+      expect(podmanDesktopApi.containerEngine.logsContainer).toHaveBeenCalledWith(
+        'engine-1',
+        'container-id-1',
+        expect.any(Function),
+      );
+    });
+
+    test('should set connection.error with Error message on restart failure', async () => {
+      vi.mocked(podmanDesktopApi.containerEngine.restartContainer).mockRejectedValue(new Error('restart failed'));
+
+      await expect(
+        registeredConnection.lifecycle!.restart!({} as extensionApi.LifecycleContext, undefined),
+      ).rejects.toThrow('restart failed');
+
+      expect(registeredConnection.error).toBe('restart failed');
+    });
+
+    test('should set connection.error with stringified value on non-Error restart failure', async () => {
+      vi.mocked(podmanDesktopApi.containerEngine.restartContainer).mockRejectedValue('restart string error');
+
+      await expect(
+        registeredConnection.lifecycle!.restart!({} as extensionApi.LifecycleContext, undefined),
+      ).rejects.toBe('restart string error');
+
+      expect(registeredConnection.error).toBe('restart string error');
+    });
+  });
+
   describe('delete', () => {
     test('should clear connection.error on successful delete', async () => {
       registeredConnection.error = 'previous error';
