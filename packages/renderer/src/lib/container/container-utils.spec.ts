@@ -90,6 +90,35 @@ test('should expect ports as string when there are multiple public ports', async
   expect(ports).toBe('80, 8022');
 });
 
+test('should expect no opening URL when there are no public ports', async () => {
+  const containerInfo = {
+    Image: 'docker.io/kindest/node:foobar',
+    Ports: [{ PrivatePort: 80 }],
+  } as unknown as ContainerInfo;
+  expect(containerUtils.getOpeningUrls(containerInfo)).toEqual([]);
+  expect(containerUtils.getOpeningUrl(containerInfo)).toBe('');
+});
+
+test('should expect one opening URL per public port', async () => {
+  const containerInfo = {
+    Image: 'docker.io/kindest/node:foobar',
+    Ports: [{ PublicPort: 8080 }, { PrivatePort: 22 }, { PublicPort: 9090 }],
+  } as unknown as ContainerInfo;
+  expect(containerUtils.getOpeningUrls(containerInfo)).toEqual(['http://localhost:8080', 'http://localhost:9090']);
+  expect(containerUtils.getOpeningUrl(containerInfo)).toBe('http://localhost:8080');
+});
+
+test('should expect a port bound on IPv4 and IPv6 to have a single opening URL', async () => {
+  const containerInfo = {
+    Image: 'docker.io/kindest/node:foobar',
+    Ports: [
+      { IP: '0.0.0.0', PublicPort: 8080 },
+      { IP: '::', PublicPort: 8080 },
+    ],
+  } as unknown as ContainerInfo;
+  expect(containerUtils.getOpeningUrls(containerInfo)).toEqual(['http://localhost:8080']);
+});
+
 test('container group status should be running when all compose containers are running', async () => {
   const groupName = 'compose-group';
   const containerInfo = {
