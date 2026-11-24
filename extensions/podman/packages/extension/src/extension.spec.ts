@@ -78,6 +78,7 @@ import type { PodmanRemoteConnections } from './remote/podman-remote-connections
 import { ExtensionNotifications } from './utils/notifications';
 import * as podmanCli from './utils/podman-cli';
 import type { PodmanConfiguration } from './utils/podman-configuration';
+import { PodmanMachineLifecycle } from './utils/podman-machine-lifecycle';
 import { RosettaProvisioner } from './utils/rosetta';
 import * as util from './utils/util';
 import { getAssetsFolder, LIBKRUN_LABEL, LoggerDelegator, VMTYPE } from './utils/util';
@@ -301,6 +302,8 @@ beforeEach(async () => {
           return PODMAN_PROVIDER_MOCK;
         case RosettaProvisioner:
           return ROSETTA_PROVISIONER_MOCK;
+        case PodmanMachineLifecycle:
+          return new PodmanMachineLifecycle();
         case SocketCompatibility:
           // only bound on macOS
           return extensionApi.env.isMac ? SOCKET_COMPATIBILITY_MOCK : undefined;
@@ -373,6 +376,7 @@ vi.mock(import('./helpers/krunkit-helper'));
 vi.mock(import('./helpers/podman-binary-location-helper'));
 vi.mock(import('./helpers/podman-info-helper'));
 vi.mock(import('./utils/rosetta'));
+vi.mock(import('./utils/podman-machine-lifecycle'));
 
 vi.mock(import('./utils/util'), async importOriginal => {
   const original = await importOriginal();
@@ -2538,6 +2542,55 @@ describe('connection error property on lifecycle methods', () => {
       'stop failed',
     );
     expect(registeredConnection!.error).toBe('stop failed');
+  });
+
+  describe('restart lifecycle', () => {
+    const installedPodman: InstalledPodman = { version: '6.1.0' };
+    const lifecycleContext: extensionApi.LifecycleContext = {
+      log: { log: vi.fn(), error: vi.fn(), warn: vi.fn() },
+    };
+
+    beforeEach(() => {
+      vi.mocked(extensionApi.env).isMac = true;
+      vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue(installedPodman);
+    });
+
+    test('restarts the machine through PodmanMachineLifecycle', async () => {
+      spySetup();
+      await registerConnection();
+      assert(registeredConnection?.lifecycle?.restart);
+
+      await registeredConnection.lifecycle.restart(lifecycleContext);
+
+      expect(PodmanMachineLifecycle.prototype.restart).toHaveBeenCalledExactlyOnceWith({
+        machineName: machineInfo.name,
+        vmType: machineInfo.vmType,
+        podmanVersion: installedPodman.version,
+        runOptions: { logger: expect.any(LoggerDelegator) },
+      });
+    });
+
+    test('clears the connection error on success', async () => {
+      spySetup();
+      await registerConnection();
+      assert(registeredConnection?.lifecycle?.restart);
+      registeredConnection.error = 'previous error';
+
+      await registeredConnection.lifecycle.restart(lifecycleContext);
+
+      expect(registeredConnection.error).toBeUndefined();
+    });
+
+    test('sets the connection error and rethrows on failure', async () => {
+      spySetup();
+      await registerConnection();
+      assert(registeredConnection?.lifecycle?.restart);
+      vi.mocked(PodmanMachineLifecycle.prototype.restart).mockRejectedValue(new Error('restart failed'));
+
+      await expect(registeredConnection.lifecycle.restart(lifecycleContext)).rejects.toThrow('restart failed');
+
+      expect(registeredConnection.error).toBe('restart failed');
+    });
   });
 
   test('delete lifecycle clears error on success', async () => {

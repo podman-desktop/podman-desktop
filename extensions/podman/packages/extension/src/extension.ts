@@ -72,6 +72,7 @@ import { PodmanRemoteConnections } from './remote/podman-remote-connections';
 import { ExtensionNotifications } from './utils/notifications';
 import { getPodmanCli } from './utils/podman-cli';
 import { PodmanConfiguration } from './utils/podman-configuration';
+import { PodmanMachineLifecycle } from './utils/podman-machine-lifecycle';
 import { ProviderConnectionShellAccessImpl } from './utils/podman-machine-stream';
 import { RegistrySetup } from './utils/registry-setup';
 import { ROSETTA_ENABLE_FILE, RosettaProvisioner } from './utils/rosetta';
@@ -120,6 +121,7 @@ let telemetryLogger: extensionApi.TelemetryLogger;
 let winPlatform: WinPlatform;
 let podmanBinary: PodmanBinary;
 let rosettaProvisioner: RosettaProvisioner;
+let podmanMachineLifecycle: PodmanMachineLifecycle;
 let socketCompatibility: SocketCompatibility | undefined;
 
 let certificateDetectionService: CertificateDetectionService | undefined;
@@ -870,6 +872,21 @@ export async function registerProviderFor(
         throw err;
       }
     },
+    restart: async (context, logger): Promise<void> => {
+      try {
+        const podmanVersion = (await podmanBinary.getBinaryInfo())?.version;
+        await podmanMachineLifecycle.restart({
+          machineName: machineInfo.name,
+          vmType: machineInfo.vmType,
+          podmanVersion,
+          runOptions: { logger: new LoggerDelegator(context, logger) },
+        });
+        containerProviderConnection.error = undefined;
+      } catch (err) {
+        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+        throw err;
+      }
+    },
     delete: async (logger): Promise<void> => {
       try {
         await execPodman(['machine', 'rm', '-f', machineInfo.name], machineInfo.vmType, {
@@ -1428,6 +1445,7 @@ export async function initInversify(
   winPlatform = inversifyContainer.get(WinPlatform);
   podmanBinary = inversifyContainer.get(PodmanBinary);
   rosettaProvisioner = inversifyContainer.get(RosettaProvisioner);
+  podmanMachineLifecycle = inversifyContainer.get(PodmanMachineLifecycle);
   socketCompatibility = inversifyContainer.get(SocketCompatibility, { optional: true });
   extensionNotifications = inversifyContainer.get(ExtensionNotifications);
   const podmanProvider = await inversifyContainer.getAsync(PodmanProvider);
