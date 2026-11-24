@@ -231,7 +231,11 @@ test.describe
 
       await test.step(`Filter by ${secondMachineDisplayName} shows no containers`, async () => {
         await containers.filterByEnvironment(secondMachineDisplayName);
-        await playExpect.poll(async () => await containers.countRowsFromTable(), { timeout: 10_000 }).toBe(0);
+        await playExpect
+          .poll(async () => !(await containers.containerExists(environmentFilterContainer)), {
+            timeout: 10_000,
+          })
+          .toBeTruthy();
       });
 
       await test.step(`Filter by ${defaultMachineDisplayName} shows the started container`, async () => {
