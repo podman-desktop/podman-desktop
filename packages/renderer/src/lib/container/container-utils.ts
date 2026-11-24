@@ -115,18 +115,12 @@ export class ContainerUtils {
   }
 
   getOpeningUrl(containerInfo: ContainerInfo): string {
-    const ports = containerInfo.Ports?.filter(port => port.PublicPort).map(port => port.PublicPort);
-    if (ports && ports.length > 0) {
-      return `http://localhost:${ports[0]}`;
-    } else {
-      return '';
-    }
+    return this.getOpeningUrls(containerInfo)[0] ?? '';
   }
 
+  // one URL per published host port; a port bound on both IPv4 and IPv6 is listed once
   getOpeningUrls(containerInfo: ContainerInfo): string[] {
-    return containerInfo.Ports?.filter(port => port.PublicPort)
-      .map(port => port.PublicPort)
-      .map(port => `http://localhost:${port}`);
+    return [...new Set(this.getPorts(containerInfo).map(port => `http://localhost:${port.PublicPort}`))];
   }
 
   getEngineId(containerInfo: ContainerInfo): string {
@@ -171,6 +165,7 @@ export class ContainerUtils {
       displayPort: this.getDisplayPort(containerInfo),
       hasPublicPort: this.hasPublicPort(containerInfo),
       openingUrl: this.getOpeningUrl(containerInfo),
+      openingUrls: this.getOpeningUrls(containerInfo),
       groupInfo: this.getContainerGroup(containerInfo),
       selected: false,
       created: containerInfo.Created,

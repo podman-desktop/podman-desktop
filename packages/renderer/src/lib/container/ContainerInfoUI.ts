@@ -64,6 +64,7 @@ export interface ContainerInfoUI {
   command?: string;
   hasPublicPort: boolean;
   openingUrl?: string;
+  openingUrls?: string[];
   groupInfo: ContainerGroupPartInfoUI;
   selected: boolean;
   created: number;
