@@ -48,6 +48,10 @@ class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
     return super.getSshConfig();
   }
 
+  createServer(connectionListener: (socket: net.Socket) => void): net.Server {
+    return super.createServer(connectionListener);
+  }
+
   registerSocketErrorHandler(socket: EventEmitter, peerSocket: { end(): unknown }, side: 'local' | 'remote'): void {
     super.registerSocketErrorHandler(socket, peerSocket, side);
   }
@@ -84,7 +88,7 @@ test('should be able to connect', async () => {
         })
         .on('openssh.streamlocal', (accept, _reject, info) => {
           const stream = accept();
-          stream.pipe(createConnection(info.socketPath)).pipe(stream);
+          stream.pipe(net.createConnection(info.socketPath)).pipe(stream);
         });
     },
   ).listen(0, '127.0.0.1', () => {
@@ -114,9 +118,11 @@ test('should be able to connect', async () => {
   let listenReady = false;
 
   // start a remote server
-  const npipeServer = createServer(socket => socket.end('pong')).listen(socketOrNpipePathRemote, () => {
-    listenReady = true;
-  });
+  const npipeServer = net
+    .createServer(socket => socket.end('pong'))
+    .listen(socketOrNpipePathRemote, () => {
+      listenReady = true;
+    });
 
   await vi.waitFor(() => expect(listenReady).toBeTruthy());
 
@@ -136,7 +142,7 @@ test('should be able to connect', async () => {
 
   // send a request to the tunnel using the socket path and expect the remote server's reply
   let received = '';
-  const client = createConnection({ path: socketOrNpipePathLocal });
+  const client = net.createConnection({ path: socketOrNpipePathLocal });
   client.on('data', data => {
     received += data.toString();
   });

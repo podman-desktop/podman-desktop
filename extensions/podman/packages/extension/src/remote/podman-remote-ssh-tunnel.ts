@@ -79,6 +79,10 @@ export class PodmanRemoteSshTunnel {
     return this.#sshConfig;
   }
 
+  protected createServer(connectionListener: (socket: net.Socket) => void): net.Server {
+    return net.createServer(connectionListener);
+  }
+
   protected logSocketError(side: 'local' | 'remote', error: unknown): void {
     console.error(
       `Podman ssh tunnel ${side} socket error using configuration`,
