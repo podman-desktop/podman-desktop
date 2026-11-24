@@ -1909,6 +1909,20 @@ export class ColorRegistry {
       hcLight: gray[300],
     });
 
+    this.registerColor(`${dropdown}separator`, {
+      dark: charcoal[400],
+      light: gray[600],
+      hcDark: white,
+      hcLight: black,
+    });
+
+    this.registerColor(`${dropdown}label-text`, {
+      dark: gray[800],
+      light: charcoal[100],
+      hcDark: white,
+      hcLight: black,
+    });
+
     this.registerColor(`${dropdown}item-text`, {
       dark: gray[400],
       light: charcoal[600],
@@ -2209,6 +2223,64 @@ export class ColorRegistry {
     this.registerColor(`${statusbar}text`, {
       dark: white,
       light: white,
+    });
+
+    this.registerColor(`${statusbar}area-bg`, {
+      dark: charcoal[900],
+      light: gray[50],
+      hcDark: black,
+      hcLight: white,
+    });
+
+    this.registerColor(`${statusbar}area-border`, {
+      dark: charcoal[500],
+      light: gray[300],
+      hcDark: white,
+      hcLight: black,
+    });
+
+    this.registerColor(`${statusbar}label`, {
+      dark: neutral[400],
+      light: neutral[600],
+      hcDark: white,
+      hcLight: black,
+    });
+
+    this.registerColorDefinition(
+      this.color(`${statusbar}separator`)
+        .withDark(colorPaletteHelper(white).withAlpha(0.1))
+        .withLight(colorPaletteHelper(black).withAlpha(0.1))
+        .withHcDark(colorPaletteHelper(white))
+        .withHcLight(colorPaletteHelper(black))
+        .build(),
+    );
+
+    this.registerColor(`${statusbar}error-bg`, {
+      dark: red[700],
+      light: red[600],
+      hcDark: red[400],
+      hcLight: red[800],
+    });
+
+    this.registerColor(`${statusbar}error-color`, {
+      dark: white,
+      light: white,
+      hcDark: black,
+      hcLight: white,
+    });
+
+    this.registerColor(`${statusbar}warning-bg`, {
+      dark: yellow[500],
+      light: yellow[500],
+      hcDark: yellow[400],
+      hcLight: yellow[500],
+    });
+
+    this.registerColor(`${statusbar}warning-color`, {
+      dark: black,
+      light: black,
+      hcDark: black,
+      hcLight: black,
     });
   }
 

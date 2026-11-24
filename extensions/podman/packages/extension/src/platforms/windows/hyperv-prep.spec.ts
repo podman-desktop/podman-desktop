@@ -202,6 +202,48 @@ describe('HyperVPrep.getStatus', () => {
   );
 });
 
+describe('HyperVPrep.isCurrentUserHyperVAdminGroupMember', () => {
+  test('returns true when the supported user is a group member', async () => {
+    const hyperVPrep = await createHyperVPrep();
+    vi.mocked(execPodman).mockResolvedValueOnce({
+      stdout: APPLIED_STATUS_OUTPUT,
+      stderr: '',
+      command: 'podman system hyperv-prep --status',
+    });
+
+    await expect(hyperVPrep.isCurrentUserHyperVAdminGroupMember()).resolves.toBe(true);
+    expect(execPodman).toHaveBeenLastCalledWith(['system', 'hyperv-prep', '--status']);
+  });
+
+  test('returns false when the supported user is not a group member', async () => {
+    const hyperVPrep = await createHyperVPrep();
+    vi.mocked(execPodman).mockResolvedValueOnce({
+      stdout: NEEDED_STATUS_OUTPUT,
+      stderr: '',
+      command: 'podman system hyperv-prep --status',
+    });
+
+    await expect(hyperVPrep.isCurrentUserHyperVAdminGroupMember()).resolves.toBe(false);
+  });
+
+  test('returns false without reading status when Podman is unsupported', async () => {
+    vi.mocked(PodmanBinary.prototype.getBinaryInfo).mockResolvedValue({ version: '5.9.9' });
+    const hyperVPrep = await createHyperVPrep();
+
+    await expect(hyperVPrep.isCurrentUserHyperVAdminGroupMember()).resolves.toBe(false);
+    expect(execPodman).not.toHaveBeenCalled();
+  });
+
+  test('returns false and logs when membership status cannot be read', async () => {
+    const hyperVPrep = await createHyperVPrep();
+    const error = new Error('status unavailable');
+    vi.mocked(execPodman).mockRejectedValueOnce(error);
+
+    await expect(hyperVPrep.isCurrentUserHyperVAdminGroupMember()).resolves.toBe(false);
+    expect(telemetryLoggerMock.logError).toHaveBeenCalledWith('hypervPrepStatusCheckFailed', { error });
+  });
+});
+
 describe('HyperVPrep.refreshContext', () => {
   test('hides buttons when Podman is older than version 6', async () => {
     vi.mocked(PodmanBinary.prototype.getBinaryInfo).mockResolvedValue({ version: '5.4.0' });
@@ -328,12 +370,12 @@ describe('HyperVPrep.run', () => {
     vi.mocked(execPodman).mockResolvedValueOnce({
       stdout: '',
       stderr: '',
-      command: 'podman system hyperv-prep',
+      command: 'podman system hyperv-prep --mounts 3',
     });
 
     await hyperVPrep.runPrep();
 
-    expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep'], undefined, { isAdmin: true });
+    expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep', '--mounts', '3'], undefined, { isAdmin: true });
   });
 });
 
@@ -392,7 +434,7 @@ describe('HyperVPrep command handler', () => {
       'No',
     );
     expect(extensionApi.window.withProgress).toHaveBeenCalled();
-    expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep'], undefined, { isAdmin: true });
+    expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep', '--mounts', '3'], undefined, { isAdmin: true });
     expect(telemetryLoggerMock.logUsage).toHaveBeenCalledWith('podman.hypervPrep', { status: 'applied' });
     expect(extensionApi.window.showInformationMessage).toHaveBeenCalledWith(
       expect.stringContaining('Hyper-V preparation completed successfully.'),
@@ -410,7 +452,9 @@ describe('HyperVPrep command handler', () => {
     await callback();
 
     expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep', '--status']);
-    expect(execPodman).not.toHaveBeenCalledWith(['system', 'hyperv-prep'], undefined, { isAdmin: true });
+    expect(execPodman).not.toHaveBeenCalledWith(['system', 'hyperv-prep', '--mounts', '3'], undefined, {
+      isAdmin: true,
+    });
   });
 
   test('shows status when prep is already applied', async () => {
@@ -420,7 +464,9 @@ describe('HyperVPrep command handler', () => {
     await callback();
 
     expect(execPodman).toHaveBeenCalledWith(['system', 'hyperv-prep', '--status']);
-    expect(execPodman).not.toHaveBeenCalledWith(['system', 'hyperv-prep'], undefined, { isAdmin: true });
+    expect(execPodman).not.toHaveBeenCalledWith(['system', 'hyperv-prep', '--mounts', '3'], undefined, {
+      isAdmin: true,
+    });
     expect(extensionApi.window.showInformationMessage).toHaveBeenCalledWith(
       expect.stringContaining('Hyper-V preparation is already applied.'),
     );

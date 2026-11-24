@@ -90,6 +90,20 @@ export class HyperVPrep {
     return this.parseStatus(result.stdout);
   }
 
+  async isCurrentUserHyperVAdminGroupMember(): Promise<boolean> {
+    try {
+      if (!(await this.isSupported())) {
+        return false;
+      }
+
+      return (await this.getStatus()) === HyperVPrepStatus.APPLIED;
+    } catch (error: unknown) {
+      this.telemetryLogger.logError('hypervPrepStatusCheckFailed', { error });
+      console.warn('Unable to check Hyper-V group membership', error);
+      return false;
+    }
+  }
+
   /**
    * Parses output from `podman system hyperv-prep --status`, for example:
    * ```text
@@ -131,7 +145,7 @@ export class HyperVPrep {
   }
 
   protected async run(): Promise<void> {
-    await execPodman(['system', 'hyperv-prep'], undefined, { isAdmin: true });
+    await execPodman(['system', 'hyperv-prep', '--mounts', '3'], undefined, { isAdmin: true });
   }
 
   private async prepare(): Promise<void> {

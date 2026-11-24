@@ -1,6 +1,6 @@
 {
   "name": "@podman-desktop/api",
-  "version": "1.31.0-next",
+  "version": "1.32.0-next",
   "description": "API for Podman Desktop extensions",
   "repository": "https://github.com/podman-desktop/podman-desktop",
   "publishConfig": {
@@ -22,6 +22,6 @@
   "devDependencies": {
     "typescript": "^6.0.3",
     "vite": "^8.3.8",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.1"
   }
 }

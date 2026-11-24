@@ -226,3 +226,17 @@ test('check parseEnvFile and expect error with invalid entries', async () => {
     'Environment file foo is not a valid env file. Each line should have the format KEY=VALUE, value being optional.',
   );
 });
+
+test('check parseEnvFile with Windows line endings', async () => {
+  const content = 'HI=FOO\r\n\r\n# a comment\r\nQUOTED="BAR"\r\nSINGLE=\'BAZ\'\r\nHELLO=WORLD # trailing\r\nEMPTY=\r\n';
+
+  const readFileMock = vi.spyOn(promises, 'readFile');
+  readFileMock.mockResolvedValue(content);
+
+  const statsFileMock = vi.spyOn(promises, 'stat');
+  statsFileMock.mockResolvedValue({ size: 100 } as Stats);
+
+  const result = await envfileParser.parseEnvFile('foo');
+
+  expect(result).toEqual(['HI=FOO', 'QUOTED=BAR', 'SINGLE=BAZ', 'HELLO=WORLD', 'EMPTY=']);
+});

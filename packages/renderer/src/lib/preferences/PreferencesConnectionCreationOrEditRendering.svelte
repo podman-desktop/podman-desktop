@@ -146,12 +146,13 @@ onMount(async () => {
   for (let field of configurationKeys) {
     const id = field.id;
     if (id) {
-      data[id] = field.default;
+      data[id] = existingFormData?.[id] ?? field.default;
     }
   }
   if (!connectionInfo) {
     try {
       connectionAuditResult = await window.auditConnectionParameters(providerInfo.internalId, data);
+      isValid = connectionAuditResult.records.filter(record => record.type === 'error').length === 0;
     } catch (e: unknown) {
       console.warn(e && typeof e === 'object' && 'message' in e ? e.message : e);
     }

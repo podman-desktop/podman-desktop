@@ -170,6 +170,8 @@ import { ExtensionsExternal } from '/@/plugin/extension/local/extensions-externa
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
+import { MacManagedConfiguration } from '/@/plugin/mac-managed-configuration.js';
+import { ManagedConfiguration } from '/@/plugin/managed-configuration.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
@@ -219,6 +221,7 @@ import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension/extension-development-folders.js';
 import { ExtensionInstaller } from './extension/extension-installer.js';
+import { ExtensionPlatformService } from './extension/extension-platform.js';
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
 import { FeedbackHandler } from './feedback-handler.js';
@@ -245,7 +248,6 @@ import { RegistryInit } from './registry-init.js';
 import { ReleaseNotesBannerInit } from './release-notes-banner-init.js';
 import { SafeStorageRegistry } from './safe-storage/safe-storage-registry.js';
 import { PinRegistry } from './statusbar/pin-registry.js';
-import { StatusbarProvidersInit } from './statusbar/statusbar-providers-init.js';
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
@@ -580,6 +582,10 @@ export class PluginSystem {
     container.bind<DefaultConfiguration>(DefaultConfiguration).toSelf().inSingletonScope();
     container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
     container.bind<LockedConfiguration>(LockedConfiguration).toSelf().inSingletonScope();
+    if (isMac()) {
+      container.bind<MacManagedConfiguration>(MacManagedConfiguration).toSelf().inSingletonScope();
+      container.bind<ManagedConfiguration>(ManagedConfiguration).toService(MacManagedConfiguration);
+    }
     container.bind<IConfigurationRegistry>(IConfigurationRegistry).toService(ConfigurationRegistry);
     const configurationRegistry = await this.initConfigurationRegistry(
       container,
@@ -653,10 +659,6 @@ export class PluginSystem {
     container.bind<DockerCompatibility>(DockerCompatibility).toSelf().inSingletonScope();
     const dockerCompatibility = container.get<DockerCompatibility>(DockerCompatibility);
     dockerCompatibility.init();
-
-    container.bind<StatusbarProvidersInit>(StatusbarProvidersInit).toSelf().inSingletonScope();
-    const statusbarProviders = container.get<StatusbarProvidersInit>(StatusbarProvidersInit);
-    statusbarProviders.init();
 
     container.bind<DashboardService>(DashboardService).toSelf().inSingletonScope();
     container.get<DashboardService>(DashboardService);
@@ -2699,6 +2701,42 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'provider-registry:restartProviderConnectionLifecycle',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        providerId: string,
+        providerConnectionInfo: ProviderConnectionInfo,
+        loggerId: string,
+      ): Promise<void> => {
+        const task = taskManager.createTask({
+          title: `Restarting ${providerConnectionInfo.name}`,
+          action: {
+            name: 'Go to task >',
+            execute: () => {
+              navigationManager.navigateToProviderConnection(providerId, providerConnectionInfo);
+            },
+          },
+        });
+
+        const logger = this.getLogHandler('provider-registry:taskConnection-onData', loggerId);
+        return providerRegistry
+          .restartProviderConnection(providerId, providerConnectionInfo, logger)
+          .then(result => {
+            task.status = 'success';
+            return result;
+          })
+          .catch((err: unknown) => {
+            task.error = `Something went wrong while restarting container provider: ${err}`;
+            logger.error(err);
+            throw err;
+          })
+          .finally(() => {
+            logger.onEnd();
+          });
+      },
+    );
+
+    this.ipcHandle(
       'provider-registry:editProviderConnectionLifecycle',
       async (
         _listener: Electron.IpcMainInvokeEvent,
@@ -3587,6 +3625,7 @@ export class PluginSystem {
     const dockerExtensionAdapter = new DockerPluginAdapter(contributionManager, containerProviderRegistry);
     dockerExtensionAdapter.init();
 
+    container.bind<ExtensionPlatformService>(ExtensionPlatformService).toSelf().inSingletonScope();
     container.bind<ExtensionInstaller>(ExtensionInstaller).toSelf().inSingletonScope();
     const extensionInstaller = container.get(ExtensionInstaller);
     await extensionInstaller.init();

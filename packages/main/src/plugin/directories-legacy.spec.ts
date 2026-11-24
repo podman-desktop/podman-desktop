@@ -135,6 +135,28 @@ describe('LegacyDirectories', () => {
     });
   });
 
+  describe('getManagedPreferencesDir', () => {
+    beforeEach(() => {
+      vi.resetAllMocks();
+      vi.mocked(isMac).mockReturnValue(true);
+      provider = new LegacyDirectories();
+    });
+
+    test.each([
+      { username: undefined, directory: '/Library/Managed Preferences' },
+      { username: 'testuser', directory: path.join('/Library/Managed Preferences', 'testuser') },
+    ])('resolve the managed preference directory for $username', ({ username, directory }) => {
+      expect(provider.getManagedPreferencesDir(username)).toBe(directory);
+    });
+
+    test('omit managed preference directories outside macOS', () => {
+      vi.mocked(isMac).mockReturnValue(false);
+
+      expect(provider.getManagedPreferencesDir()).toBeUndefined();
+      expect(provider.getManagedPreferencesDir('testuser')).toBeUndefined();
+    });
+  });
+
   describe('getManagedDefaultsDirectory', () => {
     test('should return macOS managed folder path when running on macOS', () => {
       vi.mocked(isMac).mockReturnValue(true);
