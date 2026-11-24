@@ -4563,7 +4563,7 @@ test('check handleEvents calls errorCallback and destroys pipeline on parse erro
 test('check volume mounted is replicated when executing replicatePodmanContainer with named volume', async () => {
   const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
 
-  const createPodmanContainerMock = vi.fn();
+  const createPodmanContainerMock = vi.fn().mockResolvedValue({ Id: 'new-container', Warnings: [] });
   const fakeLibPod = {
     createPodmanContainer: createPodmanContainerMock,
   } as unknown as LibPod;
@@ -4611,7 +4611,7 @@ test('check volume mounted is replicated when executing replicatePodmanContainer
 test('check volume mounted is replicated when executing replicatePodmanContainer', async () => {
   const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
 
-  const createPodmanContainerMock = vi.fn();
+  const createPodmanContainerMock = vi.fn().mockResolvedValue({ Id: 'new-container', Warnings: [] });
   const fakeLibPod = {
     createPodmanContainer: createPodmanContainerMock,
   } as unknown as LibPod;
@@ -4687,6 +4687,30 @@ function addPortBindingReplicationProvider(
 
   return vi.mocked(libpodAPI.createPodmanContainer);
 }
+
+describe('replicatePodmanContainer warnings', () => {
+  const source = { engineId: 'podman1', id: 'id' };
+  const target = { engineId: 'podman1' };
+
+  test('returns an empty array when libpod reports null Warnings', async () => {
+    const createPodmanContainerMock = addPortBindingReplicationProvider();
+    // libpod encodes a nil Go slice as null
+    createPodmanContainerMock.mockResolvedValue({ Id: 'new-container', Warnings: null as unknown as string[] });
+
+    const result = await containerRegistry.replicatePodmanContainer(source, target, {});
+
+    expect(result).toEqual({ Id: 'new-container', Warnings: [] });
+  });
+
+  test('returns the Warnings reported by libpod unchanged', async () => {
+    const createPodmanContainerMock = addPortBindingReplicationProvider();
+    createPodmanContainerMock.mockResolvedValue({ Id: 'new-container', Warnings: ['a warning'] });
+
+    const result = await containerRegistry.replicatePodmanContainer(source, target, {});
+
+    expect(result).toEqual({ Id: 'new-container', Warnings: ['a warning'] });
+  });
+});
 
 describe('replicatePodmanContainer into a pod', () => {
   test('does not copy published ports from the source container', async () => {
