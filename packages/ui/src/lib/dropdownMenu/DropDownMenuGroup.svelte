@@ -18,7 +18,7 @@ const labelId = $props.id();
 <div
   role="group"
   aria-labelledby={label ? labelId : undefined}
-  class="divide-y divide-[var(--pd-dropdown-divider)] {className}"
+  class="divide-y divide-(--pd-dropdown-divider) {className}"
   {...restProps}>
   {#if label}
     <DropDownMenuLabel id={labelId} title={label} />
