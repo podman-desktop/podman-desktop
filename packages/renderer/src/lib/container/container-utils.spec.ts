@@ -119,6 +119,44 @@ test('should expect a port bound on IPv4 and IPv6 to have a single opening URL',
   expect(containerUtils.getOpeningUrls(containerInfo)).toEqual(['http://localhost:8080']);
 });
 
+test('should expect getContainerInfoUI to open the first public port', async () => {
+  const containerInfo = {
+    Id: 'id123',
+    Names: ['/web'],
+    Image: 'docker.io/library/nginx:latest',
+    State: 'running',
+    Ports: [
+      { IP: '0.0.0.0', PrivatePort: 22 },
+      { IP: '0.0.0.0', PublicPort: 8080, PrivatePort: 80 },
+      { IP: '0.0.0.0', PublicPort: 9090, PrivatePort: 90 },
+    ],
+    engineId: 'engine',
+    engineName: 'podman',
+  } as unknown as ContainerInfo;
+
+  const containerUI = containerUtils.getContainerInfoUI(containerInfo);
+
+  expect(containerUI.hasPublicPort).toBe(true);
+  expect(containerUI.openingUrl).toBe('http://localhost:8080');
+});
+
+test('should expect getContainerInfoUI to have no opening URL without public ports', async () => {
+  const containerInfo = {
+    Id: 'id123',
+    Names: ['/web'],
+    Image: 'docker.io/library/nginx:latest',
+    State: 'running',
+    Ports: [],
+    engineId: 'engine',
+    engineName: 'podman',
+  } as unknown as ContainerInfo;
+
+  const containerUI = containerUtils.getContainerInfoUI(containerInfo);
+
+  expect(containerUI.hasPublicPort).toBe(false);
+  expect(containerUI.openingUrl).toBe('');
+});
+
 test('container group status should be running when all compose containers are running', async () => {
   const groupName = 'compose-group';
   const containerInfo = {

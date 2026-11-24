@@ -165,7 +165,6 @@ export class ContainerUtils {
       displayPort: this.getDisplayPort(containerInfo),
       hasPublicPort: this.hasPublicPort(containerInfo),
       openingUrl: this.getOpeningUrl(containerInfo),
-      openingUrls: this.getOpeningUrls(containerInfo),
       groupInfo: this.getContainerGroup(containerInfo),
       selected: false,
       created: containerInfo.Created,
