@@ -8,6 +8,9 @@ import ColorsStyle from './lib/style/ColorsStyle.svelte';
 import { lastPage } from './stores/breadcrumb';
 import { colorsInfos } from './stores/colors';
 
+// how long we wait for the colors before displaying the application without them
+const COLORS_LOADING_TIMEOUT = 5000;
+
 let systemReady = false;
 let colorsLoaded = false;
 // extension page to open once the UI state (system + colors) is fully loaded
@@ -19,12 +22,29 @@ let loadingSequence: NodeJS.Timeout;
 
 let extensionsStarterChecker: NodeJS.Timeout;
 
+let colorsLoadingTimeout: NodeJS.Timeout | undefined;
+
 const unsubscribeColors = colorsInfos.subscribe(colors => {
-  if (colors && colors.length > 0) {
+  if (colors.length > 0) {
     colorsLoaded = true;
+    clearTimeout(colorsLoadingTimeout);
     maybeOpenPendingExtension();
   }
 });
+
+// the colors are listed by the colors store once the system is ready. If they never arrive, do not
+// keep the user on the splash screen forever
+function watchColorsLoading(): void {
+  clearTimeout(colorsLoadingTimeout);
+  colorsLoadingTimeout = setTimeout(() => {
+    if (colorsLoaded) {
+      return;
+    }
+    console.warn(`Colors were not loaded after ${COLORS_LOADING_TIMEOUT}ms, displaying the application anyway`);
+    colorsLoaded = true;
+    maybeOpenPendingExtension();
+  }, COLORS_LOADING_TIMEOUT);
+}
 
 onMount(async () => {
   loadingSequence = setInterval(() => {
@@ -35,6 +55,7 @@ onMount(async () => {
     const isReady = await window.extensionSystemIsReady();
     systemReady = isReady;
     if (systemReady) {
+      watchColorsLoading();
       window.dispatchEvent(new CustomEvent('system-ready', {}));
       maybeOpenPendingExtension();
     }
@@ -66,6 +87,8 @@ onDestroy(() => {
   if (extensionsStarterChecker) {
     clearInterval(extensionsStarterChecker);
   }
+
+  clearTimeout(colorsLoadingTimeout);
 });
 
 // redirect to the extension page
@@ -97,7 +120,9 @@ window.events?.receive('install-extension:from-id', (extensionId: unknown) => {
   if (systemReady && colorsLoaded) {
     openExtensionPage(extensionId);
   } else {
-    // need to wait for the UI state to be loaded, so we delay the install
+    // need to wait for the UI state to be loaded, so we delay the install.
+    // Only the last request is kept: all the requests received before the UI is ready are
+    // redirected at the same time, so the last one is the one the user asked for.
     pendingExtensionId = extensionId;
   }
 });
@@ -106,6 +131,7 @@ window.events?.receive('install-extension:from-id', (extensionId: unknown) => {
 window.events.receive('starting-extensions', (value: unknown) => {
   systemReady = value === 'true';
   if (systemReady) {
+    watchColorsLoading();
     window.dispatchEvent(new CustomEvent('system-ready', {}));
     maybeOpenPendingExtension();
   }
