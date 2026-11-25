@@ -87,12 +87,11 @@ export class Main implements IDisposable {
     ];
   }
 
-  main(args: string[]): void {
-    // parse argv
-    const argv = args.slice(2);
-    const additionalData: AdditionalData = {
-      argv: argv,
-    };
+  /**
+   * @param argv the command line arguments, without the executable (and the app path in development)
+   */
+  main(argv: string[]): void {
+    const additionalData: AdditionalData = { argv };
 
     try {
       this.init(additionalData);
@@ -284,8 +283,8 @@ export class Main implements IDisposable {
     _workingDirectory: string,
     additionalData: unknown,
   ): void {
-    // if we are on Windows, we need to handle the protocol
-    if (isWindows() && additionalData && (additionalData as AdditionalData).argv) {
+    // if we are on Windows or Linux, we need to handle the protocol
+    if ((isWindows() || isLinux()) && additionalData && (additionalData as AdditionalData).argv) {
       this.#protocolLauncher.handleAdditionalProtocolLauncherArgs((additionalData as AdditionalData).argv);
     }
 
@@ -296,7 +295,7 @@ export class Main implements IDisposable {
 
   /**
    * Listener for {@link ElectronApp.on('will-finish-launching')} event
-   * Handle the open-url event (macOS/Linux). For Windows, it needs to be handled in the second-instance event
+   * Handle the open-url event (macOS). For Windows and Linux, it is handled in the second-instance event
    */
   protected onWillFinishLaunching(): void {
     this.app.on('open-url', (event, url) => {

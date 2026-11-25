@@ -21,4 +21,6 @@ import { Main } from './main.js';
 
 // Main startup
 const podmanDesktopMain = new Main(app);
-podmanDesktopMain.main(process.argv);
+// `process.defaultApp` is used to determine how many arguments will need to be sliced off from process.argv.
+// https://www.electronjs.org/docs/latest/api/process#processdefaultapp-readonly
+podmanDesktopMain.main(process.argv.slice(process.defaultApp ? 2 : 1));
