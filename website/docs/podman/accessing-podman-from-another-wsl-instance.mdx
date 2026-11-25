@@ -72,6 +72,14 @@ To communicate with the remote Podman Machine, you need a Podman client.
    $ sudo ln -s /usr/local/bin/podman-remote-static-linux_amd64 /usr/local/bin/podman
    ```
 
+   Confirm that `/usr/local/bin` is on your `PATH`, so both your shell and tools such as `podman-compose` can find the link:
+
+   ```shell-session
+   $ command -v podman
+   ```
+
+   If the command returns no path, add `/usr/local/bin` to `PATH` in your shell configuration and start a new shell.
+
    :::note
 
    Do not use an alias to rename the `podman-remote` binary. Tools such as `podman-compose` start `podman` as a separate process, which does not read your shell aliases, and then fail with `failed to check if podman is installed: [Errno 2] No such file or directory: 'podman'`.
