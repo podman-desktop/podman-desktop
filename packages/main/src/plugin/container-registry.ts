@@ -1882,7 +1882,9 @@ export class ContainerProviderRegistry {
         ...originalConfiguration,
         ...overrideParameters,
       };
-      return libPod.createPodmanContainer(configuration);
+      const result = await libPod.createPodmanContainer(configuration);
+      // libpod serializes a nil Go slice as `null`, normalize it to match the declared type
+      return { ...result, Warnings: result.Warnings ?? [] };
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;

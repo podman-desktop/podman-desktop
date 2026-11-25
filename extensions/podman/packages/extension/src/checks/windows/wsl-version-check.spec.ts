@@ -16,105 +16,74 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { process } from '@podman-desktop/api';
+import { Container } from 'inversify';
 import { beforeEach, expect, test, vi } from 'vitest';
+
+import { WslHelper } from '/@/helpers/wsl-helper';
 
 import { WSLVersionCheck } from './wsl-version-check';
 
+vi.mock(import('/@/helpers/wsl-helper'));
+
+const GENERIC_DOC_LINKS_DESCRIPTION = `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`;
+
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
 });
 
-test('expect WSLVersion preflight check return fail result if wsl --version command fails its execution', async () => {
-  vi.mocked(process.exec).mockRejectedValue('');
+function createCheck(): WSLVersionCheck {
+  const container = new Container();
+  container.bind(WslHelper).toSelf();
+  container.bind(WSLVersionCheck).toSelf();
+  return container.get(WSLVersionCheck);
+}
 
-  const winWSLCheck = new WSLVersionCheck();
-  const result = await winWSLCheck.execute();
+test('expect WSLVersion preflight check return fail result if the WSL version cannot be read', async () => {
+  vi.mocked(WslHelper.prototype.getWSLVersionData).mockRejectedValue(new Error('wsl not found'));
+
+  const result = await createCheck().execute();
+
   expect(result.description).equal('WSL version should be >= 1.2.5.');
-  expect(result.docLinksDescription).equal(
-    `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`,
-  );
+  expect(result.docLinksDescription).equal(GENERIC_DOC_LINKS_DESCRIPTION);
 });
 
-test('expect WSLVersion preflight check return fail result if first line output do not contain any colon symbol', async () => {
-  vi.mocked(process.exec).mockResolvedValue({
-    stdout: 'unknown message',
-    stderr: '',
-    command: 'command',
-  });
+test('expect WSLVersion preflight check return fail result if the WSL version is unknown', async () => {
+  vi.mocked(WslHelper.prototype.getWSLVersionData).mockResolvedValue({});
 
-  const winWSLCheck = new WSLVersionCheck();
-  const result = await winWSLCheck.execute();
+  const result = await createCheck().execute();
+
   expect(result.description).equal('WSL version should be >= 1.2.5.');
-  expect(result.docLinksDescription).equal(
-    `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`,
-  );
+  expect(result.docLinksDescription).equal(GENERIC_DOC_LINKS_DESCRIPTION);
 });
 
-test('expect WSLVersion preflight check return fail result if first line output do not contain any wsl word', async () => {
-  vi.mocked(process.exec).mockResolvedValue({
-    stdout: 'unknown message: 1.2.5.0',
-    stderr: '',
-    command: 'command',
-  });
+test('expect WSLVersion preflight check return fail result if the WSL version is older than the minimum supported version', async () => {
+  vi.mocked(WslHelper.prototype.getWSLVersionData).mockResolvedValue({ wslVersion: '1.1.3' });
 
-  const winWSLCheck = new WSLVersionCheck();
-  const result = await winWSLCheck.execute();
-  expect(result.description).equal('WSL version should be >= 1.2.5.');
-  expect(result.docLinksDescription).equal(
-    `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`,
-  );
-});
+  const result = await createCheck().execute();
 
-test('expect WSLVersion preflight check return fail result if first line output contain an invalid version', async () => {
-  vi.mocked(process.exec).mockResolvedValue({
-    stdout: 'WSL version: 1.1.3',
-    stderr: '',
-    command: 'command',
-  });
-
-  const winWSLCheck = new WSLVersionCheck();
-  const result = await winWSLCheck.execute();
   expect(result.description).equal('Your WSL version is 1.1.3 but it should be >= 1.2.5.');
   expect(result.docLinksDescription).equal(
     `Call 'wsl --update' to update your WSL installation. If you do not have access to the Windows store you can run 'wsl --update --web-download'. If you still receive an error please contact your IT administator as 'Windows Store Applications' may have been disabled.`,
   );
 });
 
-test('expect WSLVersion preflight check return successful result if first line output contain a version equal to the minimum supported version', async () => {
-  vi.mocked(process.exec).mockResolvedValue({
-    stdout: 'WSL version: 1.2.5.0',
-    stderr: '',
-    command: 'command',
-  });
+test.each(['1.2.5.0', '2.4.0'])(
+  'expect WSLVersion preflight check return successful result for WSL %s',
+  async wslVersion => {
+    vi.mocked(WslHelper.prototype.getWSLVersionData).mockResolvedValue({ wslVersion });
 
-  const winWSLCheck = new WSLVersionCheck();
-  const result = await winWSLCheck.execute();
-  expect(result.successful).toBeTruthy();
-});
+    const result = await createCheck().execute();
 
-test('expect WSLVersion preflight check return successful result if first line output contain a version greater than the minimum supported version', async () => {
-  vi.mocked(process.exec).mockResolvedValue({
-    stdout: 'WSL version: 2.4.0',
-    stderr: '',
-    command: 'command',
-  });
-
-  const winWSLCheck = new WSLVersionCheck();
-  const result = await winWSLCheck.execute();
-  expect(result.successful).toBeTruthy();
-});
+    expect(result.successful).toBeTruthy();
+  },
+);
 
 test('expect WSLVersion to be memoized', async () => {
-  vi.mocked(process.exec).mockResolvedValue({
-    stdout: 'WSL version: 1.2.5.0',
-    stderr: '',
-    command: 'command',
-  });
+  vi.mocked(WslHelper.prototype.getWSLVersionData).mockResolvedValue({ wslVersion: '1.2.5.0' });
 
-  const winWSLCheck = new WSLVersionCheck();
-  await winWSLCheck.execute();
-  await winWSLCheck.execute();
+  const check = createCheck();
+  await check.execute();
+  await check.execute();
 
-  expect(process.exec).toHaveBeenCalledTimes(1);
+  expect(WslHelper.prototype.getWSLVersionData).toHaveBeenCalledTimes(1);
 });

@@ -1317,6 +1317,26 @@ export function initExposure(): void {
   );
 
   contextBridge.exposeInMainWorld(
+    'restartProviderConnectionLifecycle',
+    async (
+      providerId: string,
+      providerConnectionInfo: ProviderConnectionInfo,
+      key: symbol,
+      keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
+    ): Promise<void> => {
+      onDataCallbacksTaskConnectionId++;
+      onDataCallbacksTaskConnectionKeys.set(onDataCallbacksTaskConnectionId, key);
+      onDataCallbacksTaskConnectionLogs.set(onDataCallbacksTaskConnectionId, keyLogger);
+      return ipcInvoke(
+        'provider-registry:restartProviderConnectionLifecycle',
+        providerId,
+        providerConnectionInfo,
+        onDataCallbacksTaskConnectionId,
+      );
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
     'editProviderConnectionLifecycle',
     async (
       providerId: string,

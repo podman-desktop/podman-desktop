@@ -19,14 +19,24 @@ import fs from 'node:fs';
 import os from 'node:os';
 
 import extensionApi from '@podman-desktop/api';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 
 import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import { findRunningMachine } from '/@/extension';
-import { execPodman } from '/@/utils/util';
+import { PodmanBinary } from '/@/utils/podman-binary';
+import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
 
 @injectable()
 export class DarwinSocketCompatibility extends SocketCompatibility {
+  constructor(
+    @inject(PodmanBinary)
+    private readonly podmanBinary: PodmanBinary,
+    @inject(PodmanMachineLifecycle)
+    private readonly podmanMachineLifecycle: PodmanMachineLifecycle,
+  ) {
+    super();
+  }
+
   // Shows the details of the compatibility mode on what we do.
   details = 'the podman-mac-helper binary will be run, unlinking the Docker socket from Podman.';
 
@@ -96,7 +106,7 @@ export class DarwinSocketCompatibility extends SocketCompatibility {
   }
 
   // Prompt the user that you need to restart the current podman machine for the changes to take effect
-  async promptRestart(machine: string): Promise<void> {
+  async promptRestart(machine: string, vmType?: string): Promise<void> {
     if (machine) {
       const result = await extensionApi.window.showInformationMessage(
         `Restarting your Podman machine is required to apply the changes. Would you like to restart the Podman machine '${machine}' now?`,
@@ -104,9 +114,12 @@ export class DarwinSocketCompatibility extends SocketCompatibility {
         'Cancel',
       );
       if (result === 'Yes') {
-        // Await since we must wait for the machine to stop before starting it again
-        await execPodman(['machine', 'stop', machine]);
-        await execPodman(['machine', 'start', machine]);
+        const podmanInstallation = await this.podmanBinary.getBinaryInfo();
+        await this.podmanMachineLifecycle.restart({
+          machineName: machine,
+          vmType,
+          podmanVersion: podmanInstallation?.version,
+        });
       }
     }
   }
@@ -117,10 +130,10 @@ export class DarwinSocketCompatibility extends SocketCompatibility {
     await this.runCommand('install', 'enabled');
 
     // Prompt the user to restart the podman machine if it's running
-    return findRunningMachine().then(isRunning => {
-      if (isRunning) {
-        this.promptRestart(isRunning).catch((e: unknown) =>
-          console.error(`Failed at restarting podman machine ${isRunning}. Error: ${String(e)}`),
+    return findRunningMachine().then(runningMachine => {
+      if (runningMachine) {
+        this.promptRestart(runningMachine.Name, runningMachine.VMType).catch((e: unknown) =>
+          console.error(`Failed at restarting podman machine ${runningMachine.Name}. Error: ${String(e)}`),
         );
       }
     });
@@ -130,10 +143,10 @@ export class DarwinSocketCompatibility extends SocketCompatibility {
     await this.runCommand('uninstall', 'disabled');
 
     // Prompt the user to restart the podman machine if it's running
-    return findRunningMachine().then(isRunning => {
-      if (isRunning) {
-        this.promptRestart(isRunning).catch((e: unknown) =>
-          console.error(`Failed at restarting podman machine ${isRunning}. Error: ${String(e)}`),
+    return findRunningMachine().then(runningMachine => {
+      if (runningMachine) {
+        this.promptRestart(runningMachine.Name, runningMachine.VMType).catch((e: unknown) =>
+          console.error(`Failed at restarting podman machine ${runningMachine.Name}. Error: ${String(e)}`),
         );
       }
     });

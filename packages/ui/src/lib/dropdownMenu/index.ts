@@ -16,17 +16,26 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import DropdownMenu from './DropdownMenu.svelte';
+import DropDownMenuGroup from './DropDownMenuGroup.svelte';
 import DropDownMenuItem from './DropDownMenuItem.svelte';
 import DropDownMenuItems from './DropDownMenuItems.svelte';
+import DropDownMenuLabel from './DropDownMenuLabel.svelte';
+import DropDownMenuSeparator from './DropDownMenuSeparator.svelte';
 
 type DropdownMenuCompound = typeof DropdownMenu & {
   Item: typeof DropDownMenuItem;
   Items: typeof DropDownMenuItems;
+  Group: typeof DropDownMenuGroup;
+  Label: typeof DropDownMenuLabel;
+  Separator: typeof DropDownMenuSeparator;
 };
 
 const dropdownMenu = Object.assign(DropdownMenu, {
   Item: DropDownMenuItem,
   Items: DropDownMenuItems,
+  Group: DropDownMenuGroup,
+  Label: DropDownMenuLabel,
+  Separator: DropDownMenuSeparator,
 }) as DropdownMenuCompound;
 
 export default dropdownMenu;
