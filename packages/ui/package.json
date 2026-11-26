@@ -184,7 +184,7 @@
     "jsdom": "^31.0.1",
     "svelte": "^5.59.1",
     "svelte-check": "^4.7.8",
-    "svelte-eslint-parser": "^1.10.1",
+    "svelte-eslint-parser": "^1.11.0",
     "tailwindcss": "^4.3.5",
     "tslib": "^2.9.1",
     "typescript": "^6.0.3",
