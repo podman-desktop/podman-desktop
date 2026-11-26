@@ -126,6 +126,28 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     initExposure();
   });
 
+  test('discards failed TTY attachment callbacks without removing a concurrent attachment', async () => {
+    const failure = Promise.withResolvers<{ error: Error }>();
+    const attachError = new Error('container is restarting');
+    vi.mocked(ipcRenderer.invoke).mockReturnValueOnce(failure.promise).mockResolvedValueOnce({ result: 2 });
+    const attach = getInMainWorld('attachContainer');
+    const failedData = vi.fn();
+    const successfulData = vi.fn();
+    const rejected = expect(attach('engine', 'container', failedData, vi.fn(), vi.fn())).rejects.toThrow(
+      attachError.message,
+    );
+    const successfulId = await attach('engine', 'container', successfulData, vi.fn(), vi.fn());
+    failure.resolve({ error: attachError });
+    await rejected;
+
+    const failedId = vi.mocked(ipcRenderer.invoke).mock.calls[0][3];
+    const onData = getRendererOn('container-provider-registry:attachContainer-onData');
+    onData({} as IpcRendererEvent, failedId, Buffer.from('stale'));
+    onData({} as IpcRendererEvent, successfulId, Buffer.from('connected'));
+    expect(failedData).not.toHaveBeenCalled();
+    expect(successfulData).toHaveBeenCalledExactlyOnceWith(Buffer.from('connected'));
+  });
+
   test('openDialog', async () => {
     vi.mocked(ipcRenderer.invoke).mockResolvedValue({ error: undefined, result: undefined });
 
