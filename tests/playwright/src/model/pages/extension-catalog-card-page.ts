@@ -25,7 +25,7 @@ import { ExtensionDetailsPage } from './extension-details-page';
 export class ExtensionCatalogCardPage extends BasePage {
   readonly parent: Locator;
   readonly extensionName: string;
-  readonly detailsButton: Locator;
+  readonly detailsLink: Locator;
   readonly downloadButton: Locator;
   readonly status: Locator;
 
@@ -33,8 +33,9 @@ export class ExtensionCatalogCardPage extends BasePage {
     super(page);
     this.extensionName = extensionName;
     this.parent = this.page.getByRole('group', { name: this.extensionName });
-    this.detailsButton = this.parent.getByRole('button', {
-      name: 'More details',
+    this.detailsLink = this.parent.getByRole('link', {
+      name: this.extensionName,
+      exact: true,
     });
     this.downloadButton = this.parent.getByRole('button', { name: 'Install' });
     this.status = this.parent.getByRole('status', { name: 'Extension status', exact: true });
@@ -43,8 +44,8 @@ export class ExtensionCatalogCardPage extends BasePage {
   public async openDetails(): Promise<ExtensionDetailsPage> {
     return test.step(`Open details for extension: ${this.extensionName}`, async () => {
       await this.parent.scrollIntoViewIfNeeded();
-      await playExpect(this.detailsButton).toBeVisible();
-      await this.detailsButton.click();
+      await playExpect(this.detailsLink).toBeVisible();
+      await this.detailsLink.click();
       return new ExtensionDetailsPage(this.page, this.extensionName);
     });
   }
