@@ -128,6 +128,44 @@ describe('MessageBox', () => {
     expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, undefined);
   });
 
+  test('Expect Enter with no focused control to select the default button', async () => {
+    const idRequest = 458;
+    const messageBoxOptions: MessageBoxOptions = {
+      id: idRequest,
+      title: 'My custom title',
+      message: 'My message',
+      buttons: ['Cancel', 'OK'],
+    };
+
+    showMessageBox(messageBoxOptions);
+
+    const ok = await screen.findByRole('button', { name: 'OK' });
+    expect(ok).toHaveAttribute('data-default');
+    // simulate a click on the dialog text, which drops focus to the body
+    ok.blur();
+    await userEvent.keyboard('{Enter}');
+    expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, 1, undefined);
+  });
+
+  test('Expect Enter not to select the destructive default button of a danger dialog', async () => {
+    const messageBoxOptions: MessageBoxOptions = {
+      id: 459,
+      title: 'Delete',
+      message: 'Delete this?',
+      type: 'danger',
+      buttons: ['Cancel', 'Delete'],
+    };
+
+    showMessageBox(messageBoxOptions);
+
+    const deleteButton = await screen.findByRole('button', { name: 'Delete' });
+    expect(deleteButton).not.toHaveAttribute('data-default');
+    // initial focus is on Cancel, not Delete, so blur whichever element holds it
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    await userEvent.keyboard('{Enter}');
+    expect(window.sendShowMessageBoxOnSelect).not.toHaveBeenCalled();
+  });
+
   test('Expect that tabbing works', async () => {
     const idRequest = 567;
 
@@ -621,5 +659,23 @@ describe('MessageBox', () => {
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveAttribute('tabindex', '-1');
     await vi.waitFor(() => expect(dialog).toHaveFocus());
+  });
+
+  test('Expect Enter to select a default icon button', async () => {
+    const idRequest = 709;
+    const messageBoxOptions: MessageBoxOptions = {
+      id: idRequest,
+      title: 'Actions',
+      message: 'Message',
+      buttons: [{ type: 'iconButton', label: 'Run', icon: 'fas fa-play' }],
+    };
+
+    showMessageBox(messageBoxOptions);
+
+    const run = await screen.findByRole('button', { name: 'Run' });
+    expect(run).toHaveAttribute('data-default');
+    run.blur();
+    await userEvent.keyboard('{Enter}');
+    expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, 0, undefined);
   });
 });
