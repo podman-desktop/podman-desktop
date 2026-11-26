@@ -1524,6 +1524,19 @@ describe('initStatusColors', () => {
     expect(definition?.hcLight).toBe(tailwindColorPalette.black);
   });
 
+  test.each(['status-running', 'status-starting', 'status-connected'])(
+    'registers %s with darker hc-light and lighter hc-dark green values',
+    (id: string) => {
+      const call = vi.mocked(colorRegistry.registerColor).mock.calls.find(c => c?.[0] === id);
+      expect(call).toBeDefined();
+      const definition = call?.[1];
+      expect(definition?.dark).toBe(tailwindColorPalette.green[400]);
+      expect(definition?.light).toBe(tailwindColorPalette.green[500]);
+      expect(definition?.hcDark).toBe(tailwindColorPalette.green[300]);
+      expect(definition?.hcLight).toBe(tailwindColorPalette.green[700]);
+    },
+  );
+
   test('registers status-contrast with dark and light values', () => {
     const call = vi.mocked(colorRegistry.registerColor).mock.calls.find(c => c?.[0] === 'status-contrast');
     expect(call).toBeDefined();
