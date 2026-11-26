@@ -5,7 +5,6 @@ import {
   faAlignLeft,
   faArrowsRotate,
   faDownload,
-  faExternalLinkSquareAlt,
   faFileCode,
   faPlay,
   faRocket,
@@ -26,6 +25,7 @@ import { containersInfos, setContainerActionError, setContainerStatus } from '/@
 import { context } from '/@/stores/context';
 
 import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from './ContainerInfoUI';
+import ContainerOpenBrowserAction from './ContainerOpenBrowserAction.svelte';
 
 interface Props {
   container: ContainerInfoUI;
@@ -112,15 +112,6 @@ async function stopContainer(): Promise<void> {
   } finally {
     inProgress(false);
   }
-}
-
-function openBrowser(): void {
-  if (!container.openingUrl) {
-    return;
-  }
-  window
-    .openExternal(container.openingUrl)
-    .catch((err: unknown) => console.error(`Error opening URL ${container.openingUrl}`, err));
 }
 
 function openLogs(): void {
@@ -232,14 +223,7 @@ let ActionsStyle = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
     hidden={!(container.engineType === 'podman' && container.groupInfo.type === ContainerGroupInfoTypeUI.STANDALONE)}
     detailed={detailed}
     icon={faRocket} />
-  <ListItemButtonIcon
-    title="Open Browser"
-    onClick={openBrowser}
-    menu={dropdownMenu}
-    enabled={container.state === 'RUNNING' && container.hasPublicPort}
-    hidden={dropdownMenu && container.state !== 'RUNNING'}
-    detailed={detailed}
-    icon={faExternalLinkSquareAlt} />
+  <ContainerOpenBrowserAction container={container} dropdownMenu={dropdownMenu} detailed={detailed} />
   {#if !detailed}
     <ListItemButtonIcon
       title="Open Terminal"
