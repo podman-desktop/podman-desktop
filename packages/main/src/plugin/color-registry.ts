@@ -2049,8 +2049,8 @@ export class ColorRegistry {
     this.registerColor(`${status}running`, {
       dark: green[400],
       light: green[500],
-      hcDark: green[400],
-      hcLight: green[500],
+      hcDark: green[300],
+      hcLight: green[700],
     });
 
     // Kubernetes only
@@ -2072,8 +2072,8 @@ export class ColorRegistry {
     this.registerColor(`${status}starting`, {
       dark: green[400],
       light: green[500],
-      hcDark: green[400],
-      hcLight: green[500],
+      hcDark: green[300],
+      hcLight: green[700],
     });
 
     // Stopped & Exited are the same color / same thing in the eyes of statuses
@@ -2139,8 +2139,8 @@ export class ColorRegistry {
     this.registerColor(`${status}connected`, {
       dark: green[400],
       light: green[500],
-      hcDark: green[400],
-      hcLight: green[500],
+      hcDark: green[300],
+      hcLight: green[700],
     });
 
     this.registerColor(`${status}disconnected`, {
