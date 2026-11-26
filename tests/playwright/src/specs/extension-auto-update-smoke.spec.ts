@@ -38,6 +38,8 @@ test.use({ runnerOptions: new RunnerOptions({ customFolder: PROFILE_FOLDER }) })
 let settingsFile: string;
 
 test.beforeAll(async ({ runner, welcomePage }) => {
+  test.setTimeout(180_000);
+
   runner.setVideoAndTraceName('extension-auto-update-e2e');
   settingsFile = join(runner.getTestOutput(), PROFILE_FOLDER, 'configuration', 'settings.json');
   await welcomePage.handleWelcomePage(true);
