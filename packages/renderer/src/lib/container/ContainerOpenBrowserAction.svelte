@@ -25,7 +25,7 @@ function openUrl(url: string | undefined): void {
 
 <ListItemButtonIcon
   title="Open Browser"
-  onClick={openUrl.bind(undefined, container.openingUrl)}
+  onClick={(): void => openUrl(container.openingUrl)}
   menu={dropdownMenu}
   enabled={container.state === 'RUNNING' && container.hasPublicPort}
   hidden={dropdownMenu && container.state !== 'RUNNING'}

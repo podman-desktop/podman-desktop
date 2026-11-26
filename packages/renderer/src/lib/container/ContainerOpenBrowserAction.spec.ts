@@ -19,49 +19,62 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { ContainerInfoUI } from './ContainerInfoUI';
+import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from './ContainerInfoUI';
 import ContainerOpenBrowserAction from './ContainerOpenBrowserAction.svelte';
 
-function containerWithUrls(urls: string[], state = 'RUNNING'): ContainerInfoUI {
+function createContainer(overrides: Partial<ContainerInfoUI> = {}): ContainerInfoUI {
   return {
     id: 'container-id',
-    engineId: 'container-engine-id',
+    shortId: 'container-id',
     name: 'my-container',
-    state,
-    hasPublicPort: urls.length > 0,
-    openingUrl: urls[0] ?? '',
-  } as unknown as ContainerInfoUI;
+    image: 'my-image',
+    shortImage: 'my-image',
+    engineId: 'container-engine-id',
+    engineName: 'Podman',
+    engineType: 'podman',
+    state: 'RUNNING',
+    uptime: '',
+    startedAt: '',
+    ports: [],
+    portsAsString: '',
+    displayPort: '',
+    hasPublicPort: true,
+    openingUrl: 'http://localhost:8080',
+    groupInfo: {
+      name: 'my-container',
+      type: ContainerGroupInfoTypeUI.STANDALONE,
+      id: 'container-id',
+      engineId: 'container-engine-id',
+      engineName: 'Podman',
+      engineType: 'podman',
+    },
+    selected: false,
+    created: 0,
+    labels: {},
+    imageBase64RepoTag: '',
+    imageId: 'image-id',
+    names: ['/my-container'],
+    ...overrides,
+  };
 }
-
-beforeAll(() => {
-  Object.defineProperty(window, 'openExternal', { value: vi.fn() });
-});
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.openExternal).mockResolvedValue(undefined);
 });
 
-test('Expect Open Browser to open the only published port directly', async () => {
-  render(ContainerOpenBrowserAction, {
-    container: containerWithUrls(['http://localhost:8080']),
-    dropdownMenu: false,
-    detailed: false,
-  });
+test('Expect Open Browser to open openingUrl', async () => {
+  render(ContainerOpenBrowserAction, { container: createContainer(), dropdownMenu: false, detailed: false });
 
   await fireEvent.click(screen.getByRole('button', { name: 'Open Browser' }));
 
   expect(window.openExternal).toHaveBeenCalledWith('http://localhost:8080');
 });
 
-test('Expect Open Browser to open the first published port in the kebab menu', async () => {
-  render(ContainerOpenBrowserAction, {
-    container: containerWithUrls(['http://localhost:8080', 'http://localhost:9090']),
-    dropdownMenu: true,
-    detailed: false,
-  });
+test('Expect Open Browser to open openingUrl in the kebab menu', async () => {
+  render(ContainerOpenBrowserAction, { container: createContainer(), dropdownMenu: true, detailed: false });
 
   await fireEvent.click(screen.getByRole('button', { name: 'Open Browser' }));
 
@@ -69,28 +82,38 @@ test('Expect Open Browser to open the first published port in the kebab menu', a
 });
 
 test('Expect Open Browser to be disabled without published port', async () => {
-  render(ContainerOpenBrowserAction, { container: containerWithUrls([]), dropdownMenu: false, detailed: false });
+  render(ContainerOpenBrowserAction, {
+    container: createContainer({ hasPublicPort: false, openingUrl: undefined }),
+    dropdownMenu: false,
+    detailed: false,
+  });
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Open Browser' }));
+  const button = screen.getByRole('button', { name: 'Open Browser' });
+  expect(button).toBeDisabled();
+
+  await fireEvent.click(button);
 
   expect(window.openExternal).not.toHaveBeenCalled();
 });
 
 test('Expect Open Browser to be disabled when the container is not running', async () => {
   render(ContainerOpenBrowserAction, {
-    container: containerWithUrls(['http://localhost:8080'], 'STOPPED'),
+    container: createContainer({ state: 'STOPPED' }),
     dropdownMenu: false,
     detailed: true,
   });
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Open Browser' }));
+  const button = screen.getByRole('button', { name: 'Open Browser' });
+  expect(button).toBeDisabled();
+
+  await fireEvent.click(button);
 
   expect(window.openExternal).not.toHaveBeenCalled();
 });
 
 test('Expect no Open Browser item in the kebab menu when the container is not running', async () => {
   render(ContainerOpenBrowserAction, {
-    container: containerWithUrls(['http://localhost:8080'], 'STOPPED'),
+    container: createContainer({ state: 'STOPPED' }),
     dropdownMenu: true,
     detailed: false,
   });
