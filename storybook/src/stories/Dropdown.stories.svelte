@@ -55,6 +55,19 @@ const { Story } = defineMeta({
     disabled: true,
   }} />
 
+<Story
+  name="Truncated labels"
+  args={{
+    truncate: true,
+    class: 'w-48 grow-0',
+    value: 'ai',
+    options: [
+      { value: 'ai', label: 'Artificial intelligence and machine learning' },
+      { value: 'containers', label: 'Container development and Kubernetes orchestration' },
+      { value: 'other', label: 'Other' },
+    ],
+  }} />
+
 <Story name="Left snippet">
   <Dropdown>
     <option value="a">One</option>
