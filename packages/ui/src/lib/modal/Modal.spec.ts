@@ -61,6 +61,17 @@ test('Escape key should trigger close', async () => {
   expect(closeMock).toHaveBeenCalled();
 });
 
+test('ignoreFocusOut blocks backdrop clicks but still allows Escape', async () => {
+  const onclose = vi.fn();
+  render(Modal, { onclose, ignoreFocusOut: true });
+
+  await userEvent.click(screen.getByLabelText('fade-bg'));
+  expect(onclose).not.toHaveBeenCalled();
+
+  await userEvent.keyboard('{Escape}');
+  expect(onclose).toHaveBeenCalledOnce();
+});
+
 describe('translation-y', () => {
   test('default modal should have translate-y', async () => {
     render(Modal);

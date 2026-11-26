@@ -56,6 +56,17 @@ test('Expect developers feedback form to be rendered by default', async () => {
   expect(GitHubIssueFeedback).not.toHaveBeenCalled();
 });
 
+test('Escape closes empty feedback while backdrop clicks do not', async () => {
+  render(SendFeedback);
+
+  await userEvent.click(screen.getByLabelText('fade-bg'));
+  screen.getByRole('dialog', { name: 'Share your feedback' });
+
+  await userEvent.keyboard('{Escape}');
+  expect(screen.queryByRole('dialog', { name: 'Share your feedback' })).not.toBeInTheDocument();
+  expect(window.showMessageBox).not.toHaveBeenCalled();
+});
+
 test('Expect confirmation dialog to be displayed if content changed', async () => {
   render(SendFeedback, {});
 
