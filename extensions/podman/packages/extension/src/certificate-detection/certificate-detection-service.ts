@@ -44,7 +44,7 @@ export interface CertificateDetectionConfig {
   followSymlinks: boolean;
 }
 
-const DEFAULT_CONFIG: CertificateDetectionConfig = {
+export const DEFAULT_CONFIG: CertificateDetectionConfig = {
   enableTelemetry: true,
   scanTimeoutMs: 10000,
   excludedExtensions: ['.pem', '.cer'],
@@ -107,11 +107,12 @@ export class CertificateDetectionService {
       errors: [],
     };
 
-    const directories = await this.getDirectoriesToScan();
+    const directories = await this.getDirectoriesToScan(result);
     const scanPromise = this.scanDirectories(directories, result);
-    const timeoutPromise = new Promise<void>((_, reject) =>
-      setTimeout(() => reject(new Error('Scan timeout')), this.config.scanTimeoutMs),
-    );
+    let timeoutId: NodeJS.Timeout | undefined;
+    const timeoutPromise = new Promise<void>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('Scan timeout')), this.config.scanTimeoutMs);
+    });
 
     try {
       await Promise.race([scanPromise, timeoutPromise]);
@@ -121,6 +122,8 @@ export class CertificateDetectionService {
       } else {
         throw error;
       }
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     result.hasCustomCertificates = result.certificateCount > 0;
@@ -187,7 +190,7 @@ export class CertificateDetectionService {
     return hostnamePattern.test(directoryName) || hostnamePortPattern.test(directoryName);
   }
 
-  protected async getDirectoriesToScan(): Promise<string[]> {
+  protected async getDirectoriesToScan(result: CertificateDetectionResult): Promise<string[]> {
     const directories: string[] = [...this.config.certDirectories.system];
 
     const homeDir = os.homedir();
@@ -203,6 +206,8 @@ export class CertificateDetectionService {
         const nodeError = error as NodeJS.ErrnoException;
         if (nodeError.code && nodeError.code !== 'ENOENT') {
           console.debug(`Certificate directory not accessible: ${dir} (${nodeError.code})`);
+          // the error message embeds the path, which contains the user's home directory: keep it out of telemetry
+          result.errors.push({ error: 'Certificate directory not accessible', code: nodeError.code });
         }
       }
     }
@@ -211,6 +216,10 @@ export class CertificateDetectionService {
   }
 
   private async sendTelemetry(result: CertificateDetectionResult): Promise<void> {
+    if (!result.hasCustomCertificates && result.errors.length === 0) {
+      return;
+    }
+
     const telemetryRecords = {
       using_custom_certificates: result.hasCustomCertificates,
       certificate_count: result.certificateCount,
@@ -218,17 +227,16 @@ export class CertificateDetectionService {
       is_windows: extensionApi.env.isWindows,
       is_linux: extensionApi.env.isLinux,
       is_mac: extensionApi.env.isMac,
-      errors:
-        result.errors
-          .map(e => {
-            const errorMsg = e.error;
-            const codeMsg = e.code ? ` (${e.code})` : '';
-            return `${errorMsg}${codeMsg}`;
-          })
-          .join('; ') ?? '',
+      errors: result.errors
+        .map(e => {
+          const errorMsg = e.error;
+          const codeMsg = e.code ? ` (${e.code})` : '';
+          return `${errorMsg}${codeMsg}`;
+        })
+        .join('; '),
     };
 
-    this.telemetryLogger!.logUsage('custom_certs', telemetryRecords);
+    this.telemetryLogger?.logUsage('custom_certs', telemetryRecords);
   }
 
   updateConfig(config: Partial<CertificateDetectionConfig>): void {
