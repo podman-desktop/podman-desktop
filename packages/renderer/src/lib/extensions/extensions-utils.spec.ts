@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ExtensionInfo } from '@desktop-framework/api';
 import type { CatalogExtension } from '@desktop-framework/api/extension-catalog';
 import type { FeaturedExtension } from '@desktop-framework/api/featured';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -503,6 +504,56 @@ describe('filters', () => {
     const filteredInstalledExtensions = extensionsUtils.filterInstalledExtensions(combined, 'bar');
     expect(filteredInstalledExtensions.length).toBe(1);
     expect(filteredInstalledExtensions[0].id).toBe('idAInstalled');
+  });
+
+  describe('development folders', () => {
+    const loadedExtension: ExtensionInfo = {
+      id: 'idFoo',
+      name: 'Delta Extension',
+      displayName: 'Delta Extension',
+      description: 'Local test extension',
+      publisher: 'test',
+      removable: false,
+      devMode: true,
+      bundled: false,
+      version: '1.0.0',
+      state: 'started',
+      path: '/dev/foo',
+      readme: '',
+    };
+
+    test('links folders to the extension loaded from the same path', () => {
+      const folders = extensionsUtils.extractDevelopmentFolders(
+        [{ path: '/dev/foo' }, { path: '/dev/bar' }],
+        [loadedExtension],
+      );
+
+      expect(folders).toEqual([
+        {
+          path: '/dev/foo',
+          name: '/dev/foo',
+          selected: false,
+          extension: { id: 'idFoo', name: 'Delta Extension', state: 'started' },
+        },
+        { path: '/dev/bar', name: '/dev/bar', selected: false, extension: undefined },
+      ]);
+    });
+
+    test.each([
+      { searchTerm: 'BAR', expectedPaths: ['/dev/bar'] },
+      { searchTerm: 'DELTA', expectedPaths: ['/dev/foo'] },
+      { searchTerm: '', expectedPaths: ['/dev/foo', '/dev/bar'] },
+      { searchTerm: 'no-match', expectedPaths: [] },
+    ])('filters by path or extension name with "$searchTerm"', ({ searchTerm, expectedPaths }) => {
+      const folders = extensionsUtils.extractDevelopmentFolders(
+        [{ path: '/dev/foo' }, { path: '/dev/bar' }],
+        [loadedExtension],
+      );
+
+      expect(extensionsUtils.filterDevelopmentFolders(folders, searchTerm).map(folder => folder.path)).toEqual(
+        expectedPaths,
+      );
+    });
   });
 
   describe('quoted values with spaces', () => {
