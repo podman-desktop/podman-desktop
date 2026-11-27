@@ -253,6 +253,7 @@ import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
 import { CIDetection } from './telemetry/ci-detection.js';
 import { EventType, Telemetry } from './telemetry/telemetry.js';
+import { TelemetryEnvDetection } from './telemetry/telemetry-env-detection.js';
 import { TerminalInit } from './terminal-init.js';
 import { TrayIconColor } from './tray-icon-color.js';
 import { TrayMenuRegistry } from './tray-menu-registry.js';
@@ -609,6 +610,7 @@ export class PluginSystem {
     container.bind<Exec>(Exec).toConstantValue(exec);
 
     container.bind<CIDetection>(CIDetection).toSelf().inSingletonScope();
+    container.bind<TelemetryEnvDetection>(TelemetryEnvDetection).toSelf().inSingletonScope();
     container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
     const telemetry = container.get<Telemetry>(Telemetry);
     await telemetry.init();
