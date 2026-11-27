@@ -111,13 +111,30 @@ export class PodmanRemoteSshTunnel {
   connect(): void {
     this.#reconnect = true;
     this.#listening = false;
-    this.#client = new Client();
+
+    // release resources from a previous connection
+    this.#client?.end();
+    this.#server?.close();
+    this.#server = undefined;
+
+    const client = new Client();
+    this.#client = client;
     this.#connected = new Promise<boolean>((resolve, _reject) => {
       this.#resolveConnected = resolve;
     });
 
-    this.#client
+    // events from a superseded client are ignored: they must not change the status
+    // or schedule a reconnect that would interrupt the current connection
+    client
       .on('ready', () => {
+        if (this.#client !== client) return;
+
+        // the connection succeeded, drop any reconnect scheduled by a previous client
+        if (this.#reconnectTimeout) {
+          clearTimeout(this.#reconnectTimeout);
+          this.#reconnectTimeout = undefined;
+        }
+
         this.#status = 'started';
 
         this.#resolveConnected(true);
@@ -125,38 +142,43 @@ export class PodmanRemoteSshTunnel {
         // Create a local server to listen on the local file socket
         this.#server = net.createServer(localSocket => {
           // Create a connection to the remote socket via SSH
-          this.#client?.openssh_forwardOutStreamLocal(this.remotePath, (err, remoteSocket) => {
-            if (err) {
-              localSocket.end();
-              return;
-            }
+          try {
+            client.openssh_forwardOutStreamLocal(this.remotePath, (err, remoteSocket) => {
+              if (err) {
+                localSocket.end();
+                return;
+              }
 
-            // Forward data from local to remote
-            localSocket.on('data', data => {
-              remoteSocket.write(data);
+              // Forward data from local to remote
+              localSocket.on('data', data => {
+                remoteSocket.write(data);
+              });
+
+              // Forward data from remote to local
+              remoteSocket.on('data', (data: string | Uint8Array) => {
+                localSocket.write(data);
+              });
+
+              // Handle local socket close
+              localSocket.on('close', () => {
+                remoteSocket.end();
+              });
+
+              // Handle remote socket close
+              remoteSocket.on('close', () => {
+                localSocket.end();
+              });
+
+              // Handle local socket error
+              this.registerSocketErrorHandler(localSocket, remoteSocket, 'local');
+
+              // Handle remote socket error
+              this.registerSocketErrorHandler(remoteSocket, localSocket, 'remote');
             });
-
-            // Forward data from remote to local
-            remoteSocket.on('data', (data: string | Uint8Array) => {
-              localSocket.write(data);
-            });
-
-            // Handle local socket close
-            localSocket.on('close', () => {
-              remoteSocket.end();
-            });
-
-            // Handle remote socket close
-            remoteSocket.on('close', () => {
-              localSocket.end();
-            });
-
-            // Handle local socket error
-            this.registerSocketErrorHandler(localSocket, remoteSocket, 'local');
-
-            // Handle remote socket error
-            this.registerSocketErrorHandler(remoteSocket, localSocket, 'remote');
-          });
+          } catch (err: unknown) {
+            console.error('Podman ssh tunnel unable to forward to remote socket', err);
+            localSocket.destroy();
+          }
         });
 
         // Listen on the local file socket
@@ -171,18 +193,21 @@ export class PodmanRemoteSshTunnel {
       })
       .connect(this.#sshConfig);
 
-    this.#client.on('error', err => {
+    client.on('error', err => {
       console.error('SSH connection error:', err);
+      if (this.#client !== client) return;
       this.#status = 'unknown';
       this.handleReconnect();
     });
 
-    this.#client.on('end', () => {
+    client.on('end', () => {
+      if (this.#client !== client) return;
       this.#status = 'stopped';
       this.handleReconnect();
     });
 
-    this.#client.on('close', () => {
+    client.on('close', () => {
+      if (this.#client !== client) return;
       this.#status = 'stopped';
       this.handleReconnect();
     });

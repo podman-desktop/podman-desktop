@@ -146,6 +146,185 @@ test('should be able to connect', async () => {
   npipeServer.close();
 });
 
+test('should close local socket and not throw when ssh connection is lost', async () => {
+  let sshPort = 0;
+
+  const sshServer = new Server(
+    {
+      hostKeys: [dummyKey],
+    },
+    client => {
+      client.on('authentication', ctx => {
+        ctx.accept();
+      });
+    },
+  ).listen(0, '127.0.0.1', () => {
+    const address: AddressInfo = sshServer.address() as AddressInfo;
+    sshPort = address?.port;
+  });
+
+  await vi.waitFor(() => expect(sshPort).toBeGreaterThan(0));
+
+  let socketOrNpipePathLocal: string;
+  if (process.platform === 'win32') {
+    socketOrNpipePathLocal = '\\\\.\\pipe\\test-local-lost';
+  } else {
+    socketOrNpipePathLocal = join(tmpdir(), 'test-local-lost.sock');
+  }
+  await rm(socketOrNpipePathLocal, { force: true });
+
+  const podmanRemoteSshTunnel = new TestPodmanRemoteSshTunnel(
+    'localhost',
+    sshPort,
+    'foo',
+    dummyKey,
+    '/tmp/remote.sock',
+    socketOrNpipePathLocal,
+  );
+
+  podmanRemoteSshTunnel.connect();
+  await vi.waitFor(() => expect(podmanRemoteSshTunnel.isListening()).toBeTruthy());
+
+  // simulate ssh2 behavior when the underlying connection is gone
+  const forwardSpy = vi.spyOn(Client.prototype, 'openssh_forwardOutStreamLocal').mockImplementation(() => {
+    throw new Error('Not connected');
+  });
+
+  let localClosed = false;
+  const client = createConnection({ path: socketOrNpipePathLocal });
+  client.on('error', () => {});
+  client.on('close', () => {
+    localClosed = true;
+  });
+
+  await vi.waitFor(() => expect(localClosed).toBeTruthy());
+  expect(forwardSpy).toHaveBeenCalled();
+
+  podmanRemoteSshTunnel.disconnect();
+  sshServer.close();
+});
+
+test('should release previous client and local socket when reconnecting', async () => {
+  let sshPort = 0;
+
+  const sshServer = new Server(
+    {
+      hostKeys: [dummyKey],
+    },
+    client => {
+      client.on('authentication', ctx => {
+        ctx.accept();
+      });
+    },
+  ).listen(0, '127.0.0.1', () => {
+    const address: AddressInfo = sshServer.address() as AddressInfo;
+    sshPort = address?.port;
+  });
+
+  await vi.waitFor(() => expect(sshPort).toBeGreaterThan(0));
+
+  let socketOrNpipePathLocal: string;
+  if (process.platform === 'win32') {
+    socketOrNpipePathLocal = '\\\\.\\pipe\\test-local-reconnect';
+  } else {
+    socketOrNpipePathLocal = join(tmpdir(), 'test-local-reconnect.sock');
+  }
+  await rm(socketOrNpipePathLocal, { force: true });
+
+  const podmanRemoteSshTunnel = new TestPodmanRemoteSshTunnel(
+    'localhost',
+    sshPort,
+    'foo',
+    dummyKey,
+    '/tmp/remote.sock',
+    socketOrNpipePathLocal,
+  );
+
+  podmanRemoteSshTunnel.connect();
+  await vi.waitFor(() => expect(podmanRemoteSshTunnel.isListening()).toBeTruthy());
+
+  const endSpy = vi.spyOn(Client.prototype, 'end');
+
+  // reconnect: the new local server must be able to listen on the same path
+  podmanRemoteSshTunnel.connect();
+  expect(endSpy).toHaveBeenCalledTimes(1);
+  expect(podmanRemoteSshTunnel.isListening()).toBeFalsy();
+  await vi.waitFor(() => expect(podmanRemoteSshTunnel.isListening()).toBeTruthy());
+
+  podmanRemoteSshTunnel.disconnect();
+  sshServer.close();
+});
+
+test('should ignore events from a superseded ssh client', () => {
+  const clients: Client[] = [];
+  vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client) {
+    clients.push(this);
+    return this;
+  });
+  vi.spyOn(Client.prototype, 'end').mockReturnThis();
+
+  const podmanRemoteSshTunnel = new PodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    '',
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+  );
+  const handleReconnectSpy = vi.spyOn(podmanRemoteSshTunnel, 'handleReconnect').mockReturnValue();
+
+  podmanRemoteSshTunnel.connect();
+  podmanRemoteSshTunnel.connect();
+  expect(clients).toHaveLength(2);
+
+  // the first client is ended by the second connect and emits its end/close events
+  clients[0]?.emit('end');
+  clients[0]?.emit('close');
+  clients[0]?.emit('error', new Error('superseded'));
+  expect(handleReconnectSpy).not.toHaveBeenCalled();
+  expect(podmanRemoteSshTunnel.status()).toBe('unknown');
+
+  clients[1]?.emit('close');
+  expect(handleReconnectSpy).toHaveBeenCalledTimes(1);
+  expect(podmanRemoteSshTunnel.status()).toBe('stopped');
+
+  podmanRemoteSshTunnel.disconnect();
+});
+
+test('should clear pending reconnect timeout when the connection succeeds', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  const clients: Client[] = [];
+  vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client) {
+    clients.push(this);
+    return this;
+  });
+  vi.spyOn(Client.prototype, 'end').mockReturnThis();
+
+  const socketOrNpipePathLocal =
+    process.platform === 'win32' ? '\\\\.\\pipe\\test-local-ready' : join(tmpdir(), 'test-local-ready.sock');
+  await rm(socketOrNpipePathLocal, { force: true });
+
+  const podmanRemoteSshTunnel = new PodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    '',
+    '/tmp/remote.sock',
+    socketOrNpipePathLocal,
+  );
+  const connectSpy = vi.spyOn(podmanRemoteSshTunnel, 'connect');
+
+  podmanRemoteSshTunnel.connect();
+  podmanRemoteSshTunnel.handleReconnect();
+  clients[0]?.emit('ready');
+
+  vi.advanceTimersByTime(30000);
+  expect(connectSpy).toHaveBeenCalledTimes(1);
+  expect(podmanRemoteSshTunnel.status()).toBe('started');
+
+  podmanRemoteSshTunnel.disconnect();
+});
+
 test('disconnect should clear pending reconnect timeout', () => {
   vi.useFakeTimers();
   vi.spyOn(Client.prototype, 'connect').mockReturnThis();
