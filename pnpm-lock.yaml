@@ -1044,8 +1044,8 @@ importers:
         specifier: ^4.7.8
         version: 4.7.8(picomatch@4.0.7)(svelte@5.59.1(@typescript-eslint/types@8.70.0))(typescript@6.0.3)
       svelte-eslint-parser:
-        specifier: ^1.11.0
-        version: 1.11.0(svelte@5.59.1(@typescript-eslint/types@8.70.0))
+        specifier: ^1.12.0
+        version: 1.12.0(svelte@5.59.1(@typescript-eslint/types@8.70.0))
       svelte-fa:
         specifier: ^4.0.4
         version: 4.0.4(svelte@5.59.1(@typescript-eslint/types@8.70.0))
@@ -1141,8 +1141,8 @@ importers:
         specifier: ^4.7.8
         version: 4.7.8(picomatch@4.0.7)(svelte@5.59.1(@typescript-eslint/types@8.70.0))(typescript@6.0.3)
       svelte-eslint-parser:
-        specifier: ^1.11.0
-        version: 1.11.0(svelte@5.59.1(@typescript-eslint/types@8.70.0))
+        specifier: ^1.12.0
+        version: 1.12.0(svelte@5.59.1(@typescript-eslint/types@8.70.0))
       tailwindcss:
         specifier: ^4.3.5
         version: 4.3.5
@@ -11798,9 +11798,9 @@ packages:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: ^5.0.0 || ^6.0.0
 
-  svelte-eslint-parser@1.11.0:
-    resolution: {integrity: sha512-THKSuH+05dzMjBg0CJcBSdWLMC0ujzViX0h5w4vwxoPvCsaHv6WJ0d15otuitUVeLFDAb7Ertf5dH9qx+h0WiQ==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0, pnpm: 10.34.6}
+  svelte-eslint-parser@1.12.0:
+    resolution: {integrity: sha512-E6CCEapmde0ixoWuPqIWhLkzsZirh3oc3AOsi22HPJI9QwkaOEDcFI+ZjiM25Gl/7cHX7MObZq/4hkgQGI7WIA==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0, pnpm: 12.21.0}
     peerDependencies:
       svelte: ^3.37.0 || ^4.0.0 || ^5.0.0
     peerDependenciesMeta:
@@ -20580,7 +20580,7 @@ snapshots:
       postcss-load-config: 3.1.4(postcss@8.5.33)
       postcss-safe-parser: 7.0.1(postcss@8.5.33)
       semver: 7.8.6
-      svelte-eslint-parser: 1.11.0(svelte@5.59.1(@typescript-eslint/types@8.70.0))
+      svelte-eslint-parser: 1.12.0(svelte@5.59.1(@typescript-eslint/types@8.70.0))
     optionalDependencies:
       svelte: 5.59.1(@typescript-eslint/types@8.70.0)
     transitivePeerDependencies:
@@ -25382,7 +25382,7 @@ snapshots:
     transitivePeerDependencies:
       - picomatch
 
-  svelte-eslint-parser@1.11.0(svelte@5.59.1(@typescript-eslint/types@8.70.0)):
+  svelte-eslint-parser@1.12.0(svelte@5.59.1(@typescript-eslint/types@8.70.0)):
     dependencies:
       eslint-scope: 8.4.0
       eslint-visitor-keys: 4.2.1
