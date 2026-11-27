@@ -44,6 +44,12 @@ test('Check link styling', async () => {
   expect(link).toHaveClass('cursor-pointer');
 });
 
+test('Check link disables transitions when reduced motion is preferred', async () => {
+  render(Link);
+
+  expect(screen.getByRole('link')).toHaveClass('motion-reduce:transition-none');
+});
+
 test('Check icon styling', async () => {
   render(Link, { icon: faRocket, children: SNIPPET_MOCK });
 

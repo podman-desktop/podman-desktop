@@ -27,7 +27,7 @@ let {
 
 <!-- svelte-ignore a11y_missing_attribute -->
 <a
-  class="text-[var(--pd-link)] hover:bg-[var(--pd-link-hover-bg)] transition-all rounded-[4px] p-0.5 no-underline cursor-pointer {classes}"
+  class="text-[var(--pd-link)] hover:bg-[var(--pd-link-hover-bg)] transition-all motion-reduce:transition-none rounded-[4px] p-0.5 no-underline cursor-pointer {classes}"
   {onclick}
   role="link"
   tabindex="0"
