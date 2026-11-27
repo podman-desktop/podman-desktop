@@ -7,4 +7,5 @@ Icon=io.podman_desktop.PodmanDesktop
 StartupWMClass=podman-desktop
 Categories=Development;
 Keywords=container;pod;image;volume;kubernetes;docker;kind;kubectl;
+MimeType=x-scheme-handler/podman-desktop;
 X-Flatpak=io.podman_desktop.PodmanDesktop
