@@ -1404,10 +1404,30 @@ export class PluginSystem {
         });
 
         try {
+          const layerProgress = new Map<string, { current: number; total: number }>();
           await containerProviderRegistry.pullImage(
             providerContainerConnectionInfo,
             imageName,
             (event: PullEvent) => {
+              const progressDetail = event.progressDetail;
+              const total = Number(progressDetail?.total);
+              const current = Number(progressDetail?.current ?? 0);
+              if (Number.isFinite(total) && total > 0) {
+                const layerId = event.id ?? 'unknown';
+                layerProgress.set(layerId, {
+                  total,
+                  current: Number.isFinite(current) ? Math.min(total, Math.max(0, current)) : 0,
+                });
+
+                const overallProgress = Array.from(layerProgress.values()).reduce(
+                  (progress, layer) => ({
+                    current: progress.current + layer.current,
+                    total: progress.total + layer.total,
+                  }),
+                  { current: 0, total: 0 },
+                );
+                task.progress = Math.min(100, Math.round((overallProgress.current / overallProgress.total) * 100));
+              }
               this.getWebContentsSender().send('container-provider-registry:pullImage-onData', callbackId, event);
             },
             platform,

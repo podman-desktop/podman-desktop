@@ -567,7 +567,7 @@ test('push image sends data event with error, "end" event when fails and set tas
   expect(vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value.error).toBe(String(pushError));
 });
 
-test('Pull image creates a task', async () => {
+test('Pull image reports progress when the pull event includes current and total', async () => {
   const handle = getHandler<
     (_event: unknown, _engine: string, _imageName: string, _callbackId: number) => Promise<void>
   >('container-provider-registry:pullImage');
@@ -581,7 +581,14 @@ test('Pull image creates a task', async () => {
   );
   await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
   expect(registeredCallback).not.equal(defaultCallback);
-  registeredCallback({ id: 'pullEvent1' } as PullEvent);
+  registeredCallback({
+    id: 'pullEvent1',
+    progressDetail: { total: 100 },
+  } as PullEvent);
+  registeredCallback({
+    id: 'pullEvent1',
+    progressDetail: { current: 50, total: 100 },
+  } as PullEvent);
   expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
   expect(TaskManager.prototype.createTask).toHaveBeenCalledWith({
     title: 'Pulling registry.com/repo/image:latest',
@@ -590,8 +597,51 @@ test('Pull image creates a task', async () => {
   });
   expect(webContents.send).toBeCalledWith('container-provider-registry:pullImage-onData', 1, {
     id: 'pullEvent1',
+    progressDetail: { current: 50, total: 100 },
   } as PullEvent);
+  expect(vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value.progress).toBe(50);
   expect(vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value.status).toBe('success');
+});
+
+test('Pull image calculates progress across all reported layers', async () => {
+  const handle = getHandler<
+    (_event: unknown, _engine: string, _imageName: string, _callbackId: number) => Promise<void>
+  >('container-provider-registry:pullImage');
+  let registeredCallback: (event: PullEvent) => void = vi.fn();
+  vi.mocked(ContainerProviderRegistry.prototype.pullImage).mockImplementation(
+    (_engine, _imageName, callback: (event: PullEvent) => void) => {
+      registeredCallback = callback;
+      return Promise.resolve();
+    },
+  );
+
+  await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
+  registeredCallback({ id: 'layer-1', progressDetail: { current: 0, total: 100 } });
+  registeredCallback({ id: 'layer-2', progressDetail: { current: 0, total: 300 } });
+  const task = vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value;
+  expect(task?.progress).toBe(0);
+
+  registeredCallback({ id: 'layer-1', progressDetail: { current: 50, total: 100 } });
+  registeredCallback({ id: 'layer-2', progressDetail: { current: 150, total: 300 } });
+  expect(task?.progress).toBe(50);
+});
+
+test('Pull image reports 0% when the first pull event only includes total', async () => {
+  const handle = getHandler<
+    (_event: unknown, _engine: string, _imageName: string, _callbackId: number) => Promise<void>
+  >('container-provider-registry:pullImage');
+  let registeredCallback: (event: PullEvent) => void = vi.fn();
+  vi.mocked(ContainerProviderRegistry.prototype.pullImage).mockImplementation(
+    (_engine, _imageName, callback: (event: PullEvent) => void) => {
+      registeredCallback = callback;
+      return Promise.resolve();
+    },
+  );
+
+  await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
+  registeredCallback({ id: 'pullEvent1', progressDetail: { total: 100 } });
+
+  expect(vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value.progress).toBe(0);
 });
 
 test('Pull image creates a cancellable task and marks task as canceled on cancellation', async () => {
