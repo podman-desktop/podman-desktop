@@ -36,6 +36,7 @@ import {
 import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import { ExtensionPlatformService } from '/@/plugin/extension/extension-platform.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { MessageBox } from '/@/plugin/message-box.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
@@ -67,6 +68,8 @@ export class ExtensionInstaller {
     private taskManager: TaskManager,
     @inject(MessageBox)
     private messageBox: MessageBox,
+    @inject(ExtensionPlatformService)
+    private extensionPlatformService: ExtensionPlatformService,
   ) {
     this.#dockerDesktopInstaller = new DockerDesktopInstaller(contributionManager);
   }
@@ -184,6 +187,19 @@ export class ExtensionInstaller {
         sendLog(event.message);
         onProgress?.(event.progress);
       });
+
+      if (isPDExtension) {
+        // refuse an extension that does not run on this platform before copying it to the plugins directory
+        const manifestPath = path.join(tmpFolderPath, 'extension', 'package.json');
+        const unsupportedReason = this.extensionPlatformService.getUnsupportedReason(
+          await this.extensionPlatformService.readDeclaredPlatforms(manifestPath),
+          'installed',
+        );
+        if (unsupportedReason) {
+          sendError(`Extension ${titleLabel} ${unsupportedReason}`);
+          return;
+        }
+      }
 
       sendLog('Filtering image content...');
       if (isPDExtension) {

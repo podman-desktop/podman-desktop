@@ -38,6 +38,7 @@ import type { Task } from '/@/plugin/tasks/tasks.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
 import { ExtensionInstaller } from './extension-installer.js';
+import { ExtensionPlatformService } from './extension-platform.js';
 
 let extensionInstaller: ExtensionInstaller;
 
@@ -103,11 +104,13 @@ const taskManager = {
 } as unknown as TaskManager;
 
 let messageBox: MessageBox;
+let extensionPlatformService: ExtensionPlatformService;
 
 vi.mock(import('node:fs'));
 vi.mock(import('node:fs/promises'));
 vi.mock(import('/@/plugin/docker-extension/docker-desktop-installer.js'));
 vi.mock(import('/@/plugin/message-box.js'));
+vi.mock(import('/@/plugin/extension/extension-platform.js'));
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -119,9 +122,13 @@ beforeEach(() => {
   });
 
   vi.mocked(rm).mockResolvedValue(undefined);
+  vi.mocked(mkdtemp).mockResolvedValue('/fake/tmp/fake-extension');
   vi.mocked(directories.getPluginsDirectory).mockReturnValue('/fake/plugins/directory');
   vi.mocked(directories.getContributionStorageDir).mockReturnValue('/fake/dd/directory');
+  // an installed extension supports every platform unless a test declares otherwise
+  vi.mocked(ExtensionPlatformService.prototype.readDeclaredPlatforms).mockResolvedValue({ kind: 'unrestricted' });
   messageBox = new MessageBox(apiSender);
+  extensionPlatformService = new ExtensionPlatformService();
   extensionInstaller = new ExtensionInstaller(
     apiSender,
     extensionLoader,
@@ -133,6 +140,7 @@ beforeEach(() => {
     ipcMainOnMock,
     taskManager,
     messageBox,
+    extensionPlatformService,
   );
 });
 
@@ -269,6 +277,7 @@ describe('installFromImage tmp folder cleanup', () => {
       ipcMainOnMock,
       taskManager,
       messageBox,
+      extensionPlatformService,
     );
     vi.mocked(mkdtemp).mockResolvedValue(TMP_FOLDER);
     getImageConfigLabelsMock.mockResolvedValueOnce({
@@ -943,5 +952,128 @@ describe('installing an extension replacing a bundled one', () => {
     expect(sendError).toHaveBeenCalledWith('Extension podman-desktop.kind is already installed.');
     expect(extensionLoader.markIfOverriding).not.toHaveBeenCalled();
     expect(loadExtensionsMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('analyzeFromImage platform support', () => {
+  const imageToPull = 'fake.io/fake-image:fake-tag';
+  const TMP_FOLDER = '/fake/tmp/fakeiofakeimage-abc123';
+
+  const podmanDesktopLabels = {
+    'org.opencontainers.image.title': 'Apple container',
+    'org.opencontainers.image.description': 'List and manage Apple containers',
+    'org.opencontainers.image.vendor': 'podman-desktop',
+    'io.podman-desktop.api.version': '1.21.0',
+  };
+
+  beforeEach(() => {
+    extensionInstaller = new TestExtensionInstaller(
+      apiSender,
+      extensionLoader,
+      imageRegistry,
+      extensionsCatalog,
+      telemetryMock,
+      directories,
+      contributionManager,
+      ipcMainOnMock,
+      taskManager,
+      messageBox,
+      extensionPlatformService,
+    );
+    vi.mocked(mkdtemp).mockResolvedValue(TMP_FOLDER);
+    getImageConfigLabelsMock.mockResolvedValue(podmanDesktopLabels);
+    downloadAndExtractImageMock.mockResolvedValue(undefined);
+    listExtensionsMock.mockResolvedValue([]);
+    analyzeExtensionMock.mockResolvedValue({ manifest: {} } as AnalyzedExtension);
+    vi.mocked(ExtensionPlatformService.prototype.readDeclaredPlatforms).mockResolvedValue({ kind: 'unrestricted' });
+    vi.mocked(ExtensionPlatformService.prototype.getUnsupportedReason).mockReturnValue(undefined);
+  });
+
+  test('refuses an extension which does not support the current platform', async () => {
+    vi.mocked(ExtensionPlatformService.prototype.readDeclaredPlatforms).mockResolvedValue({
+      kind: 'restricted',
+      platforms: ['windows/amd64'],
+    });
+    vi.mocked(ExtensionPlatformService.prototype.getUnsupportedReason).mockReturnValue(
+      'supports windows/amd64 and cannot be installed on darwin/arm64',
+    );
+    const sendLog = vi.fn();
+    const sendError = vi.fn();
+
+    const analyzedExtension = await extensionInstaller.analyzeFromImage(sendLog, sendError, imageToPull);
+
+    expect(analyzedExtension).toBeUndefined();
+    expect(sendError).toHaveBeenCalledWith(
+      'Extension Apple container supports windows/amd64 and cannot be installed on darwin/arm64',
+    );
+    expect(downloadAndExtractImageMock).toHaveBeenCalled();
+    expect(extractExtensionFilesMock).not.toHaveBeenCalled();
+    expect(rm).toHaveBeenCalledWith(TMP_FOLDER, { recursive: true, force: true });
+  });
+
+  test('refuses an extension declaring an invalid targetPlatforms', async () => {
+    vi.mocked(ExtensionPlatformService.prototype.readDeclaredPlatforms).mockResolvedValue({ kind: 'invalid' });
+    vi.mocked(ExtensionPlatformService.prototype.getUnsupportedReason).mockReturnValue(
+      'declares an invalid targetPlatforms list and cannot be installed',
+    );
+    const sendError = vi.fn();
+
+    const analyzedExtension = await extensionInstaller.analyzeFromImage(vi.fn(), sendError, imageToPull);
+
+    expect(analyzedExtension).toBeUndefined();
+    expect(sendError).toHaveBeenCalledWith(
+      'Extension Apple container declares an invalid targetPlatforms list and cannot be installed',
+    );
+    expect(extractExtensionFilesMock).not.toHaveBeenCalled();
+  });
+
+  test('installs an extension supporting the current platform', async () => {
+    vi.mocked(ExtensionPlatformService.prototype.readDeclaredPlatforms).mockResolvedValue({
+      kind: 'restricted',
+      platforms: ['darwin/arm64', 'darwin/amd64'],
+    });
+    const sendError = vi.fn();
+
+    await extensionInstaller.analyzeFromImage(vi.fn(), sendError, imageToPull);
+
+    expect(ExtensionPlatformService.prototype.getUnsupportedReason).toHaveBeenCalledWith(
+      { kind: 'restricted', platforms: ['darwin/arm64', 'darwin/amd64'] },
+      'installed',
+    );
+    expect(sendError).not.toHaveBeenCalled();
+    expect(extractExtensionFilesMock).toHaveBeenCalled();
+    expect(analyzeExtensionMock).toHaveBeenCalled();
+  });
+
+  test('installs an extension which does not declare any platform', async () => {
+    const sendError = vi.fn();
+
+    await extensionInstaller.analyzeFromImage(vi.fn(), sendError, imageToPull);
+
+    expect(sendError).not.toHaveBeenCalled();
+    expect(extractExtensionFilesMock).toHaveBeenCalled();
+  });
+
+  test('does not check the platform of a Docker Desktop extension', async () => {
+    getImageConfigLabelsMock.mockResolvedValue({
+      'org.opencontainers.image.title': 'Docker extension',
+      'org.opencontainers.image.description': 'desc',
+      'org.opencontainers.image.vendor': 'vendor',
+      'com.docker.desktop.extension.api.version': '0.3.0',
+    });
+    const sendError = vi.fn();
+
+    await extensionInstaller.analyzeFromImage(vi.fn(), sendError, imageToPull);
+
+    expect(ExtensionPlatformService.prototype.readDeclaredPlatforms).not.toHaveBeenCalled();
+    expect(sendError).not.toHaveBeenCalled();
+  });
+
+  test('reads the platforms declared in the package.json of the image', async () => {
+    await extensionInstaller.analyzeFromImage(vi.fn(), vi.fn(), imageToPull);
+
+    expect(ExtensionPlatformService.prototype.readDeclaredPlatforms).toHaveBeenCalledWith(
+      path.join(TMP_FOLDER, 'extension', 'package.json'),
+    );
   });
 });
