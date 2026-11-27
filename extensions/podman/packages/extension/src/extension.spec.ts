@@ -80,6 +80,7 @@ import * as podmanCli from './utils/podman-cli';
 import type { PodmanConfiguration } from './utils/podman-configuration';
 import { PodmanMachineLifecycle } from './utils/podman-machine-lifecycle';
 import { RosettaProvisioner } from './utils/rosetta';
+import { SshHostKeyStore } from './utils/ssh-host-key-store';
 import * as util from './utils/util';
 import { getAssetsFolder, LIBKRUN_LABEL, LoggerDelegator, VMTYPE } from './utils/util';
 import { isDisguisedPodman } from './utils/warnings';
@@ -289,6 +290,7 @@ beforeEach(async () => {
   // each init() returns a new container, with its own ExtensionNotifications singleton
   function createContainer(): InversifyContainer {
     let extensionNotifications: ExtensionNotifications | undefined;
+    let sshHostKeyStore: SshHostKeyStore | undefined;
 
     function getBind(identifier: ServiceIdentifier<unknown>): unknown {
       switch (identifier) {
@@ -300,6 +302,9 @@ beforeEach(async () => {
           return PODMAN_BINARY_MOCK;
         case PodmanProvider:
           return PODMAN_PROVIDER_MOCK;
+        case SshHostKeyStore:
+          sshHostKeyStore ??= new SshHostKeyStore();
+          return sshHostKeyStore;
         case RosettaProvisioner:
           return ROSETTA_PROVISIONER_MOCK;
         case PodmanMachineLifecycle:
