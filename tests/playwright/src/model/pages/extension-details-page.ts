@@ -34,6 +34,11 @@ export class ExtensionDetailsPage extends BasePage {
   readonly status: Locator;
   readonly heading: Locator;
   readonly errorStackTrace: Locator;
+  readonly autoUpdateRegion: Locator;
+  readonly autoUpdateEnabledLabel: Locator;
+  readonly autoUpdateDisabledLabel: Locator;
+  readonly autoUpdateEnableButton: Locator;
+  readonly autoUpdateDisableButton: Locator;
 
   constructor(
     page: Page,
@@ -56,6 +61,31 @@ export class ExtensionDetailsPage extends BasePage {
     this.errorStackTrace = this.tabContent.getByRole('group', {
       name: 'Stack Trace',
       exact: true,
+    });
+    this.autoUpdateRegion = page.getByRole('region', { name: 'Auto-update', exact: true });
+    this.autoUpdateEnabledLabel = this.autoUpdateRegion.getByText('Enabled', { exact: true });
+    this.autoUpdateDisabledLabel = this.autoUpdateRegion.getByText('Disabled', { exact: true });
+    this.autoUpdateEnableButton = this.autoUpdateRegion.getByRole('button', { name: 'Enable', exact: true });
+    this.autoUpdateDisableButton = this.autoUpdateRegion.getByRole('button', { name: 'Disable', exact: true });
+  }
+
+  async disableAutoUpdate(): Promise<this> {
+    return test.step(`Disable automatic updates of extension: ${this.extensionName}`, async () => {
+      await playExpect(this.autoUpdateDisableButton).toBeVisible();
+      await this.autoUpdateDisableButton.click();
+      await playExpect(this.autoUpdateDisabledLabel).toBeVisible();
+      await playExpect(this.autoUpdateEnableButton).toBeVisible();
+      return this;
+    });
+  }
+
+  async enableAutoUpdate(): Promise<this> {
+    return test.step(`Enable automatic updates of extension: ${this.extensionName}`, async () => {
+      await playExpect(this.autoUpdateEnableButton).toBeVisible();
+      await this.autoUpdateEnableButton.click();
+      await playExpect(this.autoUpdateEnabledLabel).toBeVisible();
+      await playExpect(this.autoUpdateDisableButton).toBeVisible();
+      return this;
     });
   }
 
