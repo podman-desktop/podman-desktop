@@ -161,7 +161,7 @@ test('Expect do not close if clicking on the status bar entry', async () => {
 
   // create the button
   const taskButton = document.createElement('button');
-  taskButton.title = 'Tasks';
+  taskButton.ariaLabel = 'Tasks';
   statusBarEntry.appendChild(taskButton);
 
   const showTaskManager = true;

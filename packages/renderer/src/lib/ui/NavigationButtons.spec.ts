@@ -48,19 +48,19 @@ afterEach(() => {
 
 describe('button states', () => {
   test('back button should be disabled when no history', async () => {
-    const { findByTitle } = render(NavigationButtons);
+    const { findByRole } = render(NavigationButtons);
 
     await vi.waitFor(async () => {
-      const backButton = await findByTitle('Back (hold for history)');
+      const backButton = await findByRole('button', { name: 'Back (hold for history)' });
       expect(backButton).toBeDisabled();
     });
   });
 
   test('forward button should be disabled when no history', async () => {
-    const { findByTitle } = render(NavigationButtons);
+    const { findByRole } = render(NavigationButtons);
 
     await vi.waitFor(async () => {
-      const forwardButton = await findByTitle('Forward (hold for history)');
+      const forwardButton = await findByRole('button', { name: 'Forward (hold for history)' });
       expect(forwardButton).toBeDisabled();
     });
   });
@@ -69,10 +69,10 @@ describe('button states', () => {
     navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 1;
 
-    const { findByTitle } = render(NavigationButtons);
+    const { findByRole } = render(NavigationButtons);
 
     await vi.waitFor(async () => {
-      const backButton = await findByTitle('Back (hold for history)');
+      const backButton = await findByRole('button', { name: 'Back (hold for history)' });
       expect(backButton).toBeEnabled();
     });
   });
@@ -81,10 +81,10 @@ describe('button states', () => {
     navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 0;
 
-    const { findByTitle } = render(NavigationButtons);
+    const { findByRole } = render(NavigationButtons);
 
     await vi.waitFor(async () => {
-      const forwardButton = await findByTitle('Forward (hold for history)');
+      const forwardButton = await findByRole('button', { name: 'Forward (hold for history)' });
       expect(forwardButton).toBeEnabled();
     });
   });
@@ -95,10 +95,10 @@ describe('click navigation', () => {
     navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 1;
 
-    const { findByTitle } = render(NavigationButtons);
+    const { findByRole } = render(NavigationButtons);
 
     await vi.waitFor(async () => {
-      const backButton = await findByTitle('Back (hold for history)');
+      const backButton = await findByRole('button', { name: 'Back (hold for history)' });
       await fireEvent.click(backButton);
       expect(goBack).toHaveBeenCalled();
     });
@@ -108,10 +108,10 @@ describe('click navigation', () => {
     navigationHistory.stack = [{ url: '/containers' }, { url: '/images' }];
     navigationHistory.index = 0;
 
-    const { findByTitle } = render(NavigationButtons);
+    const { findByRole } = render(NavigationButtons);
 
     await vi.waitFor(async () => {
-      const forwardButton = await findByTitle('Forward (hold for history)');
+      const forwardButton = await findByRole('button', { name: 'Forward (hold for history)' });
       await fireEvent.click(forwardButton);
       expect(goForward).toHaveBeenCalled();
     });
@@ -306,10 +306,10 @@ describe('long press dropdown', () => {
       { index: 0, name: 'Containers' },
     ]);
 
-    const { findByTitle } = render(NavigationButtons);
+    const { findByRole, findByTitle } = render(NavigationButtons);
 
     await vi.waitFor(async () => {
-      const backButton = await findByTitle('Back (hold for history)');
+      const backButton = await findByRole('button', { name: 'Back (hold for history)' });
 
       // Start long press
       await fireEvent.mouseDown(backButton, { button: 0 });
@@ -331,10 +331,10 @@ describe('long press dropdown', () => {
       { index: 0, name: 'My Extension → Model 1', icon: { iconImage: 'data:image/png;base64,abc' } },
     ]);
 
-    const { findByTitle } = render(NavigationButtons);
+    const { findByRole, findByTitle } = render(NavigationButtons);
 
     await vi.waitFor(async () => {
-      const backButton = await findByTitle('Back (hold for history)');
+      const backButton = await findByRole('button', { name: 'Back (hold for history)' });
 
       // Start long press
       await fireEvent.mouseDown(backButton, { button: 0 });
@@ -356,10 +356,10 @@ describe('long press dropdown', () => {
       { index: 2, name: 'Pods' },
     ]);
 
-    const { findByTitle } = render(NavigationButtons);
+    const { findByRole, findByTitle } = render(NavigationButtons);
 
     await vi.waitFor(async () => {
-      const forwardButton = await findByTitle('Forward (hold for history)');
+      const forwardButton = await findByRole('button', { name: 'Forward (hold for history)' });
 
       // Start long press
       await fireEvent.mouseDown(forwardButton, { button: 0 });
@@ -379,10 +379,10 @@ describe('long press dropdown', () => {
 
     vi.mocked(getBackEntries).mockReturnValue([{ index: 0, name: 'Containers' }]);
 
-    const { findByTitle, queryByTitle } = render(NavigationButtons);
+    const { findByRole, queryByTitle } = render(NavigationButtons);
 
     await vi.waitFor(async () => {
-      const backButton = await findByTitle('Back (hold for history)');
+      const backButton = await findByRole('button', { name: 'Back (hold for history)' });
 
       // Short click (mousedown then mouseup before timer)
       await fireEvent.mouseDown(backButton, { button: 0 });
@@ -405,10 +405,10 @@ describe('dropdown item selection', () => {
       { index: 0, name: 'Containers' },
     ]);
 
-    const { findByTitle } = render(NavigationButtons);
+    const { findByRole, findByTitle } = render(NavigationButtons);
 
     await vi.waitFor(async () => {
-      const backButton = await findByTitle('Back (hold for history)');
+      const backButton = await findByRole('button', { name: 'Back (hold for history)' });
 
       // Long press to show dropdown
       await fireEvent.mouseDown(backButton, { button: 0 });

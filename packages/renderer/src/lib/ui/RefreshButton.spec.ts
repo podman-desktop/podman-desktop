@@ -31,9 +31,21 @@ test('Expect basic styling', async () => {
   // get button
   const button = screen.getByRole('button', { name: label });
   expect(button).toBeInTheDocument();
-  expect(button).toHaveAttribute('title', label);
+  expect(button).not.toHaveAttribute('title');
   expect(button).toHaveClass('text-(--pd-button-icon-primary-text)');
   expect(button).toHaveClass('hover:text-(--pd-button-icon-primary-hover-text)');
+});
+
+test('Expect label shown as tooltip on hover instead of a native title', async () => {
+  const label = 'Refresh test';
+  render(RefreshButton, { onclick: vi.fn(), label });
+
+  const button = screen.getByRole('button', { name: label });
+  await fireEvent.mouseEnter(button);
+
+  expect(screen.getByRole('tooltip')).toHaveTextContent(label);
+  // the tooltip repeats the aria-label, so it is not referenced as a description
+  expect(button).not.toHaveAttribute('aria-describedby');
 });
 
 test('Expect click', async () => {

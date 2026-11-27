@@ -14,7 +14,7 @@ function toggle(val: boolean): void {
 function onWindowClick({ clientX, clientY, target }: MouseEvent): void {
   // grab the task manager button from the status bar
   const statusBarElement = document.querySelector('div[aria-label="Status Bar"]');
-  const taskManagerButton = statusBarElement?.querySelector('button[title="Tasks"]');
+  const taskManagerButton = statusBarElement?.querySelector('button[aria-label="Tasks"]');
 
   // if the task manager is not open, do not check anything
   if (!showTaskManager) {

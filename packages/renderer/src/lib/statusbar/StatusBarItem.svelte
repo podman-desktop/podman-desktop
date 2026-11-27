@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { StatusBarEntry } from '@desktop-framework/api';
+import { tooltip as tooltipAttachment } from '@podman-desktop/ui-svelte';
 
 import { iconClass } from './StatusBarItem';
 
@@ -11,6 +12,14 @@ let { entry }: Props = $props();
 
 function tooltipText(entry: StatusBarEntry): string {
   return entry.tooltip ?? '';
+}
+
+function accessibleName(entry: StatusBarEntry): string | undefined {
+  // an entry without text is icon-only: use its tooltip so the button keeps an accessible name
+  if (entry.text) {
+    return entry.text;
+  }
+  return tooltipText(entry) || undefined;
 }
 
 function opacity(entry: StatusBarEntry): string {
@@ -45,7 +54,8 @@ async function executeCommand(entry: StatusBarEntry): Promise<void> {
   class="{opacity(entry)} px-1 py-px flex h-full items-center {hoverBackground(entry)} {hoverCursor(
     entry,
   )} relative inline-block"
-  title={tooltipText(entry)}>
+  aria-label={accessibleName(entry)}
+  {@attach tooltipAttachment(() => tooltipText(entry))}>
   {#if iconClass(entry)}
     <span class={iconClass(entry)} aria-hidden="true" data-task-button="{tooltipText(entry)}"></span>
   {/if}

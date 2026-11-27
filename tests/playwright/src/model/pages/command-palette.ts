@@ -41,7 +41,7 @@ export class CommandPalette extends BasePage {
   constructor(page: Page) {
     super(page);
     this.commandPaletteInputField = this.page.getByLabel('Command palette command input', { exact: true });
-    this.searchButton = this.page.getByTitle('Search');
+    this.searchButton = this.page.locator('#navbar').getByRole('button', { name: 'Search' });
     this.allTab = this.page.getByRole('button', { name: /\bAll$/ });
     this.commandsTab = this.page.getByRole('button', { name: /\bCommands$/ });
     this.documentationTab = this.page.getByRole('button', { name: /\bDocumentation$/ });
