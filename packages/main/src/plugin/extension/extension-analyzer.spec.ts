@@ -26,15 +26,21 @@ import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionAnalyzer } from './extension-analyzer.js';
 import type { ExtensionManifest } from './extension-manifest-schema.js';
+import { ExtensionPlatformService } from './extension-platform.js';
 
 let extensionAnalyzer: ExtensionAnalyzer;
+let extensionPlatformService: ExtensionPlatformService;
 
 vi.mock(import('node:fs'));
 vi.mock(import('node:fs/promises'));
+vi.mock(import('./extension-platform.js'));
 
 beforeEach(() => {
   vi.resetAllMocks();
-  extensionAnalyzer = new ExtensionAnalyzer();
+  extensionPlatformService = new ExtensionPlatformService();
+  vi.mocked(extensionPlatformService.analyzeDeclaredPlatforms).mockReturnValue({ kind: 'unrestricted' });
+  vi.mocked(extensionPlatformService.getUnsupportedReason).mockReturnValue(undefined);
+  extensionAnalyzer = new ExtensionAnalyzer(extensionPlatformService);
 });
 
 describe('analyze extension and main', () => {
@@ -203,6 +209,101 @@ describe('analyze extension and main', () => {
 
     assert(extension.error);
     expect(extension.overrides).toEqual({ id: 'podman-desktop.bundled', version: '1.0.0' });
+  });
+});
+
+describe('analyze extension and targetPlatforms', () => {
+  test('reports an error for an extension which does not support the current platform', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.mocked(realpath).mockResolvedValue('/fake/path');
+    // package.json manifest
+    vi.mocked(readFile).mockResolvedValue(
+      JSON.stringify({
+        publisher: 'fooPublisher',
+        name: 'fooName',
+        displayName: 'Foo',
+        version: '1.0.0',
+        description: 'Foo extension',
+        targetPlatforms: ['windows/amd64'],
+      }),
+    );
+
+    vi.mocked(extensionPlatformService.analyzeDeclaredPlatforms).mockReturnValue({
+      kind: 'restricted',
+      platforms: ['windows/amd64'],
+    });
+    vi.mocked(extensionPlatformService.getUnsupportedReason).mockReturnValue(
+      'supports windows/amd64 and cannot be loaded on darwin/arm64',
+    );
+
+    const extension = await extensionAnalyzer.analyzeExtension({
+      extensionPath: '/fake/path',
+      removable: false,
+    });
+
+    expect(extension.error).toBe('Extension /fake/path supports windows/amd64 and cannot be loaded on darwin/arm64');
+    expect(vi.mocked(extensionPlatformService.getUnsupportedReason)).toHaveBeenCalledWith(
+      { kind: 'restricted', platforms: ['windows/amd64'] },
+      'loaded',
+    );
+  });
+
+  test('reports an error for an extension declaring an invalid targetPlatforms list', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.mocked(realpath).mockResolvedValue('/fake/path');
+    // package.json manifest
+    vi.mocked(readFile).mockResolvedValue(
+      JSON.stringify({
+        publisher: 'fooPublisher',
+        name: 'fooName',
+        displayName: 'Foo',
+        version: '1.0.0',
+        description: 'Foo extension',
+        targetPlatforms: ['darwin-arm64'],
+      }),
+    );
+
+    vi.mocked(extensionPlatformService.analyzeDeclaredPlatforms).mockReturnValue({ kind: 'invalid' });
+    vi.mocked(extensionPlatformService.getUnsupportedReason).mockReturnValue(
+      'declares an invalid targetPlatforms list and cannot be loaded',
+    );
+
+    const extension = await extensionAnalyzer.analyzeExtension({
+      extensionPath: '/fake/path',
+      removable: false,
+    });
+
+    expect(extension.error).toBe('Extension /fake/path declares an invalid targetPlatforms list and cannot be loaded');
+  });
+
+  test('does not report an error for an extension supporting the current platform', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.mocked(realpath).mockResolvedValue('/fake/path');
+    // package.json manifest
+    vi.mocked(readFile).mockResolvedValue(
+      JSON.stringify({
+        publisher: 'fooPublisher',
+        name: 'fooName',
+        displayName: 'Foo',
+        version: '1.0.0',
+        description: 'Foo extension',
+        targetPlatforms: ['darwin/arm64'],
+      }),
+    );
+
+    vi.mocked(extensionPlatformService.analyzeDeclaredPlatforms).mockReturnValue({
+      kind: 'restricted',
+      platforms: ['darwin/arm64'],
+    });
+    vi.mocked(extensionPlatformService.getUnsupportedReason).mockReturnValue(undefined);
+
+    const extension = await extensionAnalyzer.analyzeExtension({
+      extensionPath: '/fake/path',
+      removable: false,
+      devMode: true,
+    });
+
+    expect(extension.error).toBeUndefined();
   });
 });
 

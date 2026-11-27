@@ -123,7 +123,7 @@ export class ExtensionPlatformService {
   /**
    * @returns why the extension cannot be used on the current platform, or undefined when it can
    */
-  getUnsupportedReason(declaredPlatforms: DeclaredPlatforms, action: 'installed'): string | undefined {
+  getUnsupportedReason(declaredPlatforms: DeclaredPlatforms, action: 'installed' | 'loaded'): string | undefined {
     if (declaredPlatforms.kind === 'invalid') {
       return `declares an invalid targetPlatforms list and cannot be ${action}`;
     }

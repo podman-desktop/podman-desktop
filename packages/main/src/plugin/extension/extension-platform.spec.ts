@@ -136,6 +136,15 @@ describe('getUnsupportedReason', () => {
     ).toBe('supports windows/amd64 and cannot be installed on darwin/arm64');
   });
 
+  test('reports an extension which cannot be loaded on the current platform', () => {
+    vi.mocked(platform).mockReturnValue('darwin');
+    vi.mocked(arch).mockReturnValue('arm64');
+
+    expect(
+      extensionPlatformService.getUnsupportedReason({ kind: 'restricted', platforms: ['windows/amd64'] }, 'loaded'),
+    ).toBe('supports windows/amd64 and cannot be loaded on darwin/arm64');
+  });
+
   test('reports an invalid declaration', () => {
     vi.mocked(platform).mockReturnValue('darwin');
     vi.mocked(arch).mockReturnValue('arm64');
