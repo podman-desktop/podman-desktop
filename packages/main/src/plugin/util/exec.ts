@@ -19,7 +19,7 @@
 import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { homedir } from 'node:os';
-import { delimiter, join } from 'node:path';
+import { delimiter, join, posix } from 'node:path';
 
 import type { RunError, RunOptions, RunResult } from '@desktop-framework/extension-api';
 import * as sudo from '@expo/sudo-prompt';
@@ -70,6 +70,17 @@ export class Exec {
     if (isMac() || isWindows()) {
       env['PATH'] = getInstallationPath(env['PATH']);
     }
+
+    // Binaries shipped inside the Flatpak live under /app, which only exists in the sandbox, so they must not be
+    // spawned on the host. Relative paths are resolved against the working directory used by spawn. Bare command
+    // names (no slash) are looked up in the host PATH and admin commands require pkexec on the host, so both keep
+    // using flatpak-spawn.
+    const cwd = options?.cwd;
+    const isBundledFlatpakBinary =
+      !!env['FLATPAK_ID'] &&
+      !options?.isAdmin &&
+      command.includes('/') &&
+      posix.resolve(cwd ?? process.cwd(), command).startsWith('/app/');
 
     // do we have an admin task ?
     // if yes, will use sudo-prompt on windows and osascript on mac and pkexec on linux
@@ -141,7 +152,7 @@ export class Exec {
       }
     }
 
-    if (env['FLATPAK_ID']) {
+    if (env['FLATPAK_ID'] && !isBundledFlatpakBinary) {
       const customEnvVariables: string[] = [];
       for (const envVar in options?.env) {
         customEnvVariables.push(`--env=${envVar}=${options.env[envVar]}`);
@@ -149,8 +160,6 @@ export class Exec {
       args = ['--host', ...customEnvVariables, command, ...(args ?? [])];
       command = 'flatpak-spawn';
     }
-
-    const cwd = options?.cwd;
 
     if (options?.detached) {
       // On Windows, detached:true sets DETACHED_PROCESS which conflicts
