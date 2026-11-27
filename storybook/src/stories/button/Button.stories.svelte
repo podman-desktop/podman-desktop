@@ -24,6 +24,10 @@ const onclickFn = fn().mockName('onclick');
  *
  * This collection showcases button types, states, and usage patterns
  * found in the Podman Desktop application.
+ *
+ * Use `type="danger"` for the control that starts a destructive action, on the page and in the
+ * confirmation dialog. Refer to `DESIGN-GUIDELINES.md` if you're unsure what counts as destructive
+ * or when a confirmation is required.
  */
 // biome-ignore lint/correctness/noUnusedVariables: Story is used in markup
 const { Story } = defineMeta({
