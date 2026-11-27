@@ -71,7 +71,7 @@
 | Element           | Selector                                                                       |
 | ----------------- | ------------------------------------------------------------------------------ |
 | Card              | `[role="group"][aria-label="{extensionName}"]`                                 |
-| More details      | `[role="group"][aria-label="{extensionName}"] button:has-text("More details")` |
+| Details link      | `[role="group"][aria-label="{extensionName}"] a[href^="/extensions/details/"]` |
 | Install button    | `[role="group"][aria-label="{extensionName}"] button:has-text("Install")`      |
 | Already installed | text "Already installed" within card                                           |
 
@@ -87,7 +87,7 @@
 
 1. Navigate to Extensions page (steps 1-2)
 2. Click Catalog: `click('button:has-text("Catalog")')`
-3. Wait for catalog cards: `wait('[role="group"][aria-label] button:has-text("More details")')`
+3. Wait for catalog cards: `wait('[aria-label="Catalog Extensions"] a[href^="/extensions/details/"]')`
 
 ### Install extension from catalog
 

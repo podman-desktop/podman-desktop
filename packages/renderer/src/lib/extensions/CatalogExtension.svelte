@@ -1,6 +1,4 @@
 <script lang="ts">
-import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
-import { Button } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
@@ -20,15 +18,28 @@ let {
 }: Props = $props();
 
 const installed = $derived(catalogExtensionUI.installedExtension);
+const detailsPath = $derived(`/extensions/details/${catalogExtensionUI.id}/`);
 
-function openExtensionDetails(): void {
+function openExtensionDetails(event: MouseEvent): void {
+  if (
+    event.defaultPrevented ||
+    event.button !== 0 ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.shiftKey ||
+    event.altKey
+  ) {
+    return;
+  }
+
+  event.preventDefault();
   ondetails(catalogExtensionUI.id);
-  router.goto(`/extensions/details/${catalogExtensionUI.id}/`);
+  router.goto(detailsPath);
 }
 </script>
 
 <div
-  class="rounded-lg border border-(--pd-content-bg) flex flex-col bg-(--pd-content-card-bg) hover:border-(--pd-content-card-border-selected) min-h-32"
+  class="relative isolate rounded-lg border border-(--pd-content-bg) flex flex-col bg-(--pd-content-card-bg) hover:border-(--pd-content-card-border-selected) min-h-32"
   role="group"
   aria-label={catalogExtensionUI.displayName}>
   <div class="p-3 h-full w-full flex flex-col justify-start">
@@ -38,22 +49,30 @@ function openExtensionDetails(): void {
         alt="{catalogExtensionUI.displayName} logo"
         class="size-10 shrink-0 object-contain" />
       <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-1.5 min-w-0">
-          <div class="truncate font-semibold text-(--pd-content-header)" title={catalogExtensionUI.displayName}>
-            {catalogExtensionUI.displayName}
-          </div>
-          {#if catalogExtensionUI.isFeatured}
-            <span
-              class="inline-flex shrink-0 rounded-full border border-(--pd-content-header) px-2 py-0.5 text-xs font-medium leading-none text-(--pd-content-header)">
-              Featured
+        <a
+          href={detailsPath}
+          data-tinro-ignore
+          aria-label={catalogExtensionUI.displayName}
+          onclick={openExtensionDetails}
+          class="block after:absolute after:inset-0 after:rounded-lg focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-(--pd-button-focus-ring)">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="relative z-10 truncate font-semibold text-(--pd-content-header)" title={catalogExtensionUI.displayName}>
+              {catalogExtensionUI.displayName}
             </span>
-          {/if}
-        </div>
-        <div
-          class="pt-0.5 truncate text-sm font-medium text-(--pd-content-header)"
-          title={catalogExtensionUI.publisherDisplayName}>
-          {catalogExtensionUI.publisherDisplayName}
-        </div>
+            {#if catalogExtensionUI.isFeatured}
+              <span
+                class="inline-flex shrink-0 rounded-full border border-(--pd-content-header) px-2 py-0.5 text-xs font-medium leading-none text-(--pd-content-header)">
+                Featured
+              </span>
+            {/if}
+          </div>
+          <!-- Keep the publisher title hoverable without taking it out of the link. -->
+          <div
+            class="relative z-10 pt-0.5 truncate text-sm font-medium text-(--pd-content-header)"
+            title={catalogExtensionUI.publisherDisplayName}>
+            {catalogExtensionUI.publisherDisplayName}
+          </div>
+        </a>
         <div class="pt-0.5 text-sm text-(--pd-content-text) line-clamp-1">
           {catalogExtensionUI.shortDescription}
         </div>
@@ -63,7 +82,8 @@ function openExtensionDetails(): void {
       </div>
 
       {#if !catalogExtensionUI.isInstalled && catalogExtensionUI.fetchable}
-        <div class="shrink-0">
+        <!-- Keep independent controls above the stretched details link. -->
+        <div class="relative z-10 shrink-0">
           <FeaturedExtensionDownload oninstall={oninstall} extension={catalogExtensionUI} />
         </div>
       {/if}
@@ -74,13 +94,6 @@ function openExtensionDetails(): void {
         {#if catalogExtensionUI.installedVersion && catalogExtensionUI.installedVersion !== catalogExtensionUI.fetchVersion}
           <span>(installed: v{catalogExtensionUI.installedVersion})</span>
         {/if}
-      </div>
-      <div class="flex flex-1 justify-end items-center">
-        <Button
-          type="link"
-          icon={faCircleInfo}
-          aria-label="More details about {catalogExtensionUI.displayName}"
-          on:click={openExtensionDetails}>More details</Button>
       </div>
     </div>
   </div>
