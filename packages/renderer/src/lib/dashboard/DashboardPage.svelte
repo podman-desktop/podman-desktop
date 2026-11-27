@@ -1,6 +1,6 @@
 <script lang="ts">
 import { ListOrganizer, type ListOrganizerItem, NavPage, tablePersistence } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { onMount, setContext } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 import {
@@ -8,9 +8,12 @@ import {
   dashboardPageRegistry,
   type DashboardPageRegistryEntry,
   defaultSection,
+  isEnhancedDashboard,
   setupDashboardPageRegistry,
 } from '/@/stores/dashboard/dashboard-page-registry.svelte';
 
+import { DASHBOARD_SECTION_CONTEXT, type DashboardSectionContext } from './dashboard-section-context';
+import DashboardHeader from './DashboardHeader.svelte';
 import NotificationsBox from './NotificationsBox.svelte';
 
 // Dashboard section configuration managed by dashboard page registry
@@ -28,6 +31,20 @@ let sortedDashboardRegistry = $derived(
     .filter((item): item is DashboardPageRegistryEntry => item?.component !== undefined),
 );
 
+// The enhanced layout shows sentence-case labels; the legacy layout keeps showing ids
+function sectionLabel(entry: DashboardPageRegistryEntry): string {
+  return isEnhancedDashboard() ? entry.label : entry.id;
+}
+
+// Labels are resolved at render time from the registry, so stored labels, a reset
+// and a live setting flip never leave the layout menu stale
+let layoutItems = $derived(
+  dashboardSections.map(section => {
+    const entry = dashboardPageRegistry.entries.find(item => item.id === section.id);
+    return { ...section, label: entry ? sectionLabel(entry) : section.label };
+  }),
+);
+
 // Initialize default dashboard configuration
 function getDefaultDashboardItems(): ListOrganizerItem[] {
   return dashboardPageRegistry.entries.map(entry => ({
@@ -37,6 +54,16 @@ function getDefaultDashboardItems(): ListOrganizerItem[] {
     originalOrder: entry.originalOrder,
   }));
 }
+
+setContext<DashboardSectionContext>(DASHBOARD_SECTION_CONTEXT, {
+  get enhanced(): boolean {
+    return isEnhancedDashboard();
+  },
+  label: (id: string): string => dashboardPageRegistry.entries.find(entry => entry.id === id)?.label ?? id,
+  hide: (id: string): void => {
+    handleDashboardToggle(id, false);
+  },
+});
 
 // Initialize dashboard configuration
 async function initializeDashboard(): Promise<void> {
@@ -164,32 +191,52 @@ function handleDashboardToggle(itemId: string, enabled: boolean): void {
 }
 </script>
 
-<NavPage searchEnabled={false} title="Dashboard">
-  {#snippet additionalActions()}
-    <ListOrganizer
-      items={dashboardSections}
-      ordering={dashboardOrdering}
-      title="Configure Dashboard Sections"
-      enableReorder={true}
-      enableToggle={true}
-      onOrderChange={handleDashboardOrderChange}
-      onToggle={handleDashboardToggle}
-      onReset={resetDashboardLayout}
-      resetButtonLabel="Reset Layout"
-    />
-  {/snippet}
+{#snippet layoutMenu()}
+  <ListOrganizer
+    items={layoutItems}
+    ordering={dashboardOrdering}
+    title="Configure Dashboard Sections"
+    enableReorder={true}
+    enableToggle={true}
+    onOrderChange={handleDashboardOrderChange}
+    onToggle={handleDashboardToggle}
+    onReset={resetDashboardLayout}
+    resetButtonLabel="Reset Layout"
+  />
+{/snippet}
 
-  {#snippet content()}
-  <div class="flex flex-col min-w-full grow bg-[var(--pd-content-bg)] py-5">
-    <div class="min-w-full flex-1">
-      <NotificationsBox />
-      <div class="px-5 space-y-5 h-full">
-        {#each sortedDashboardRegistry as dashboardRegistryItem (dashboardRegistryItem.id)}
-          {@const Component = dashboardRegistryItem.component}
-          <Component />
-        {/each}
+{#if isEnhancedDashboard()}
+  <div class="flex flex-col w-full h-full" role="region" aria-label="Dashboard">
+    <div
+      class="flex flex-col w-full h-full overflow-auto px-6 @container bg-(--pd-content-bg)"
+      role="region"
+      aria-label="content">
+      <div class="mx-auto w-full max-w-[900px] flex flex-col pb-6">
+        <DashboardHeader title="Dashboard" actions={layoutMenu} />
+        <NotificationsBox />
+        <div class="flex flex-col gap-10">
+          {#each sortedDashboardRegistry as dashboardRegistryItem (dashboardRegistryItem.id)}
+            {@const Component = dashboardRegistryItem.component}
+            <Component />
+          {/each}
+        </div>
       </div>
     </div>
   </div>
-  {/snippet}
-</NavPage>
+{:else}
+  <NavPage searchEnabled={false} title="Dashboard" additionalActions={layoutMenu}>
+    {#snippet content()}
+    <div class="flex flex-col min-w-full grow bg-[var(--pd-content-bg)] py-5">
+      <div class="min-w-full flex-1">
+        <NotificationsBox />
+        <div class="px-5 space-y-5 h-full">
+          {#each sortedDashboardRegistry as dashboardRegistryItem (dashboardRegistryItem.id)}
+            {@const Component = dashboardRegistryItem.component}
+            <Component />
+          {/each}
+        </div>
+      </div>
+    </div>
+    {/snippet}
+  </NavPage>
+{/if}

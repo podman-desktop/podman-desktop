@@ -24,6 +24,7 @@ export function createSystemOverview(): DashboardPageRegistryEntry {
   // order should be same as providers, since we should show this instead of provider cards if enhanced dashboard is enabled
   return {
     id: 'System Overview',
+    label: 'System overview',
     originalOrder: 1,
     component: SystemOverview,
   };
