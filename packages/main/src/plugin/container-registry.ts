@@ -1538,9 +1538,16 @@ export class ContainerProviderRegistry {
   }
 
   // a colon only opens a tag when no path separator follows it, a registry port carries one too
-  protected referenceTag(reference: string): string {
+  // digest references (image@sha256:...) are not supported
+  protected splitReference(reference: string): { repo: string; tag: string } {
     const index = reference.lastIndexOf(':');
-    return index > 0 && !reference.includes('/', index) ? reference.slice(index + 1) : 'latest';
+    return index > 0 && !reference.includes('/', index)
+      ? { repo: reference.slice(0, index), tag: reference.slice(index + 1) }
+      : { repo: reference, tag: 'latest' };
+  }
+
+  protected referenceTag(reference: string): string {
+    return this.splitReference(reference).tag;
   }
 
   getImageHash(imageName: string): string {
@@ -3408,11 +3415,7 @@ export class ContainerProviderRegistry {
       throw new Error('no running engine for the matching provider');
     }
 
-    const repoTag = options.imageTag.split(':');
-    await matchingEngine.importImage(options.archivePath, {
-      repo: repoTag[0],
-      tag: repoTag[1] ?? 'latest',
-    });
+    await matchingEngine.importImage(options.archivePath, this.splitReference(options.imageTag));
   }
 
   async saveImages(options: ImagesSaveOptions): Promise<void> {
