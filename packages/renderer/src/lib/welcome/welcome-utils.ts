@@ -109,4 +109,20 @@ export class WelcomeUtils {
     }
     return { version, firstRun: false };
   }
+
+  // Tailwind classes for a card in the six-column provider grid. Every card spans two columns,
+  // four cards form a centered 2x2, and an incomplete last row is centered.
+  getProviderCardClass(index: number, count: number): string {
+    if (count === 2 || count === 4) {
+      return 'col-span-3';
+    }
+    const lastRowStart = count - (count % 3);
+    if (index === lastRowStart && count % 3 === 2) {
+      return 'col-span-2 col-start-2';
+    }
+    if (index === lastRowStart && count % 3 === 1) {
+      return 'col-span-2 col-start-3';
+    }
+    return 'col-span-2';
+  }
 }
