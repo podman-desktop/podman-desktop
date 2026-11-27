@@ -19,7 +19,7 @@
 import type { DisplayItem, GoToInfo } from '@desktop-framework/api';
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import type { Component } from 'svelte';
-import { type Writable, writable } from 'svelte/store';
+import { get, type Writable, writable } from 'svelte/store';
 import type { IconSize } from 'svelte-fa';
 
 import { configurationProperties } from '/@/stores/configurationProperties';
@@ -58,6 +58,25 @@ const windowEvents: string[] = [];
 const windowListeners = ['extensions-already-started', 'system-ready'];
 
 export const navigationRegistry: Writable<NavigationRegistryEntry[]> = writable([]);
+
+/** Names of the main navigation items in the order chosen by the user (`navbar.itemOrder`). */
+export const navigationItemOrder: Writable<string[]> = writable([]);
+
+/**
+ * Saves the new order of the shown items. Items not shown (hidden, or from a stopped extension)
+ * keep their slot in the saved order.
+ */
+export function saveNavigationItemOrder(shown: string[]): void {
+  const saved = get(navigationItemOrder);
+  const slots = [...saved, ...shown.filter(name => !saved.includes(name))];
+  let next = 0;
+  const order = slots.map(name => (shown.includes(name) ? shown[next++] : name));
+
+  navigationItemOrder.set(order);
+  window
+    .updateConfigurationValue('navbar.itemOrder', order)
+    .catch((err: unknown) => console.error('Error saving navbar.itemOrder', err));
+}
 
 let hiddenItems: string[] = [];
 
@@ -167,6 +186,11 @@ configurationProperties.subscribe(() => {
       })
       .then(() => hideItems())
       .catch((err: unknown) => console.error('Error getting configuration value navbar.disabledItems', err));
+
+    window
+      .getConfigurationValue<string[]>('navbar.itemOrder')
+      ?.then(value => navigationItemOrder.set(value ?? []))
+      .catch((err: unknown) => console.error('Error getting configuration value navbar.itemOrder', err));
 
     handleKubernetesGroup();
   }
