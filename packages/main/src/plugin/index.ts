@@ -834,6 +834,7 @@ export class PluginSystem {
     const navigationManager = container.get<NavigationManager>(NavigationManager);
     navigationManager.registerRoute({ routeId: 'kubernetes', commandId: 'kubernetes-navigation' });
 
+    container.bind<ExtensionPlatformService>(ExtensionPlatformService).toSelf().inSingletonScope();
     container.bind<ExtensionAnalyzer>(ExtensionAnalyzer).toSelf().inSingletonScope();
     container.bind<ExtensionWatcher>(ExtensionWatcher).toSelf().inSingletonScope();
     container.bind<ExtensionDevelopmentFolders>(ExtensionDevelopmentFolders).toSelf().inSingletonScope();
@@ -3625,7 +3626,6 @@ export class PluginSystem {
     const dockerExtensionAdapter = new DockerPluginAdapter(contributionManager, containerProviderRegistry);
     dockerExtensionAdapter.init();
 
-    container.bind<ExtensionPlatformService>(ExtensionPlatformService).toSelf().inSingletonScope();
     container.bind<ExtensionInstaller>(ExtensionInstaller).toSelf().inSingletonScope();
     const extensionInstaller = container.get(ExtensionInstaller);
     await extensionInstaller.init();

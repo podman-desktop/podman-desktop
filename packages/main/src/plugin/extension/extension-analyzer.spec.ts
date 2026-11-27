@@ -26,15 +26,18 @@ import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionAnalyzer } from './extension-analyzer.js';
 import type { ExtensionManifest } from './extension-manifest-schema.js';
+import { ExtensionPlatformService } from './extension-platform.js';
 
 let extensionAnalyzer: ExtensionAnalyzer;
 
 vi.mock(import('node:fs'));
 vi.mock(import('node:fs/promises'));
+vi.mock(import('./extension-platform.js'));
 
 beforeEach(() => {
   vi.resetAllMocks();
-  extensionAnalyzer = new ExtensionAnalyzer();
+  vi.mocked(ExtensionPlatformService.prototype.checkPlatform).mockReturnValue(undefined);
+  extensionAnalyzer = new ExtensionAnalyzer(new ExtensionPlatformService());
 });
 
 describe('analyze extension and main', () => {
@@ -203,6 +206,55 @@ describe('analyze extension and main', () => {
 
     assert(extension.error);
     expect(extension.overrides).toEqual({ id: 'podman-desktop.bundled', version: '1.0.0' });
+  });
+});
+
+describe('platform support', () => {
+  const validManifest = {
+    publisher: 'fooPublisher',
+    name: 'fooName',
+    displayName: 'Foo',
+    version: '1.0.0',
+    description: 'Foo extension',
+    targetPlatforms: ['windows/amd64'],
+  };
+
+  beforeEach(() => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.mocked(realpath).mockResolvedValue('/fake/path');
+  });
+
+  test('checks the platforms of the loaded manifest', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(validManifest));
+
+    const extension = await extensionAnalyzer.analyzeExtension({ extensionPath: '/fake/path', removable: true });
+
+    expect(ExtensionPlatformService.prototype.checkPlatform).toHaveBeenCalledWith(validManifest);
+    expect(extension.error).toBeUndefined();
+  });
+
+  test('reports an extension which does not run on the current platform', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(validManifest));
+    vi.mocked(ExtensionPlatformService.prototype.checkPlatform).mockReturnValue(
+      'supports windows/amd64 and cannot run on darwin/arm64',
+    );
+
+    const extension = await extensionAnalyzer.analyzeExtension({ extensionPath: '/fake/path', removable: true });
+
+    expect(extension.error).toBe('Extension /fake/path supports windows/amd64 and cannot run on darwin/arm64');
+  });
+
+  test('keeps the missing manifest entry error over the platform error', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ ...validManifest, displayName: undefined }));
+    vi.mocked(ExtensionPlatformService.prototype.checkPlatform).mockReturnValue(
+      'supports windows/amd64 and cannot run on darwin/arm64',
+    );
+
+    const extension = await extensionAnalyzer.analyzeExtension({ extensionPath: '/fake/path', removable: true });
+
+    expect(extension.error).toBe(
+      'Extension /fake/path missing required manifest entry in package.json (name, displayName, version, publisher, description)',
+    );
   });
 });
 

@@ -22,10 +22,11 @@ import path from 'node:path';
 
 import type { OverriddenExtension } from '@desktop-framework/api';
 import type * as containerDesktopAPI from '@desktop-framework/extension-api';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { z } from 'zod';
 
 import { ExtensionManifest, ExtensionManifestSchema } from './extension-manifest-schema.js';
+import { ExtensionPlatformService } from './extension-platform.js';
 
 export interface AnalyzedExtension {
   id: string;
@@ -73,6 +74,11 @@ export interface ExtensionAnalyzerOptions {
 
 @injectable()
 export class ExtensionAnalyzer {
+  constructor(
+    @inject(ExtensionPlatformService)
+    private extensionPlatformService: ExtensionPlatformService,
+  ) {}
+
   async analyzeExtension({
     extensionPath,
     removable,
@@ -108,6 +114,13 @@ export class ExtensionAnalyzer {
     const manifest = await this.loadManifest(resolvedExtensionPath);
     if (!manifest.name || !manifest.displayName || !manifest.version || !manifest.publisher || !manifest.description) {
       error = `Extension ${resolvedExtensionPath} missing required manifest entry in package.json (name, displayName, version, publisher, description)`;
+      console.warn(error);
+    }
+
+    // log error if the extension does not run on the current platform
+    const unsupportedReason = this.extensionPlatformService.checkPlatform(manifest);
+    if (!error && unsupportedReason) {
+      error = `Extension ${resolvedExtensionPath} ${unsupportedReason}`;
       console.warn(error);
     }
 

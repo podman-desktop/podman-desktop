@@ -330,6 +330,44 @@ describe('installFromImage tmp folder cleanup', () => {
 
     expect(rm).toHaveBeenCalledWith(TMP_FOLDER, { recursive: true, force: true });
   });
+
+  test('should remove the extracted extension when its analysis reports an error', async () => {
+    extractExtensionFilesMock.mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce({
+      manifest: {},
+      error: 'Extension /fake/plugins/directory/fakeiofakeimage supports darwin/arm64 and cannot run on windows/amd64',
+    } as AnalyzedExtension);
+    const sendError = vi.fn();
+
+    await extensionInstaller.installFromImage(vi.fn(), sendError, vi.fn(), imageToPull);
+
+    expect(rm).toHaveBeenCalledWith(path.join('/fake/plugins/directory', 'fakeiofakeimage'), {
+      recursive: true,
+      force: true,
+    });
+    expect(sendError).toHaveBeenCalledWith(
+      'Could not load extension: Extension /fake/plugins/directory/fakeiofakeimage supports darwin/arm64 and cannot run on windows/amd64',
+    );
+    expect(loadExtensionsMock).not.toHaveBeenCalled();
+  });
+
+  test('should keep the analysis error when the extracted extension cannot be removed', async () => {
+    const extensionFolder = path.join('/fake/plugins/directory', 'fakeiofakeimage');
+    extractExtensionFilesMock.mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce({ manifest: {}, error: 'analysis failed' } as AnalyzedExtension);
+    const cleanupError = new Error('EPERM');
+    // the tmp folder is removed first, then the extracted extension
+    vi.mocked(rm).mockResolvedValueOnce(undefined).mockRejectedValueOnce(cleanupError);
+    const sendError = vi.fn();
+
+    await extensionInstaller.installFromImage(vi.fn(), sendError, vi.fn(), imageToPull);
+
+    expect(console.error).toHaveBeenCalledWith(
+      `Unable to remove the extension folder ${extensionFolder}`,
+      cleanupError,
+    );
+    expect(sendError).toHaveBeenCalledWith('Could not load extension: analysis failed');
+  });
 });
 
 test('should install an image (dd extensions) if labels are correct', async () => {

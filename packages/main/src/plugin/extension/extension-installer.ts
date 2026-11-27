@@ -217,6 +217,13 @@ export class ExtensionInstaller {
         sendError('Error while analyzing extension: ' + error);
       }
       if (analyzedExtension?.error) {
+        // do not leave an extension which cannot be loaded in the plugins directory
+        // a cleanup failure must not hide the error of the analysis
+        try {
+          await rm(finalFolderPath, { recursive: true, force: true });
+        } catch (error: unknown) {
+          console.error(`Unable to remove the extension folder ${finalFolderPath}`, error);
+        }
         sendError('Could not load extension: ' + analyzedExtension?.error);
         return;
       }
