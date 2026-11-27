@@ -94,6 +94,36 @@ Contrast with the cancel/action pattern, where `Cancel` stays `type="link"` and 
 - Active voice
 - Specific, not generic
 
+## Modal or page
+
+Use this to decide if a feature that collects input is a modal (built with the `Dialog` component) or a full-page form. **Confirmations and two-choice dialogs are always modals.**
+
+**Is it a short action on something the user is already looking at?** Use a modal. When it closes, the user is back where they started and sees the result in place. Examples: push image, rename image, pull image, create volume.
+
+**Does it need real setup, with many options to configure?** Use a page. Examples: build image, run image, play Kubernetes YAML, create network.
+
+### Use a page if any of these is true
+
+- **It scrolls inside the `Dialog`.** If the content is taller than the Dialog's content area, it's a page.
+- **It has page structure:** sections, tabs, an "Advanced" part, more than one step, or fields that depend on earlier answers.
+- **It has a list the user adds rows to**, such as ports, environment variables, volumes, or labels.
+- **It has a multi-line editor**, such as YAML, a Containerfile, or a multi-line secret. Editors use Tab and Escape themselves, which clashes with the modal's focus trap and Escape-to-close.
+
+If none apply, use a modal. If you're unsure, start with a modal. Ask the UX team.
+
+### Long-running tasks
+
+A long task doesn't make it a page. The modal starts the task and can show progress inline, like push image does, or hand it off to the task manager. Closing the modal never cancels the task, and the user can find its progress again, for example in the task manager.
+
+### Every modal
+
+- Use the `Dialog` component.
+- Focus follows [Focus management](#focus-management).
+- Escape and Cancel always close it. A click on the backdrop doesn't.
+- Show errors inline next to the field, linked with `aria-describedby`. Don't close the modal on an error.
+- Never open a modal from another modal. If the task needs one, it's a page.
+- Buttons follow [Button layout in dialogs, modals, and forms](#button-layout-in-dialogs-modals-and-forms), including [two-choice dialogs](#two-choice-dialogs).
+
 ## Button layout in dialogs, modals, and forms
 
 All dialogs, modals, and forms must adhere to the following guidelines to ensure accessibility, keyboard navigation, and visual coherence.
@@ -230,7 +260,7 @@ Visual order must match DOM sequence. Never use CSS `order` property to manipula
 
 ### Focus management
 
-Non-destructive dialogs, forms, or modals may focus primary actions on open. Destructive components must default focus to Cancel buttons to prevent accidental data loss or destructive action execution. If there is no Cancel, use `initialFocus="none"` (`ButtonRow`'s default focus) so focus never falls through to the destructive action.
+If a non-destructive dialog, form, or modal has an enabled input, focus the first one on open. Otherwise it may focus the primary action. Destructive components must default focus to Cancel buttons to prevent accidental data loss or destructive action execution. If there is no Cancel, use `initialFocus="none"` (`ButtonRow`'s default focus) so focus never falls through to the destructive action.
 
 ✅ **Use this pattern (destructive action):**
 
