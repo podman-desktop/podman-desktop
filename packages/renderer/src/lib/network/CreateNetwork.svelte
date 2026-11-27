@@ -37,6 +37,9 @@ let networkInfo: NetworkCreateFormInfo = $state({
 
 let createError: string | undefined = $state(undefined);
 let createNetworkInProgress: boolean = $state(false);
+// The network created by this page, until the page navigates to its details
+let createdNetwork: { id: string; engineId: string; name: string } | undefined = $state(undefined);
+let navigationTimeout: ReturnType<typeof setTimeout> | undefined;
 let selectedProvider: ProviderContainerConnectionInfo | undefined = $derived(networkInfo.selectedProvider);
 
 // Fetch available network drivers for selected provider
@@ -111,41 +114,40 @@ async function createNetwork(): Promise<void> {
       }
     }
 
-    await waitForNetworkInStore(result.Id, result.engineId);
-
-    // Route to the network details page
-    handleNavigation({
-      page: NavigationPage.NETWORK,
-      parameters: {
-        name: networkInfo.networkName,
-        engineId: result.engineId,
-      },
-    });
+    // Route to the network details page once the network is in the store, or after 10 seconds
+    navigationTimeout = setTimeout(navigateToCreatedNetwork, 10000);
+    createdNetwork = { id: result.Id, engineId: result.engineId, name: networkInfo.networkName };
   } catch (error: unknown) {
     createError = error instanceof Error ? error.message : String(error);
     console.error('Error creating network:', error);
-  } finally {
     createNetworkInProgress = false;
   }
 }
 
-/**
- * Wait for the network to appear in the store before navigating.
- */
-async function waitForNetworkInStore(networkId: string, engineId: string): Promise<void> {
-  return new Promise<void>(resolve => {
-    const timeout = setTimeout(() => {
-      unsubscribe();
-      resolve();
-    }, 10000);
+let createdNetworkInStore = $derived(
+  !!createdNetwork &&
+    $networksListInfo.some(
+      network => network.id === createdNetwork?.id && network.engineId === createdNetwork?.engineId,
+    ),
+);
 
-    const unsubscribe = networksListInfo.subscribe(networks => {
-      if (networks.some(network => network.id === networkId && network.engineId === engineId)) {
-        clearTimeout(timeout);
-        unsubscribe();
-        resolve();
-      }
-    });
+$effect(() => {
+  if (createdNetworkInStore) {
+    navigateToCreatedNetwork();
+  }
+});
+
+function navigateToCreatedNetwork(): void {
+  clearTimeout(navigationTimeout);
+  if (!createdNetwork) {
+    return;
+  }
+  const { name, engineId } = createdNetwork;
+  createdNetwork = undefined;
+  createNetworkInProgress = false;
+  handleNavigation({
+    page: NavigationPage.NETWORK,
+    parameters: { name, engineId },
   });
 }
 
