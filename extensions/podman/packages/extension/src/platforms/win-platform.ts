@@ -25,7 +25,9 @@ import { inject, injectable } from 'inversify';
 
 import { SequenceCheck, WarningCheck } from '/@/checks/base-check';
 import { HyperVCheck } from '/@/checks/windows/hyper-v-check';
+import { HyperVInstalledCheck } from '/@/checks/windows/hyper-v-installed-check';
 import { HyperVPodmanVersionCheck } from '/@/checks/windows/hyper-v-podman-version-check';
+import { HyperVRunningCheck } from '/@/checks/windows/hyper-v-running-check';
 import { VirtualMachinePlatformCheck } from '/@/checks/windows/virtual-machine-platform-check';
 import { VirtualizationFirmwareCheck } from '/@/checks/windows/virtualization-firmware-check';
 import { WinBitCheck } from '/@/checks/windows/win-bit-check';
@@ -42,6 +44,7 @@ export class WinPlatform {
 
   private readonly wslCheck: SequenceCheck;
   private readonly hyperVSequenceCheck: SequenceCheck;
+  private readonly hyperVAvailabilityCheck: SequenceCheck;
 
   constructor(
     @inject(ExtensionContextSymbol)
@@ -58,6 +61,10 @@ export class WinPlatform {
     readonly hyperVPodmanVersionCheck: HyperVPodmanVersionCheck,
     @inject(HyperVCheck)
     readonly hyperVCheck: HyperVCheck,
+    @inject(HyperVInstalledCheck)
+    readonly hyperVInstalledCheck: HyperVInstalledCheck,
+    @inject(HyperVRunningCheck)
+    readonly hyperVRunningCheck: HyperVRunningCheck,
     @inject(VirtualizationFirmwareCheck)
     readonly virtualizationFirmwareCheck: VirtualizationFirmwareCheck,
     @inject(VirtualMachinePlatformCheck)
@@ -70,6 +77,10 @@ export class WinPlatform {
     readonly wslPodmanVersionCheck: WSLPodmanVersionCheck,
   ) {
     this.hyperVSequenceCheck = new SequenceCheck('Hyper-V Platform', [this.hyperVPodmanVersionCheck, this.hyperVCheck]);
+    this.hyperVAvailabilityCheck = new SequenceCheck('Hyper-V availability', [
+      this.hyperVInstalledCheck,
+      this.hyperVRunningCheck,
+    ]);
 
     this.wslCheck = new SequenceCheck('WSL platform', [
       this.virtualMachinePlatformCheck,
@@ -108,6 +119,14 @@ export class WinPlatform {
     }
     const hyperVCheckResult = await this.hyperVSequenceCheck.execute();
     return hyperVCheckResult.successful;
+  }
+
+  async isHyperVInstalledAndRunning(): Promise<boolean> {
+    if (!extensionApi.env.isWindows) {
+      return false;
+    }
+    const hyperVAvailabilityResult = await this.hyperVAvailabilityCheck.execute();
+    return hyperVAvailabilityResult.successful;
   }
 
   calcPipeName(machineName: string): string {

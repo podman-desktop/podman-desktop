@@ -44,3 +44,8 @@ export const HYPERV_PREP_NOT_APPLIED_KEY = 'podman.hypervPrepNotApplied';
 export const HYPERV_PREP_COMMAND = 'podman.hypervPrep';
 export const HYPERV_PREP_RELOGIN_MESSAGE =
   'Hyper-V preparation complete. Sign out and sign back in, or restart your computer, for the change to take effect.';
+export const HYPERV_PREP_ONBOARDING_CHECK_COMMAND = 'podman.onboarding.checkHyperVPrep';
+export const HYPERV_PREP_ONBOARDING_COMMAND = 'podman.onboarding.hypervPrep';
+export const HYPERV_PREP_AVAILABLE_ONBOARDING_KEY = 'hypervPrepAvailable';
+export const HYPERV_PREP_SUMMARY_ONBOARDING_KEY = 'hypervPrepSummary';
+export const HYPERV_PREP_OUTCOME_ONBOARDING_KEY = 'hypervPrepOutcome';
