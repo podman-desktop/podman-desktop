@@ -172,7 +172,7 @@
   },
   "devDependencies": {
     "@sveltejs/package": "^3.0.3",
-    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@sveltejs/vite-plugin-svelte": "^7.3.2",
     "@tailwindcss/vite": "^4.3.5",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^8.0.0",

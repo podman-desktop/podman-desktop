@@ -28,7 +28,7 @@
     "@storybook/addon-themes": "^10.6.8",
     "@storybook/svelte-vite": "^10.6.8",
     "@sveltejs/package": "^3.0.3",
-    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@sveltejs/vite-plugin-svelte": "^7.3.2",
     "@tailwindcss/vite": "^4.3.5",
     "@tsconfig/svelte": "^5.0.9",
     "@typescript-eslint/eslint-plugin": "^8.73.0",
