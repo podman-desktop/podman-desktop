@@ -30,6 +30,7 @@ import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { WinInstaller } from '/@/installer/win-installer';
 import { HyperVPrep } from '/@/platforms/windows/hyperv-prep';
+import { HyperVPrepOnboarding } from '/@/platforms/windows/hyperv-prep-onboarding';
 import { WSLPodmanVersionNotification } from '/@/platforms/windows/wsl-podman-version-notification';
 import { ExtensionNotifications } from '/@/utils/notifications';
 import { PodmanMachineLifecycle } from '/@/utils/podman-machine-lifecycle';
@@ -39,6 +40,7 @@ import { InversifyBinding } from './inversify-binding';
 import { ExtensionContextSymbol, ProviderCleanupSymbol, StartupSymbol, TelemetryLoggerSymbol } from './symbols';
 
 vi.mock(import('/@/platforms/windows/hyperv-prep'));
+vi.mock(import('/@/platforms/windows/hyperv-prep-onboarding'));
 vi.mock(import('/@/platforms/windows/wsl-podman-version-notification'));
 
 const extensionContextMock = {} as ExtensionContext;
@@ -125,10 +127,14 @@ describe('inversifyBinding', () => {
       expect(container.isBound(HyperVPrep)).toBeTruthy();
     });
 
-    test('InversifyBinding#init should register HyperVPrep and WSLPodmanVersionNotification as startup services', async () => {
+    test('InversifyBinding#init should register HyperVPrep, WSLPodmanVersionNotification and HyperVPrepOnboarding as startup services', async () => {
       const startupServices = await container.getAllAsync(StartupSymbol);
 
-      expect(startupServices).toEqual([container.get(HyperVPrep), container.get(WSLPodmanVersionNotification)]);
+      expect(startupServices).toEqual([
+        container.get(HyperVPrep),
+        container.get(WSLPodmanVersionNotification),
+        container.get(HyperVPrepOnboarding),
+      ]);
     });
 
     test('InversifyBinding#init should not bind SocketCompatibility', async () => {
@@ -170,6 +176,10 @@ describe('inversifyBinding', () => {
 
     test('InversifyBinding#init should not bind WSLPodmanVersionNotification', async () => {
       expect(container.isBound(WSLPodmanVersionNotification)).toBeFalsy();
+    });
+
+    test('InversifyBinding#init should not bind HyperVPrepOnboarding', async () => {
+      expect(container.isBound(HyperVPrepOnboarding)).toBeFalsy();
     });
 
     test('InversifyBinding#init should not register any startup service', async () => {
