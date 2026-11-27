@@ -23,6 +23,11 @@ interface Props {
   ariaLabel?: string;
   left?: Snippet;
   children?: Snippet;
+  /**
+   * Truncate visible selected and option labels to the available width. Defaults to false.
+   * Requires a constrained width, such as `class="w-48 grow-0"`.
+   */
+  truncate?: boolean;
   /** Render without the built-in trigger button or form inputs. Visibility is controlled externally via `opened`. */
   triggerless?: boolean;
   opened?: boolean;
@@ -41,6 +46,7 @@ let {
   ariaLabel = '',
   left = undefined,
   children = undefined,
+  truncate = false,
   triggerless = false,
   opened = $bindable(false),
   selectOnMouseUp = false,
@@ -204,11 +210,13 @@ function onWindowClick(e: Event): void {
           class:text-[var(--pd-dropdown-item-hover-text)]={highlightIndex === i}>
           <span
             title={option.label}
+            class:min-w-0={truncate}
+            class:w-full={truncate}
             class="group flex items-center no-underline whitespace-nowrap h-4">
             {#if option.icon}
-              <Icon class="w-4 text-md" icon={option.icon} />
+              <Icon class={truncate ? 'w-4 text-md shrink-0' : 'w-4 text-md'} icon={option.icon} />
             {/if}
-            <span class={option.icon ? 'ml-2' : ''}>{option.label}</span>
+            <span class:truncate={truncate} class={option.icon ? 'ml-2' : ''}>{option.label}</span>
           </span>
         </button>
       {/each}
@@ -229,6 +237,7 @@ function onWindowClick(e: Event): void {
     bind:this={comp}>
     <button
       class="flex flex-row w-full outline-0 bg-[var(--pd-input-field-bg)] placeholder:text-[color:var(--pd-input-field-placeholder-text)] items-center text-start"
+      class:min-w-0={truncate}
       class:text-[color:var(--pd-input-field-focused-text)]={!disabled}
       class:text-[color:var(--pd-input-field-disabled-text)]={disabled}
       class:group-hover:bg-[var(--pd-input-field-hover-bg)]={!disabled}
@@ -240,8 +249,9 @@ function onWindowClick(e: Event): void {
       onclick={toggleOpen}
       onkeydown={onKeyDown}>
       {@render left?.()}
-      <span class="grow">{selectLabel}</span>
+      <span class="grow" class:truncate={truncate} title={truncate ? selectLabel : undefined}>{selectLabel}</span>
       <div
+        class:shrink-0={truncate}
         class:text-[var(--pd-input-field-stroke)]={!disabled}
         class:text-[var(--pd-input-field-disabled-text)]={!disabled}
         class:group-hover:text-[var(--pd-input-field-hover-stroke)]={!disabled}>
@@ -261,14 +271,14 @@ function onWindowClick(e: Event): void {
             class:autofocus={i === 0}
             class:bg-[var(--pd-dropdown-item-hover-bg)]={highlightIndex === i}
             class:text-[var(--pd-dropdown-item-hover-text)]={highlightIndex === i}>
-            <div class="min-w-4 max-w-4">
+            <div class="min-w-4 max-w-4" class:shrink-0={truncate}>
               {#if option.icon}
                 <Icon icon={option.icon} />
               {:else if option.value === value}
                 <Icon icon={faCheck} />
               {/if}
             </div>
-            <div class="grow">{option.label}</div>
+            <div class="grow" class:truncate={truncate} title={truncate ? option.label : undefined}>{option.label}</div>
           </button>
         {/each}
       </div>

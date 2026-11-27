@@ -17,7 +17,8 @@
  ***********************************************************************/
 import '@testing-library/jest-dom/vitest';
 
-import { createEvent, fireEvent, render, screen } from '@testing-library/svelte';
+import { faCube } from '@fortawesome/free-solid-svg-icons';
+import { createEvent, fireEvent, render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -184,6 +185,109 @@ test('Left snippet is renderered', async () => {
   const left = screen.getByText('Left:');
   expect(left).toBeInTheDocument();
   expect(left.parentElement).toHaveClass('bg-[var(--pd-input-field-bg)]');
+});
+
+describe('label truncation', () => {
+  const options = [
+    { value: 'first', label: 'A very long selected label that exceeds the available dropdown width' },
+    {
+      value: 'second',
+      label: 'Another very long option label that exceeds the available dropdown width',
+      icon: faCube,
+    },
+  ];
+
+  test.each([undefined, false, true])('truncation is opt-in (truncate=%s)', async truncate => {
+    render(Dropdown, { options, truncate });
+
+    const trigger = screen.getByRole('button', { name: options[0].label });
+    const selectedLabel = within(trigger).getByText(options[0].label);
+    expect(selectedLabel.classList.contains('truncate')).toBe(truncate === true);
+    expect(trigger.classList.contains('min-w-0')).toBe(truncate === true);
+    expect(trigger.parentElement).toHaveClass('grow');
+    if (truncate) {
+      expect(selectedLabel).toHaveAttribute('title', options[0].label);
+    } else {
+      expect(selectedLabel).not.toHaveAttribute('title');
+    }
+    await userEvent.click(trigger);
+
+    const buttons = screen.getAllByRole('button').filter(button => button !== trigger);
+    expect(buttons).toHaveLength(options.length);
+    for (const [index, button] of buttons.entries()) {
+      const label = within(button).getByText(options[index].label);
+      expect(label.classList.contains('truncate')).toBe(truncate === true);
+      expect(button).toHaveAccessibleName(options[index].label);
+      if (truncate) {
+        expect(label).toHaveAttribute('title', options[index].label);
+      } else {
+        expect(label).not.toHaveAttribute('title');
+      }
+    }
+  });
+
+  test.each([false, true])('does not style the left snippet or hidden options (hiddenLeft=%s)', async hiddenLeft => {
+    const { container } = render(DropdownTest, { truncate: true, hiddenLeft });
+
+    const trigger = screen.getByRole('button', { name: 'Left: initial value' });
+    expect(screen.getByText('Left:')).not.toHaveClass('truncate');
+    expect(within(trigger).getByText('initial value')).toHaveClass('truncate');
+    expect(container.querySelector('select')).not.toHaveClass('truncate');
+    await userEvent.click(trigger);
+    expect(container.querySelector('select option')).not.toHaveClass('truncate');
+  });
+
+  test('preserves full labels and values when selecting with the keyboard', async () => {
+    const onChange = vi.fn();
+    render(Dropdown, { options, truncate: true, onChange });
+
+    const trigger = screen.getByRole('button', { name: options[0].label });
+    trigger.focus();
+    await userEvent.keyboard('[ArrowDown][ArrowDown]');
+    expect(screen.getByRole('button', { name: options[1].label })).toHaveClass('bg-[var(--pd-dropdown-item-hover-bg)]');
+    await userEvent.keyboard('[Enter]');
+
+    expect(onChange).toHaveBeenCalledExactlyOnceWith('second');
+    expect(trigger).toHaveAccessibleName(options[1].label);
+    expect(within(trigger).getByText(options[1].label)).toHaveAttribute('title', options[1].label);
+    expect(screen.getByLabelText('hidden input')).toHaveValue('second');
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+
+    await userEvent.keyboard('[ArrowDown][Escape]');
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(trigger).toHaveAccessibleName(options[1].label);
+  });
+
+  test('preserves full labels and values when selecting with the mouse', async () => {
+    const onChange = vi.fn();
+    render(Dropdown, { options, truncate: true, onChange });
+
+    const trigger = screen.getByRole('button', { name: options[0].label });
+    await userEvent.click(trigger);
+    await userEvent.click(screen.getByRole('button', { name: options[1].label }));
+
+    expect(onChange).toHaveBeenCalledExactlyOnceWith('second');
+    expect(trigger).toHaveAccessibleName(options[1].label);
+    expect(screen.getByLabelText('hidden input')).toHaveValue('second');
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+  });
+
+  test.each([undefined, false, true])(
+    'supports triggerless labels without changing selection behavior (truncate=%s)',
+    async truncate => {
+      const onChange = vi.fn();
+      render(Dropdown, { options, truncate, triggerless: true, opened: true, selectOnMouseUp: true, onChange });
+
+      const option = screen.getByRole('button', { name: options[1].label });
+      expect(within(option).getByText(options[1].label).classList.contains('truncate')).toBe(truncate === true);
+      expect(option).toHaveAccessibleName(options[1].label);
+      await fireEvent.mouseUp(option);
+
+      expect(onChange).toHaveBeenCalledExactlyOnceWith('second');
+      expect(option).toBeInTheDocument();
+      expect(screen.queryByLabelText('hidden input')).not.toBeInTheDocument();
+    },
+  );
 });
 
 describe('triggerless mode', () => {
