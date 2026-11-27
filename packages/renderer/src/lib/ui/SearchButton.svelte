@@ -1,6 +1,5 @@
 <script lang="ts">
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
-import { tooltip as tooltipAttachment } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 interface Props {
@@ -10,6 +9,6 @@ interface Props {
 let { onclick = (): void => {} }: Props = $props();
 </script>
 
-<button id="Search button" class="text-[color:var(--pd-global-nav-icon)] flex justify-center items-center gap-1" style="-webkit-app-region: none;" {onclick} {@attach tooltipAttachment('Search')}>
+<button id="Search button" class="text-[color:var(--pd-global-nav-icon)] flex justify-center items-center gap-1" style="-webkit-app-region: none;" {onclick}>
     <Icon icon={faMagnifyingGlass} />Search
 </button>

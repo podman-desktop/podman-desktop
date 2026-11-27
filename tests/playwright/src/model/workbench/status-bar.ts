@@ -54,7 +54,7 @@ export class StatusBar extends BasePage {
 
   private getStatusBarItemByTooltip(tooltip: string): Locator {
     // StatusBarItem keeps the entry tooltip on its icon, since the button no longer has a title
-    return this.content.getByRole('button').filter({ has: this.content.locator(`[data-task-button="${tooltip}"]`) });
+    return this.content.getByRole('button').filter({ has: this.page.locator(`[data-task-button="${tooltip}"]`) });
   }
 
   public async installKindCLI(): Promise<void> {

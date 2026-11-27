@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { ProviderInfo } from '@desktop-framework/api';
 import { STATUS_BAR_PIN_CONSTANTS } from '@desktop-framework/api/status-bar';
+import { tooltip } from '@podman-desktop/ui-svelte';
 
 import ProviderWidget from '/@/lib/statusbar/ProviderWidget.svelte';
 import { providerInfos } from '/@/stores/providers';
@@ -23,8 +24,8 @@ function onclick(): void {
     data-task-button="Pin"
     onclick={onclick}
     class="px-1 py-px flex h-full items-center relative hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer z-1 fa-solid fa-thumbtack"
-    title="Pin"
-    aria-label="Pin">
+    aria-label="Pin"
+    {@attach tooltip('Pin')}>
   </button>
 {/if}
 

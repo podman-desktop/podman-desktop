@@ -16,7 +16,7 @@ function tooltipText(entry: StatusBarEntry): string {
 
 function accessibleName(entry: StatusBarEntry): string | undefined {
   // an entry without text is icon-only: use its tooltip so the button keeps an accessible name
-  if (entry.text) {
+  if (entry.text?.trim()) {
     return entry.text;
   }
   return tooltipText(entry) || undefined;

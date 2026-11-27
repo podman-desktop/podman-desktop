@@ -100,6 +100,19 @@ test('expect an icon-only entry to be named by its tooltip', () => {
   expect(screen.getByRole('button', { name: 'Help' })).toBeInTheDocument();
 });
 
+test('expect a whitespace-only text to fall back to the tooltip as accessible name', () => {
+  const statusBarEntry: StatusBarEntry = {
+    enabled: true,
+    text: ' ',
+    tooltip: 'Help',
+    activeIconClass: 'fa fa-question-circle',
+  };
+
+  render(StatusBarItem, { entry: statusBarEntry });
+
+  expect(screen.getByRole('button', { name: 'Help' })).toBeInTheDocument();
+});
+
 test('expect the entry text to be the accessible name when present', () => {
   const statusBarEntry: StatusBarEntry = {
     enabled: true,

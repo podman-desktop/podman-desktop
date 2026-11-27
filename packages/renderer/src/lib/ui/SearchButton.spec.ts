@@ -35,13 +35,14 @@ test('Expect basic styling', async () => {
   expect(button).toHaveClass('text-[color:var(--pd-global-nav-icon)]');
 });
 
-test('Expect tooltip on hover instead of a native title', async () => {
+test('Expect no tooltip, since it would only repeat the visible label', async () => {
   render(SearchButton, { onclick: vi.fn() });
 
   const button = screen.getByRole('button', { name: 'Search' });
   await fireEvent.mouseEnter(button);
 
-  expect(screen.getByRole('tooltip')).toHaveTextContent('Search');
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  expect(button).not.toHaveAttribute('aria-describedby');
 });
 
 test('Expect click', async () => {

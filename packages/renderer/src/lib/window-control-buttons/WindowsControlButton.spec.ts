@@ -36,23 +36,20 @@ test('Check Maximize/Restore', async () => {
 
   // check the tooltip of the button is 'Maximize'
   await fireEvent.mouseEnter(customButton);
-  expect(screen.getByRole('tooltip')).toHaveTextContent('Maximize');
-  await fireEvent.mouseLeave(customButton);
+  const tooltip = screen.getByRole('tooltip');
+  expect(tooltip).toHaveTextContent('Maximize');
 
-  // click on the button
+  // click on the button while still hovering it: the visible tooltip and the name switch to 'Restore'
   await fireEvent.click(customButton);
+  expect(tooltip).toHaveTextContent('Restore');
+  expect(customButton).toHaveAccessibleName('Restore');
+  // the tooltip repeats the accessible name, so it is not announced a second time
+  expect(customButton).not.toHaveAttribute('aria-describedby');
 
-  // check the tooltip of the button is 'Restore'
-  await fireEvent.mouseEnter(customButton);
-  expect(screen.getByRole('tooltip')).toHaveTextContent('Restore');
-  await fireEvent.mouseLeave(customButton);
-
-  // click on the button
+  // click again: back to 'Maximize'
   await fireEvent.click(customButton);
-
-  // check the tooltip of the button is 'Maximize'
-  await fireEvent.mouseEnter(customButton);
-  expect(screen.getByRole('tooltip')).toHaveTextContent('Maximize');
+  expect(tooltip).toHaveTextContent('Maximize');
+  expect(customButton).toHaveAccessibleName('Maximize');
 });
 
 test('Check Windows Maximize control button colors', async () => {

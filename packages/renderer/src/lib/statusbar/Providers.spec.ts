@@ -129,6 +129,17 @@ test('pin button should call window#executeCommand', async () => {
   expect(window.executeCommand).toHaveBeenCalledWith(STATUS_BAR_PIN_CONSTANTS.TOGGLE_MENU_COMMAND);
 });
 
+test('pin button should show the in-app tooltip instead of a native title', async () => {
+  const { getByRole } = render(Providers);
+
+  const button = getByRole('button', { name: 'Pin' });
+  expect(button).not.toHaveAttribute('title');
+
+  await fireEvent.mouseEnter(button);
+
+  expect(getByRole('tooltip')).toHaveTextContent('Pin');
+});
+
 test('provider with kubernetes connection should be displayed', () => {
   // mock two provider: one empty, and one with kubernetes connection
   providerInfos.set([KUBERNETES_PROVIDER_MOCK, EMPTY_PROVIDER_MOCK]);
