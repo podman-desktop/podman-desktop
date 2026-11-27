@@ -316,7 +316,9 @@ describe('CertificateDetectionService', () => {
     });
 
     test('should not send telemetry when no certificates and no errors are found', async () => {
-      vi.mocked(fs.access).mockRejectedValue(new Error('ENOENT'));
+      vi.mocked(fs.access).mockRejectedValue(
+        Object.assign(new Error('ENOENT: no such file or directory'), { code: 'ENOENT' }),
+      );
 
       const result = await serviceWithTelemetry.detectCustomCertificates();
 
@@ -327,6 +329,26 @@ describe('CertificateDetectionService', () => {
         errors: [],
       });
       expect(mockTelemetryLogger.logUsage).not.toHaveBeenCalled();
+    });
+
+    test('should send telemetry when a certs.d root directory is not readable', async () => {
+      // the system directory is checked first, then the user directory
+      vi.mocked(fs.access)
+        .mockRejectedValueOnce(Object.assign(new Error('EACCES: permission denied'), { code: 'EACCES' }))
+        .mockRejectedValueOnce(Object.assign(new Error('ENOENT: no such file or directory'), { code: 'ENOENT' }));
+
+      const result = await serviceWithTelemetry.detectCustomCertificates();
+
+      expect(result.errors).toEqual([{ error: 'Certificate directory not accessible', code: 'EACCES' }]);
+      expect(fs.readdir).not.toHaveBeenCalled();
+      expect(mockTelemetryLogger.logUsage).toHaveBeenCalledWith(
+        'custom_certs',
+        expect.objectContaining({
+          using_custom_certificates: false,
+          certificate_count: 0,
+          errors: 'Certificate directory not accessible (EACCES)',
+        }),
+      );
     });
 
     test('should not send telemetry when disabled', async () => {

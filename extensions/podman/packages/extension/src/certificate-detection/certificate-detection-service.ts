@@ -107,7 +107,7 @@ export class CertificateDetectionService {
       errors: [],
     };
 
-    const directories = await this.getDirectoriesToScan();
+    const directories = await this.getDirectoriesToScan(result);
     const scanPromise = this.scanDirectories(directories, result);
     let timeoutId: NodeJS.Timeout | undefined;
     const timeoutPromise = new Promise<void>((_, reject) => {
@@ -190,7 +190,7 @@ export class CertificateDetectionService {
     return hostnamePattern.test(directoryName) || hostnamePortPattern.test(directoryName);
   }
 
-  protected async getDirectoriesToScan(): Promise<string[]> {
+  protected async getDirectoriesToScan(result: CertificateDetectionResult): Promise<string[]> {
     const directories: string[] = [...this.config.certDirectories.system];
 
     const homeDir = os.homedir();
@@ -206,6 +206,8 @@ export class CertificateDetectionService {
         const nodeError = error as NodeJS.ErrnoException;
         if (nodeError.code && nodeError.code !== 'ENOENT') {
           console.debug(`Certificate directory not accessible: ${dir} (${nodeError.code})`);
+          // the error message embeds the path, which contains the user's home directory: keep it out of telemetry
+          result.errors.push({ error: 'Certificate directory not accessible', code: nodeError.code });
         }
       }
     }
