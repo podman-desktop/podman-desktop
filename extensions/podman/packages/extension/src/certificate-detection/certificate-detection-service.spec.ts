@@ -22,14 +22,20 @@ import * as os from 'node:os';
 
 import type { TelemetryLogger } from '@podman-desktop/api';
 import { env } from '@podman-desktop/api';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { type CertificateDetectionConfig, CertificateDetectionService } from './certificate-detection-service';
+import {
+  type CertificateDetectionConfig,
+  CertificateDetectionService,
+  DEFAULT_CONFIG,
+} from './certificate-detection-service';
 
 vi.mock(import('node:fs/promises'));
 vi.mock(import('node:os'));
 
-const SYSTEM_CERTS_DIR = '/etc/containers/certs.d';
+const SYSTEM_CERTS_DIR = DEFAULT_CONFIG.certDirectories.system[0];
+
+const never = (): Promise<never> => new Promise<never>(() => {});
 
 const mockTelemetryLogger: TelemetryLogger = {
   logUsage: vi.fn(),
@@ -98,15 +104,12 @@ describe('CertificateDetectionService', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.useRealTimers();
     vi.mocked(env).isWindows = false;
     vi.mocked(env).isMac = false;
     vi.mocked(env).isLinux = false;
     vi.mocked(os.homedir).mockReturnValue('/home/user');
     serviceWithTelemetry = new CertificateDetectionService(mockTelemetryLogger);
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
   });
 
   describe('constructor', () => {
@@ -248,7 +251,7 @@ describe('CertificateDetectionService', () => {
       const serviceWithTimeout = new CertificateDetectionService(mockTelemetryLogger, shortTimeoutConfig);
 
       vi.mocked(fs.access).mockResolvedValue();
-      vi.mocked(fs.readdir).mockReturnValue(new Promise(() => {}));
+      vi.mocked(fs.readdir).mockReturnValue(never());
 
       const detection = serviceWithTimeout.detectCustomCertificates();
       await vi.runAllTimersAsync();

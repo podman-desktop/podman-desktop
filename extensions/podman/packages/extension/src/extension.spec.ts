@@ -33,6 +33,7 @@ import type { Container as InversifyContainer, ServiceIdentifier } from 'inversi
 import type { Mock } from 'vitest';
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { CertificateDetectionService } from '/@/certificate-detection/certificate-detection-service';
 import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
@@ -371,6 +372,7 @@ vi.mock(import('node:os'), async () => {
   };
 });
 
+vi.mock(import('/@/certificate-detection/certificate-detection-service'));
 vi.mock(import('./helpers/qemu-helper'));
 vi.mock(import('./helpers/krunkit-helper'));
 vi.mock(import('./helpers/podman-binary-location-helper'));
@@ -396,6 +398,7 @@ beforeEach(() => {
   vi.mocked(extensionApi.env).isMac = false;
   vi.mocked(extensionApi.env).isLinux = false;
   vi.mocked(extensionApi.env).isWindows = false;
+  vi.mocked(extensionApi.env).isTelemetryEnabled = false;
 
   vi.mocked(spawn).mockReturnValue({
     on: vi.fn(),
@@ -404,6 +407,12 @@ beforeEach(() => {
   vi.mocked(SOCKET_COMPATIBILITY_MOCK.isEnabled).mockReturnValue(false);
 
   vi.mocked(PodmanInfoHelper.prototype.updateWithPodmanInfoRecords).mockResolvedValue(undefined);
+  vi.mocked(CertificateDetectionService.prototype.detectCustomCertificates).mockResolvedValue({
+    hasCustomCertificates: false,
+    certificateCount: 0,
+    scanDurationMs: 0,
+    errors: [],
+  });
 });
 
 afterEach(async () => {
@@ -4731,6 +4740,17 @@ describe('activate sets PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY', () => {
     } as unknown as UpdateCheck);
     await extension.activate(getContextMock());
     expect(extensionApi.context.setValue).toHaveBeenCalledWith(PODMAN_IMPORT_NATIVE_CA_SUPPORTED_KEY, supported);
+  });
+});
+
+describe('activate detects custom registry certificates', () => {
+  test.each([true, false])('passes isTelemetryEnabled=%s to the certificate detection service', async enabled => {
+    vi.mocked(extensionApi.env).isTelemetryEnabled = enabled;
+
+    await extension.activate(getContextMock());
+
+    expect(CertificateDetectionService).toHaveBeenCalledWith(telemetryLogger, { enableTelemetry: enabled });
+    expect(CertificateDetectionService.prototype.detectCustomCertificates).toHaveBeenCalledOnce();
   });
 });
 
