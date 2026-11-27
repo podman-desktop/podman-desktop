@@ -141,6 +141,7 @@ export class ExtensionsCatalog {
           categories: extension.categories,
           keywords: extension.keywords,
           unlisted: extension.unlisted ?? false,
+          targetPlatforms: extension.targetPlatforms,
           extensionName: extension.extensionName,
           shortDescription: extension.shortDescription,
           displayName: extension.displayName,
@@ -234,6 +235,7 @@ interface InternalCatalogExtensionJSON {
   categories: string[];
   keywords: string[];
   unlisted?: boolean;
+  targetPlatforms?: string[];
   shortDescription: string;
   versions: InternalCatalogExtensionVersionJSON[];
 }

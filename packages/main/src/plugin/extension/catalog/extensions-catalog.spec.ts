@@ -455,6 +455,32 @@ test('should get proper unlisted fields', async () => {
   expect(console.error).not.toBeCalled();
 });
 
+test('should get the targetPlatforms field', async () => {
+  const declaredExtension = { ...fakePublishedExtension1, targetPlatforms: ['darwin/arm64'] };
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () =>
+      HttpResponse.json({ extensions: [declaredExtension, fakePublishedExtension2] }),
+    ),
+  );
+  server.listen({ onUnhandledFrame: 'error' });
+
+  const allExtensions = await extensionsCatalog.getExtensions();
+  expect(allExtensions).toBeDefined();
+  expect(allExtensions.length).toBe(2);
+
+  // check data
+  const declaredPlatformsExtension = allExtensions.find(e => e.id === 'foo.fooName');
+  expect(declaredPlatformsExtension).toBeDefined();
+  expect(declaredPlatformsExtension?.targetPlatforms).toStrictEqual(['darwin/arm64']);
+
+  const missingPlatformsExtension = allExtensions.find(e => e.id === 'foo2.fooName2');
+  expect(missingPlatformsExtension).toBeDefined();
+  expect(missingPlatformsExtension?.targetPlatforms).toBeUndefined();
+
+  // no error
+  expect(console.error).not.toBeCalled();
+});
+
 test('should fetch alternate link', async () => {
   const customPathToCatalog = 'https://my-dummy-podman-desktop.com/catalog.json';
 
