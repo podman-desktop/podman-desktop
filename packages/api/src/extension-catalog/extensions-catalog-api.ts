@@ -38,6 +38,7 @@ export interface CatalogExtension {
   categories: string[];
   keywords: string[];
   unlisted: boolean;
+  targetPlatforms?: string[];
   versions: CatalogExtensionVersion[];
 }
 
