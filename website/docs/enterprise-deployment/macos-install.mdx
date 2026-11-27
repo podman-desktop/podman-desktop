@@ -1,0 +1,161 @@
+---
+sidebar_position: 2
+title: macOS
+description: How Podman Desktop performs privileged operations on macOS, and how to allowlist them in enterprise environments.
+tags: [podman-desktop, enterprise, macOS, intune]
+keywords: [podman desktop, enterprise deployment, macos, intune, mdm, epm, podman-mac-helper, osascript, launchd]
+---
+
+# macOS
+
+On macOS, two operations can involve elevation: the installation or update of Podman from the Podman Desktop interface, and the Docker socket compatibility helper.
+
+:::tip[TL;DR]
+
+| Item                     | Value                                                                                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| App bundle               | `/Applications/Podman Desktop.app`                                                                                                            |
+| Podman package           | `/Applications/Podman Desktop.app/Contents/Resources/extensions/podman/packages/extension/assets/podman-installer-macos-<arch>-<version>.pkg` |
+| Executable used (Podman) | `/usr/bin/open`, run as `open <pkg> -W`                                                                                                       |
+| Helper binaries          | `/opt/podman/bin/podman-mac-helper`, then `/opt/homebrew/bin/podman-mac-helper`, then `/usr/local/bin/podman-mac-helper` (first match wins)   |
+| Executable used (helper) | `/usr/bin/osascript` running `<helper> install` or `<helper> uninstall` with administrator privileges                                         |
+| launchd file             | `/Library/LaunchDaemons/com.github.containers.podman.helper-$USER.plist`                                                                      |
+| Signature checks         | `codesign -dv` on the app, the helper, and (with `pkgutil`) the package                                                                       |
+
+`<arch>` is `aarch64` on Apple silicon and `amd64` on Intel. `<pkg>` below is the full path of the bundled package.
+
+#### Package for the current architecture
+
+The application chooses the bundled package from its CPU architecture, so `uname -m` selects the same file:
+
+```shell-session
+$ app="/Applications/Podman Desktop.app"
+$ assets="$app/Contents/Resources/extensions/podman/packages/extension/assets"
+$ case "$(uname -m)" in arm64) arch=aarch64 ;; *) arch=amd64 ;; esac
+$ pkg=$(ls "$assets"/podman-installer-macos-"$arch"-*.pkg 2>/dev/null | sort -V | tail -n 1)
+$ printf 'arch=%s\npkg=%s\n' "$arch" "$pkg"
+```
+
+#### Helper binary
+
+`<helper>` does not come from `PATH`. The application checks three fixed locations and uses the first one that exists:
+
+```shell-session
+$ helper=""
+$ for candidate in /opt/podman/bin/podman-mac-helper \
+      /opt/homebrew/bin/podman-mac-helper \
+      /usr/local/bin/podman-mac-helper; do
+    if [ -x "$candidate" ]; then helper="$candidate"; break; fi
+  done
+$ printf 'helper=%s\n' "${helper:-<none found>}"
+```
+
+This order matches the application and differs from `command -v`, which follows your shell `PATH` and may return a different binary, including a Homebrew copy.
+
+#### Signature checks
+
+Each artifact has its own check. Run them separately and compare the results with the publishers you expect.
+
+```shell-session
+$ codesign -dv "$app"
+$ codesign -dv "${helper:-/opt/podman/bin/podman-mac-helper}"
+$ pkgutil --check-signature "$pkg"   # add sudo if this reports a permission error
+```
+
+- `codesign -dv` prints the signature details for each artifact. `TeamIdentifier` is the reliable field to compare: the Podman Desktop app and the Podman package are both signed by Red Hat, and the podman binary and its bundled helper installed by the package report `HYSCB8KRL2`. A Homebrew helper is typically ad-hoc signed and reports `TeamIdentifier=not set`. Depending on how Podman was built, the helper may report `Authority=(unavailable)` instead of a certificate name, so do not rely on the `Authority` line alone.
+- `pkgutil --check-signature` reports the package signature and notarization, for example `Developer ID Installer: Red Hat, Inc. (HYSCB8KRL2)` and `Notarization: trusted by the Apple notary service`.
+- `codesign -dv` succeeds even when a strict `codesign -v` fails with `invalid signature (code or signature have been modified)`. Some bundled Podman helpers are reported that way, so use `-dv` for the publisher check and treat a strict verify failure as information to investigate, not as a missing signature.
+- `pkgutil --check-signature` normally runs as your own user; if it reports a permission error, rerun it with `sudo`.
+
+The launch daemon file belongs to `root:wheel` with permissions `-rw-r--r--`, so inspecting it needs no privileges:
+
+```shell-session
+$ ls -l "/Library/LaunchDaemons/com.github.containers.podman.helper-$USER.plist"
+```
+
+`$USER` is the macOS account name, which is the same value the application uses for the launch daemon file name.
+
+:::
+
+## podman-mac-helper
+
+Podman Desktop uses the `podman-mac-helper` utility to create the Docker socket compatibility layer. The helper is looked up in this order and the first existing binary wins:
+
+1. `/opt/podman/bin/podman-mac-helper` (Podman installed from the bundled package)
+2. `/opt/homebrew/bin/podman-mac-helper` (Homebrew on Apple silicon)
+3. `/usr/local/bin/podman-mac-helper` (Homebrew on Intel or manual install)
+
+### Commands
+
+| Action                | Command              | Privilege     |
+| --------------------- | -------------------- | ------------- |
+| Enable compatibility  | `<helper> install`   | Administrator |
+| Disable compatibility | `<helper> uninstall` | Administrator |
+
+`<helper>` is the first existing binary from the lookup list above (`/opt/podman/bin/podman-mac-helper`, `/opt/homebrew/bin/podman-mac-helper`, `/usr/local/bin/podman-mac-helper`); it is not necessarily the `podman-mac-helper` on your `PATH`.
+
+Podman Desktop runs the helper through the system `/usr/bin/osascript` binary with the AppleScript form `do shell script "<command>" with prompt "Podman Desktop requires admin privileges " with administrator privileges`. Pre-authorize `osascript` and the resolved helper binary path, or pre-authorize `podman-mac-helper` directly and let the user approve the macOS prompt.
+
+`osascript` is a general-purpose scripting interpreter, so prefer rules that also constrain the target binary path instead of allowing `osascript` unconditionally.
+
+### Expected launchd service
+
+Enabling compatibility installs a launch daemon named for the current user:
+
+```
+/Library/LaunchDaemons/com.github.containers.podman.helper-<username>.plist
+```
+
+The service name contains the user name, so a single machine can have one plist per user that enabled the feature. Podman Desktop considers the feature enabled when that file exists.
+
+### Recommended deployment pattern
+
+- Pre-install the helper by deploying a Podman package with your MDM solution, then configure the **Third-Party Docker Tool Compatibility** setting to the desired state through [managed configuration](/docs/configuration/managed-configuration).
+- Add an EPM allowlist rule for the helper binary paths above and for `osascript` elevation of that binary. Include the per-user `com.github.containers.podman.helper-<username>.plist` path pattern in your file policy so the launch daemon can be installed.
+- If your security policy forbids interactive elevation entirely, disable Docker socket compatibility through managed configuration and instruct users to set `DOCKER_HOST` instead. See [Managing Docker compatibility](/docs/migrating-from-docker/managing-docker-compatibility).
+
+## Podman install and update from the GUI
+
+When the user installs or updates Podman from the Podman Desktop interface, the Podman extension runs Apple's installer on the bundled package.
+
+- **Installer entry point:** `open <path-to-pkg> -W`. The `-W` flag makes the command wait until the installer finishes. Podman Desktop does not start the installer processes directly: macOS opens the package with its registered handler, Launch Services, and that handler starts the installer.
+- **Package location:** the bundled extension assets of the installation, under `Podman Desktop.app/Contents/Resources/extensions/podman/packages/extension/assets/`.
+- **Package names:** the bundled package name includes the Podman version, for example `podman-installer-macos-aarch64-<version>.pkg` or `podman-installer-macos-amd64-<version>.pkg`.
+- **Update:** the update runs the same `open <pkg> -W` flow.
+- **Administrator prompt:** the bundled Podman package requires administrator rights, so macOS prompts for credentials unless your MDM or EPM policy already authorizes the installation.
+- **Result detection:** Podman Desktop cannot rely on the exit code of `open`, because the installer window can be closed. It treats the operation as successful when `/opt/podman/bin/podman` exists afterwards.
+
+To confirm the package path and its signature:
+
+```shell-session
+$ ls "/Applications/Podman Desktop.app/Contents/Resources/extensions/podman/packages/extension/assets/"
+$ pkgutil --check-signature "/Applications/Podman Desktop.app/Contents/Resources/extensions/podman/packages/extension/assets/podman-installer-macos-aarch64-<version>.pkg"
+```
+
+### Recommended approach for MDM environments
+
+Choose one of the following models to avoid requiring users to enter an administrator password for every Podman update, and document the choice in your internal deployment guide:
+
+1. **Pre-authorize the installer flow.** Allow the built-in `/usr/bin/open` command, the Apple installer application that Launch Services opens for `.pkg` files, and the bundled package in your MDM or EPM policy. Podman Desktop still invokes `open`; only the elevation prompt is removed. Use your endpoint protection telemetry during a pilot to record the exact process tree and helper paths for your macOS version, and note them in your policy.
+2. **Pre-install and defer updates.** Deploy Podman with your MDM solution from the signed package and keep Podman Desktop's Podman installation from running in user sessions. Verify that Podman Desktop detects the managed Podman installation and does not prompt for an update.
+3. **Pre-stage credentials.** If your policy permits it, grant a time-bound temporary administrator right so that the built-in flow completes without an interactive password.
+
+Whatever model you choose, test it with the exact Podman Desktop and Podman versions you deploy. Do not assume that installer process names or helper paths are stable between macOS releases.
+
+## Verifying paths and signatures
+
+The authoritative values for a deployment come from the binaries you install, not from this page. Use the following checks during your validation and after every upgrade:
+
+```shell-session
+$ codesign -dvvv "/Applications/Podman Desktop.app"
+$ ls "/Applications/Podman Desktop.app/Contents/Resources/extensions/podman/packages/extension/assets/"
+$ ls -l /Library/LaunchDaemons/com.github.containers.podman.helper-*.plist
+```
+
+Use the same commands in your change-management checklist so that a signature, path, or flag change in a new release is detected before rollout.
+
+## Related resources
+
+- [Enterprise Deployment](/docs/enterprise-deployment)
+- [Controlling updates in managed environments](/docs/enterprise-deployment#controlling-updates-in-managed-environments)
+- [Installing Podman Desktop on macOS](/docs/installation/macos-install)

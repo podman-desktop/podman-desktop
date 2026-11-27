@@ -1,0 +1,132 @@
+---
+sidebar_position: 1
+title: Windows
+description: How Podman Desktop performs privileged operations on Windows, and how to allowlist them in enterprise environments.
+tags: [podman-desktop, enterprise, windows, intune]
+keywords: [podman desktop, enterprise deployment, windows, intune, mdm, epm, silent install, code signing, msiexec]
+---
+
+# Windows
+
+On Windows, two operations can involve elevation: the Podman Desktop self-update, and the installation or update of the Podman CLI from the Podman Desktop interface.
+
+:::tip[TL;DR]
+
+| Item                     | Value                                                                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| App install root         | `%PROGRAMFILES%\Podman Desktop` (for all users) or `%LOCALAPPDATA%\Programs\podman-desktop` (current user)                                   |
+| Podman MSI               | `%PROGRAMFILES%\Podman Desktop\resources\extensions\podman\packages\extension\assets\podman-installer-windows-amd64.msi` (`-arm64` on arm64) |
+| Executable used (Podman) | `%SYSTEMROOT%\System32\msiexec.exe`, run as `msiexec /package <MSI>`                                                                         |
+| Download cache           | `%LOCALAPPDATA%\<updaterCacheDirName>\pending\`                                                                                              |
+| Executable used (update) | `%LOCALAPPDATA%\<updaterCacheDirName>\pending\podman-desktop-<version>-setup-<arch>.exe`, run with `--updated`                               |
+| Signature check          | `Get-AuthenticodeSignature <file>` on the app, the MSI, and the downloaded setup                                                             |
+
+`<updaterCacheDirName>` is the `updaterCacheDirName` value in `resources\app-update.yml`. In a standard build it matches the application name, so expect `podman-desktop`. Calculate the paths on the target machine:
+
+```powershell title="PowerShell"
+$appRoot = "$env:PROGRAMFILES\Podman Desktop"
+$msi = "$appRoot\resources\extensions\podman\packages\extension\assets\podman-installer-windows-amd64.msi"
+$cacheName = (Select-String -Path "$appRoot\resources\app-update.yml" -Pattern '^updaterCacheDirName:\s*(.+)$').Line -replace '^updaterCacheDirName:\s*', ''
+$pending = "$env:LOCALAPPDATA\$cacheName\pending"
+
+$appRoot, $msi, $pending
+Get-ChildItem -Force $pending
+Get-AuthenticodeSignature $msi | Format-List Status, SignerCertificate
+```
+
+If a user installed the application with the **Only for me** scope, replace `$appRoot` with `"$env:LOCALAPPDATA\Programs\podman-desktop"`.
+
+:::
+
+## Podman Desktop self-update
+
+Podman Desktop uses `electron-updater` with `autoDownload = false`. The updater checks for a new version at startup and then every 12 hours, but it downloads the update only after the user selects **Update now**.
+
+### Process flow
+
+1. The application queries the update feed and compares versions. No elevation is involved.
+2. When the user approves the update, the application downloads the installer into the updater cache directory, as the signed-in user.
+3. After the download completes, the application prompts the user to restart. When the user confirms, the application exits and the downloaded NSIS setup executable is started.
+4. The setup executable applies the update. Whether elevation is required is determined by the Windows installer technology and the installation scope (all users or only the current user), not by Podman Desktop.
+
+The downloaded installer is the same NSIS setup executable that is published for the release, with the file name pattern `podman-desktop-<version>-setup-<arch>.exe`.
+
+### Command-line arguments
+
+| Parameter        | Description                                                           |
+| ---------------- | --------------------------------------------------------------------- |
+| `--updated`      | Marks the run as an update rather than a first installation.          |
+| `/S`             | Silent mode. Podman Desktop invokes the update **without** this flag. |
+| `--force-run`    | Relaunches Podman Desktop after the update. Not used by default.      |
+| `/D=<directory>` | Installation directory. Only used when an install directory is known. |
+
+:::note
+
+Podman Desktop calls `quitAndInstall()` without arguments, so no silent parameter is passed and the user is prompted to restart explicitly. If your EPM policy is based on silent installs, model the interactive update, not a silent one.
+
+:::
+
+### Download and cache location
+
+The updater stores the installer in the application cache directory: `<cache>\<app-name>\pending\`. The cache directory is `%LOCALAPPDATA%` on Windows. The directory created below it is named by the Electron application name, not by the product display name or the application ID. Verify the exact directory on the target machine with:
+
+```powershell title="PowerShell"
+Get-ChildItem -Recurse -Force "$env:LOCALAPPDATA\podman-desktop\pending"
+```
+
+:::warning
+
+The cache path and the downloaded file name are implementation details of the updater library. Derive the path on the target system instead of hard-coding it in a rule that must survive upgrades.
+
+:::
+
+### Digital signature
+
+Released Podman Desktop binaries for Windows are code-signed as part of the release pipeline. The release build signs the NSIS setup executable and the application executables with the same signing identity, so a single publisher-based rule can cover both the application and its self-update.
+
+Podman Desktop updates are also verified by the updater against the `publisherName` recorded in the build's `app-update.yml` before the installer runs: an update whose signature does not match the publisher of the installed build is rejected.
+
+Always read the actual publisher from the binary you deploy rather than copying a subject string from documentation:
+
+```powershell title="PowerShell"
+Get-AuthenticodeSignature "C:\Program Files\Podman Desktop\Podman Desktop.exe" | Format-List Status, SignerCertificate
+Get-AuthenticodeSignature "$env:LOCALAPPDATA\<app-name>\pending\*.exe" | Format-List Status, SignerCertificate
+```
+
+## Podman CLI install and update from the GUI
+
+When the user installs or updates Podman from the Podman Desktop interface, the Podman extension runs the Podman MSI package that ships with the application.
+
+- **Installer entry point:** `msiexec`, always invoked as `msiexec /package <path-to-msi>`.
+- **Package location:** the bundled extension assets of the installation, under `resources\extensions\podman\packages\extension\assets\`. The exact root depends on your installation directory.
+- **Package names:** `podman-installer-windows-amd64.msi` for x64 and `podman-installer-windows-arm64.msi` for arm64.
+- **Update:** the update performs the same installation, so repair, upgrade, and reinstall use the same `msiexec /package` command. A previously installed legacy Podman is uninstalled first.
+- **Uninstall:** uninstalling Podman is a standard Windows MSI uninstall of the Podman product. Podman Desktop does not invoke the MSI with an uninstall flag from the GUI.
+- **Exit codes:** `0` and `1602` (user cancelled) are treated as non-failures by Podman Desktop.
+
+To find the exact package path and MSI product identity on a target machine:
+
+```powershell title="PowerShell"
+Get-ChildItem -Recurse -Filter "podman-installer-windows-*.msi" "C:\Program Files\Podman Desktop"
+Get-AuthenticodeSignature "C:\Program Files\Podman Desktop\resources\extensions\podman\packages\extension\assets\podman-installer-windows-amd64.msi"
+```
+
+The Podman MSI is a separate product from Podman Desktop and may be signed by a different publisher. Check its signature on the target machine and allow that publisher as well if your policy requires Podman to be installed from the GUI.
+
+## Verifying paths and signatures
+
+The authoritative values for a deployment come from the binaries you install, not from this page. Use the following checks during your validation and after every upgrade:
+
+```powershell title="PowerShell"
+Get-ChildItem "C:\Program Files\Podman Desktop"
+Get-AuthenticodeSignature "C:\Program Files\Podman Desktop\Podman Desktop.exe" | Format-List
+Get-ChildItem -Recurse -Filter "*.msi" "C:\Program Files\Podman Desktop"
+```
+
+Use the same commands in your change-management checklist so that a signature, path, or flag change in a new release is detected before rollout.
+
+## Related resources
+
+- [Enterprise Deployment](/docs/enterprise-deployment)
+- [Controlling updates in managed environments](/docs/enterprise-deployment#controlling-updates-in-managed-environments)
+- [Installing Podman Desktop on Windows](/docs/installation/windows-install)
