@@ -5,6 +5,14 @@
 <script lang="ts">
 import { NavigationPage } from '@desktop-framework/api';
 import { AppearanceSettings } from '@desktop-framework/api/appearance';
+import {
+  type DragDropEventHandlers,
+  DragDropProvider,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+} from '@dnd-kit/svelte';
+import { isSortable } from '@dnd-kit/svelte/sortable';
 import { onDestroy, onMount, tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
@@ -19,7 +27,11 @@ import NavItem from './lib/ui/NavItem.svelte';
 import NavRegistryEntry from './lib/ui/NavRegistryEntry.svelte';
 import { handleNavigation } from './navigation';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
-import { navigationRegistry } from './stores/navigation/navigation-registry';
+import {
+  navigationItemOrder,
+  navigationRegistry,
+  saveNavigationItemOrder,
+} from './stores/navigation/navigation-registry';
 
 interface Props {
   exitSettingsCallback: () => void;
@@ -45,6 +57,62 @@ let isDragging = $state(false);
 $effect(() => {
   document.documentElement.style.setProperty('--spacing-leftnavbar', `${navWidth}px`);
 });
+
+// The order being dragged; the saved order is used when no drag is in progress.
+let dragOrder = $state<string[]>();
+let order = $derived(dragOrder ?? $navigationItemOrder);
+
+// Shown navigation entries (groups expanded in place), sorted by the order; entries not in it go last.
+let entries = $derived(
+  $navigationRegistry
+    .flatMap(entry => (entry.type === 'group' ? (entry.items ?? []) : [entry]))
+    .filter(entry => !entry.hidden)
+    .toSorted((a, b) => position(a.name) - position(b.name)),
+);
+
+function position(name: string): number {
+  const index = order.indexOf(name);
+  return index === -1 ? order.length : index;
+}
+
+// Space picks an item up and drops it; Enter keeps following the link instead.
+const keyboardSensor = KeyboardSensor.configure({
+  keyboardCodes: {
+    start: ['Space'],
+    cancel: ['Escape'],
+    end: ['Space', 'Enter', 'Tab'],
+    up: ['ArrowUp'],
+    down: ['ArrowDown'],
+    left: [],
+    right: [],
+  },
+});
+
+let itemTitle = $derived(dragOrder ? undefined : 'Hold to reorder. Space to pick up, arrows to move');
+
+const onDragStart: NonNullable<DragDropEventHandlers['onDragStart']> = () => {
+  dragOrder = entries.map(entry => entry.name);
+};
+
+// Move the dragged entry to the position of the entry under it.
+const onDragOver: NonNullable<DragDropEventHandlers['onDragOver']> = event => {
+  const { source, target } = event.operation;
+  if (!dragOrder || !isSortable(source) || !isSortable(target) || source.index === target.index) return;
+
+  const reordered = [...dragOrder];
+  const [moved] = reordered.splice(source.index, 1);
+  reordered.splice(target.index, 0, moved);
+  dragOrder = reordered;
+};
+
+// Save the new order on drop. Canceling (Escape) goes back to the saved order.
+const onDragEnd: NonNullable<DragDropEventHandlers['onDragEnd']> = event => {
+  const { source } = event.operation;
+  if (dragOrder && !event.canceled && isSortable(source) && source.initialIndex !== source.index) {
+    saveNavigationItemOrder(dragOrder);
+  }
+  dragOrder = undefined;
+};
 
 /** Custom overlay scrollbar: thumb position and height (0–1) */
 let scrollThumbTop = $state(0);
@@ -231,16 +299,25 @@ function onDidChangeConfigurationCallback(e: Event): void {
       aria-label="Scrollable navigation list"
       onscroll={onScrollRegionScroll}
       onpointerdown={onScrollRegionPointerDown}>
-      {#each $navigationRegistry as navigationRegistryItem, index (index)}
-        {#if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
-          <!-- This is a group, list all items from the entry -->
-          {#each navigationRegistryItem.items as item, index (index)}
-            <NavRegistryEntry entry={item} bind:meta={meta} {expanded} />
+      <DragDropProvider sensors={[PointerSensor, keyboardSensor]} {onDragStart} {onDragOver} {onDragEnd}>
+        <!-- dnd-kit marks the dragged entry with aria-grabbed: dim it while the overlay shows it under the pointer. -->
+        <div class="[&_[aria-grabbed=true]]:opacity-40">
+          {#each entries as entry, index (entry.name)}
+            <NavRegistryEntry {entry} {index} bind:meta={meta} {expanded} aria-keyshortcuts="Space" title={itemTitle} />
           {/each}
-        {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}
-          <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} {expanded} />
-        {/if}
-      {/each}
+        </div>
+        <!-- The dragged entry follows the pointer in an overlay, outside the list being reordered. -->
+        <DragOverlay>
+          {#snippet children(source)}
+            {@const dragged = entries.find(entry => entry.name === source.id)}
+            {#if dragged}
+              <div class="bg-(--pd-global-nav-bg)">
+                <NavRegistryEntry entry={dragged} index={-1} {meta} {expanded} />
+              </div>
+            {/if}
+          {/snippet}
+        </DragOverlay>
+      </DragDropProvider>
     </div>
     {#if scrollThumbVisible}
       <div
