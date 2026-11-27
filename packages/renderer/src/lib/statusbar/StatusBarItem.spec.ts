@@ -16,8 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import '@testing-library/jest-dom/vitest';
+
 import type { StatusBarEntry } from '@desktop-framework/api';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
@@ -84,6 +86,73 @@ test('expect dot rendered', () => {
 
   const dot = screen.getByRole('status');
   expect(dot).toBeDefined();
+});
+
+test('expect an icon-only entry to be named by its tooltip', () => {
+  const statusBarEntry: StatusBarEntry = {
+    enabled: true,
+    tooltip: 'Help',
+    activeIconClass: 'fa fa-question-circle',
+  };
+
+  render(StatusBarItem, { entry: statusBarEntry });
+
+  expect(screen.getByRole('button', { name: 'Help' })).toBeInTheDocument();
+});
+
+test('expect a whitespace-only text to fall back to the tooltip as accessible name', () => {
+  const statusBarEntry: StatusBarEntry = {
+    enabled: true,
+    text: ' ',
+    tooltip: 'Help',
+    activeIconClass: 'fa fa-question-circle',
+  };
+
+  render(StatusBarItem, { entry: statusBarEntry });
+
+  expect(screen.getByRole('button', { name: 'Help' })).toBeInTheDocument();
+});
+
+test('expect the entry text to be the accessible name when present', () => {
+  const statusBarEntry: StatusBarEntry = {
+    enabled: true,
+    text: 'v1.31.0',
+    tooltip: 'Using version v1.31.0',
+  };
+
+  render(StatusBarItem, { entry: statusBarEntry });
+
+  expect(screen.getByRole('button', { name: 'v1.31.0' })).toBeInTheDocument();
+});
+
+test('expect the tooltip to be shown on hover instead of a native title', async () => {
+  const statusBarEntry: StatusBarEntry = {
+    enabled: true,
+    text: 'Podman',
+    tooltip: 'Podman status',
+    activeIconClass: '${podman}',
+  };
+
+  render(StatusBarItem, { entry: statusBarEntry });
+
+  const item = screen.getByRole('button');
+  expect(item).not.toHaveAttribute('title');
+
+  await fireEvent.mouseEnter(item);
+  expect(screen.getByRole('tooltip')).toHaveTextContent('Podman status');
+});
+
+test('expect no tooltip when the entry has none', async () => {
+  const statusBarEntry: StatusBarEntry = {
+    enabled: true,
+    text: 'Podman',
+    activeIconClass: '${podman}',
+  };
+
+  render(StatusBarItem, { entry: statusBarEntry });
+
+  await fireEvent.mouseEnter(screen.getByRole('button'));
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
 });
 
 test('expect click on the item with command/args', async () => {

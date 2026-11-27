@@ -37,6 +37,14 @@ import PodsList from '/@/lib/pod/PodsList.svelte';
 import { filtered, podsInfos } from '/@/stores/pods';
 import { providerInfos } from '/@/stores/providers';
 
+function getTooltipTrigger(dot: HTMLElement): HTMLElement {
+  const trigger = dot.parentElement;
+  if (!trigger) {
+    throw new Error('status dot has no wrapper');
+  }
+  return trigger;
+}
+
 const provider: ProviderInfo = {
   canStart: false,
   canStop: false,
@@ -363,10 +371,18 @@ test('Expect the pod1 row to have 3 status dots with the correct colors and the 
   const statusDots = screen.getAllByTestId('status-dot');
   expect(statusDots.length).toBe(4);
 
-  expect(statusDots[0].title).toBe('container1: Running');
-  expect(statusDots[1].title).toBe('container3: Exited');
-  expect(statusDots[2].title).toBe('container2: Terminated');
-  expect(statusDots[3].title).toBe('container4: Running');
+  const expectedTooltips = [
+    'container1: Running',
+    'container3: Exited',
+    'container2: Terminated',
+    'container4: Running',
+  ];
+  for (const [index, tooltip] of expectedTooltips.entries()) {
+    const trigger = getTooltipTrigger(statusDots[index]);
+    await fireEvent.mouseEnter(trigger);
+    expect(screen.getByRole('tooltip')).toHaveTextContent(tooltip);
+    await fireEvent.mouseLeave(trigger);
+  }
 });
 
 test('Expect the manyPod row to show 9 dots representing every status', async () => {
@@ -386,15 +402,23 @@ test('Expect the manyPod row to show 9 dots representing every status', async ()
   const statusDots = screen.getAllByTestId('status-dot');
   expect(statusDots.length).toBe(9);
 
-  expect(statusDots[0].title).toBe('Running: 3');
-  expect(statusDots[1].title).toBe('Created: 1');
-  expect(statusDots[2].title).toBe('Paused: 1');
-  expect(statusDots[3].title).toBe('Waiting: 1');
-  expect(statusDots[4].title).toBe('Degraded: 1');
-  expect(statusDots[5].title).toBe('Exited: 1');
-  expect(statusDots[6].title).toBe('Stopped: 1');
-  expect(statusDots[7].title).toBe('Terminated: 1');
-  expect(statusDots[8].title).toBe('Dead: 1');
+  const expectedTooltips = [
+    'Running: 3',
+    'Created: 1',
+    'Paused: 1',
+    'Waiting: 1',
+    'Degraded: 1',
+    'Exited: 1',
+    'Stopped: 1',
+    'Terminated: 1',
+    'Dead: 1',
+  ];
+  for (const [index, tooltip] of expectedTooltips.entries()) {
+    const trigger = getTooltipTrigger(statusDots[index]);
+    await fireEvent.mouseEnter(trigger);
+    expect(screen.getByRole('tooltip')).toHaveTextContent(tooltip);
+    await fireEvent.mouseLeave(trigger);
+  }
 });
 
 const runningPod: PodInfo = {

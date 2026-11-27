@@ -20,7 +20,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
 import LinuxControlButton from './LinuxControlButton.svelte';
@@ -30,7 +30,10 @@ test('Check Minimize', async () => {
 
   const customButton = screen.getByRole('button', { name: 'Minimize' });
   expect(customButton).toBeInTheDocument();
+  expect(customButton).not.toHaveAttribute('title');
 
-  // check the title of the button is 'Maximize'
-  expect(customButton).toHaveAttribute('title', 'Minimize');
+  await fireEvent.mouseEnter(customButton);
+  expect(screen.getByRole('tooltip')).toHaveTextContent('Minimize');
+  // the tooltip repeats the aria-label, so it is not referenced as a description
+  expect(customButton).not.toHaveAttribute('aria-describedby');
 });

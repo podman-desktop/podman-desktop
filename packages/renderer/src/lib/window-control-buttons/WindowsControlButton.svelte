@@ -1,4 +1,5 @@
 <script lang="ts">
+import { tooltip as tooltipAttachment } from '@podman-desktop/ui-svelte';
 import { type Component, onMount } from 'svelte';
 
 import WindowsExitIcon from '/@/lib/images/WindowsExitIcon.svelte';
@@ -59,11 +60,11 @@ function executeAction(): void {
 
 <button
   onclick={executeAction}
-  aria-label={name}
-  title={titleName}
+  aria-label={titleName ?? name}
   class="h-[32px] w-[45px] cursor-pointer {name === 'Close'
     ? 'hover:bg-(--pd-titlebar-windows-hover-exit-bg) hover:text-(--pd-titlebar-windows-hover-exit-text)'
-    : 'hover:bg-(--pd-titlebar-windows-hover-bg)'} text-(--pd-titlebar-icon) flex place-items-center justify-center">
+    : 'hover:bg-(--pd-titlebar-windows-hover-bg)'} text-(--pd-titlebar-icon) flex place-items-center justify-center"
+  {@attach tooltipAttachment(() => titleName ?? '')}>
   {#if icon}
     {@const Icon = icon}
     <Icon size={iconSize} />

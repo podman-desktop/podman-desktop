@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import StatusDot from './StatusDot.svelte';
@@ -34,22 +34,34 @@ const renderStatusDot = (containerStatus: string, name = 'foobar'): void => {
   render(StatusDot, { name, status: containerStatus });
 };
 
+function getTooltipTrigger(): HTMLElement {
+  const trigger = screen.getByTestId('status-dot').parentElement;
+  if (!trigger) {
+    throw new Error('status dot has no wrapper');
+  }
+  return trigger;
+}
+
 test('Expect the dot wrapper to exist for running status', () => {
   renderStatusDot('running');
   const dot = screen.getByTestId('status-dot');
   expect(dot).toBeInTheDocument();
 });
 
-test('Expect auto-generated tooltip from name and status', () => {
+test('Expect auto-generated tooltip from name and status', async () => {
   renderStatusDot('running', 'my-container');
   const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveAttribute('title', 'my-container: Running');
+  expect(dot).not.toHaveAttribute('title');
+
+  await fireEvent.mouseEnter(getTooltipTrigger());
+  expect(screen.getByRole('tooltip')).toHaveTextContent('my-container: Running');
 });
 
-test('Expect custom tooltip to override auto-generated', () => {
+test('Expect custom tooltip to override auto-generated', async () => {
   render(StatusDot, { status: 'running', name: 'my-container', tooltip: 'Custom tip' });
-  const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveAttribute('title', 'Custom tip');
+
+  await fireEvent.mouseEnter(getTooltipTrigger());
+  expect(screen.getByRole('tooltip')).toHaveTextContent('Custom tip');
 });
 
 test('Expect number badge to render when number is provided', () => {
@@ -76,16 +88,18 @@ test('Expect no mt-3 class when number is 0', () => {
   expect(dot).not.toHaveClass('mt-3');
 });
 
-test('Expect empty tooltip when name and status are empty', () => {
+test('Expect no tooltip when name and status are empty', async () => {
   render(StatusDot, { status: '', name: '' });
-  const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveAttribute('title', '');
+
+  await fireEvent.mouseEnter(getTooltipTrigger());
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
 });
 
-test('Expect auto-generated tooltip when only name is empty', () => {
+test('Expect no tooltip when only name is empty', async () => {
   render(StatusDot, { status: 'running', name: '' });
-  const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveAttribute('title', '');
+
+  await fireEvent.mouseEnter(getTooltipTrigger());
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
 });
 
 test('Expect StatusDotIcon to receive the status prop', () => {

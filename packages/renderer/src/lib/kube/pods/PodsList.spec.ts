@@ -29,6 +29,14 @@ import * as states from '/@/stores/kubernetes-contexts-state';
 
 import PodsList from './PodsList.svelte';
 
+function getTooltipTrigger(dot: HTMLElement): HTMLElement {
+  const trigger = dot.parentElement;
+  if (!trigger) {
+    throw new Error('status dot has no wrapper');
+  }
+  return trigger;
+}
+
 vi.mock(import('/@/stores/kubernetes-contexts-state'));
 vi.mock(import('/@/lib/kube/resources-listen'));
 
@@ -284,14 +292,22 @@ describe.each<{
 
     render(PodsList);
 
-    await vi.waitFor(() => {
+    await vi.waitFor(async () => {
       // Should render 3 status dots, reordered
       const statusDots = screen.getAllByTestId('status-dot');
       expect(statusDots.length).toBe(3);
 
-      expect(statusDots[0].title).toBe('container-3-name: Running');
-      expect(statusDots[1].title).toBe('container-1-name: Waiting');
-      expect(statusDots[2].title).toBe('container-2-name: Terminated');
+      const expectedTooltips = [
+        'container-3-name: Running',
+        'container-1-name: Waiting',
+        'container-2-name: Terminated',
+      ];
+      for (const [index, tooltip] of expectedTooltips.entries()) {
+        const trigger = getTooltipTrigger(statusDots[index]);
+        await fireEvent.mouseEnter(trigger);
+        expect(screen.getByRole('tooltip')).toHaveTextContent(tooltip);
+        await fireEvent.mouseLeave(trigger);
+      }
     });
   });
 });

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Tooltip } from '@podman-desktop/ui-svelte';
+import { tooltip as tooltipAttachment } from '@podman-desktop/ui-svelte';
 
 import StatusDotIcon from './StatusDotIcon.svelte';
 import { capitalize } from './Util';
@@ -18,14 +18,11 @@ let resolvedTooltip = $derived(
 );
 </script>
 
-<Tooltip top tip={resolvedTooltip}>
-  <div
-    class="mr-0.5 {number ? 'mt-3' : ''}"
-    data-testid="status-dot"
-    title={resolvedTooltip}>
+<div class="relative inline-block" {@attach tooltipAttachment(() => resolvedTooltip)}>
+  <div class="mr-0.5 {number ? 'mt-3' : ''}" data-testid="status-dot">
     <StatusDotIcon {status} />
   </div>
   {#if number}
     <div class="text-sm font-bold text-(--pd-content-text) mr-0.5">{number}</div>
   {/if}
-</Tooltip>
+</div>
