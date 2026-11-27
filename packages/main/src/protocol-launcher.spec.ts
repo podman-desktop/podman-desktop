@@ -18,7 +18,7 @@
 import type { BrowserWindow } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { isWindows } from '/@/util.js';
+import { isLinux, isWindows } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
 import { ProtocolLauncher } from './protocol-launcher.js';
@@ -88,8 +88,15 @@ test.each([
     webContentsSend: ['podman-desktop-protocol:install-extension', 'my.extension'],
   },
   { url: `${PROTOCOL}:experimental`, webContentsSend: ['podman-desktop-protocol:open-experimental-features'] },
-])('should handle valid URL on Windows', async ({ url, webContentsSend }) => {
+])('should handle valid URL $url on Windows and Linux', async ({ url, webContentsSend }) => {
   vi.mocked(isWindows).mockReturnValue(true);
+
+  getProtocolLauncher().handleAdditionalProtocolLauncherArgs([url]);
+  await vi.waitFor(() => expect(BROWSER_WINDOW_MOCK.webContents.send).toHaveBeenCalledWith(...webContentsSend));
+
+  vi.mocked(BROWSER_WINDOW_MOCK.webContents.send).mockClear();
+  vi.mocked(isWindows).mockReturnValue(false);
+  vi.mocked(isLinux).mockReturnValue(true);
 
   const protocol = getProtocolLauncher();
   protocol.handleAdditionalProtocolLauncherArgs([url]);
@@ -99,9 +106,10 @@ test.each([
 });
 
 test.each([`${PROTOCOL}:extension/my.extension`, `${PROTOCOL}:experimental`])(
-  'should not do anything with valid URL on OS different than Windows',
+  'should not do anything with valid URL on macOS',
   async url => {
     vi.mocked(isWindows).mockReturnValue(false);
+    vi.mocked(isLinux).mockReturnValue(false);
 
     const protocol = getProtocolLauncher();
 

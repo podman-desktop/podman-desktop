@@ -187,8 +187,9 @@ describe('ElectronApp#on second-instance', () => {
     expect(restoreWindow).toHaveBeenCalledOnce();
   });
 
-  test('should handle the protocol arguments on Windows', () => {
-    vi.mocked(isWindows).mockReturnValue(true);
+  test.each(['windows', 'linux'])('should handle the protocol arguments on %s', platform => {
+    vi.mocked(isWindows).mockReturnValue(platform === 'windows');
+    vi.mocked(isLinux).mockReturnValue(platform === 'linux');
 
     getElectronAppListener('second-instance')({}, [], '', { argv: ['podman-desktop:extension/foo.bar'] });
 
@@ -197,8 +198,9 @@ describe('ElectronApp#on second-instance', () => {
     ]);
   });
 
-  test('should not handle the protocol arguments on other platforms', () => {
+  test('should not handle the protocol arguments on macOS', () => {
     vi.mocked(isWindows).mockReturnValue(false);
+    vi.mocked(isLinux).mockReturnValue(false);
 
     getElectronAppListener('second-instance')({}, [], '', { argv: ['podman-desktop:extension/foo.bar'] });
 

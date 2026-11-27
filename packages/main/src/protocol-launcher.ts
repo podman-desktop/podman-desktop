@@ -17,7 +17,7 @@
  ***********************************************************************/
 import type { BrowserWindow } from 'electron';
 
-import { isWindows } from '/@/util.js';
+import { isLinux, isWindows } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
 export class ProtocolLauncher {
@@ -43,9 +43,9 @@ export class ProtocolLauncher {
   }
 
   handleAdditionalProtocolLauncherArgs(args: ReadonlyArray<string>): void {
-    // On Windows protocol handler will call the app with '<url>' args
+    // On Windows and Linux protocol handler will call the app with '<url>' args
     // on macOS it's done with 'open-url' event
-    if (isWindows()) {
+    if (isWindows() || isLinux()) {
       const extensionPrefix = `${this.protocol}:extension/`;
       const experimentalPrefix = `${this.protocol}:experimental`;
 

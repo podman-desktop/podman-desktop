@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { app } from 'electron';
-import { expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { Main } from './main.js';
 
@@ -27,9 +27,43 @@ vi.mock(import('./main.js'), () => {
   return { Main };
 });
 
-test('should start Main with the process arguments', async () => {
+let originalArgv: string[];
+let originalDefaultApp: boolean | undefined;
+
+function setDefaultApp(value: boolean | undefined): void {
+  Object.defineProperty(process, 'defaultApp', { value, configurable: true, writable: true });
+}
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  // index.ts runs on import, re-import it in each test
+  vi.resetModules();
+  originalArgv = process.argv;
+  originalDefaultApp = process.defaultApp;
+});
+
+afterEach(() => {
+  process.argv = originalArgv;
+  setDefaultApp(originalDefaultApp);
+});
+
+test.each([
+  {
+    name: 'packaged app',
+    defaultApp: undefined,
+    argv: ['/usr/bin/podman-desktop', 'podman-desktop:extension/foo.bar'],
+  },
+  {
+    name: 'default app',
+    defaultApp: true,
+    argv: ['/usr/bin/electron', '.', 'podman-desktop:extension/foo.bar'],
+  },
+])('$name should start Main with the arguments after the executable', async ({ defaultApp, argv }) => {
+  setDefaultApp(defaultApp);
+  process.argv = argv;
+
   await import('./index.js');
 
   expect(Main).toHaveBeenCalledWith(app);
-  expect(Main.prototype.main).toHaveBeenCalledWith(process.argv);
+  expect(Main.prototype.main).toHaveBeenCalledWith(['podman-desktop:extension/foo.bar']);
 });
