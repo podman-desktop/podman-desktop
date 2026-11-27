@@ -53,7 +53,7 @@ let extension: ExtensionDetailsUI | undefined = $derived.by(() => {
       </div>
     {/snippet}
     {#snippet actionsSnippet()}
-      <div class="flex items-center space-x-10 w-full">
+      <div class="flex flex-col items-end">
         {#if extension.installedExtension}
           <InstalledExtensionActions class="w-48" extension={extension.installedExtension} />
         {:else if extension.fetchable}
@@ -64,14 +64,10 @@ let extension: ExtensionDetailsUI | undefined = $derived.by(() => {
             <FeaturedExtensionDownload {extension} />
           </div>
         {/if}
+        <ExtensionBadge {extension} />
       </div>
     {/snippet}
 
-    {#snippet detailSnippet()}
-      <div class="flex">
-        <ExtensionBadge class="mt-2" {extension} />
-      </div>
-    {/snippet}
     <!-- Display tabs only if extension is in error state -->
     {#snippet tabsSnippet()}
       {#if extension.state === 'failed'}

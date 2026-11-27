@@ -18,18 +18,70 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, getByRole, render, screen } from '@testing-library/svelte';
+import { fireEvent, getByRole, render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { createRawSnippet, tick } from 'svelte';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import Page from './Page.svelte';
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
 });
 
-test('Expect title is defined', async () => {
-  const title = 'My Dummy Title';
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+test('Only focuses truncated titles and reveals their full text without expanding the heading', async () => {
+  let notifyResize = (): void => {};
+  const disconnect = vi.fn();
+  vi.spyOn(globalThis, 'ResizeObserver').mockImplementation(
+    class {
+      constructor(callback: ResizeObserverCallback) {
+        this.observe = vi.fn((element: Element) => {
+          if (element.tagName === 'H1') notifyResize = (): void => callback([], this);
+        });
+      }
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = disconnect;
+    },
+  );
+
+  const title = 'registry.example.com/team/long-image-name-for-the-details-page';
+  const page = render(Page, { title, clampTitle: true });
+  const heading = screen.getByRole('heading', { level: 1, name: title });
+  expect(heading).not.toHaveAttribute('tabindex');
+
+  let scrollHeight = 80;
+  Object.defineProperties(heading, {
+    scrollHeight: { get: (): number => scrollHeight },
+    clientHeight: { value: 40 },
+  });
+  notifyResize();
+  await tick();
+  expect(heading).toHaveAttribute('tabindex', '0');
+
+  await userEvent.tab();
+  expect(heading).toHaveFocus();
+  expect(screen.getByRole('tooltip')).toHaveTextContent(title);
+  expect(heading).toHaveAttribute('aria-describedby', screen.getByRole('tooltip').id);
+  expect(heading).toHaveClass('line-clamp-2');
+
+  scrollHeight = 40;
+  notifyResize();
+  await tick();
+  expect(heading).not.toHaveAttribute('tabindex');
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  expect(heading).not.toHaveAttribute('aria-describedby');
+
+  page.unmount();
+  expect(disconnect).toHaveBeenCalled();
+});
+
+test('Exposes the full title on the heading', () => {
+  const title = 'registry.example.com/team/long-image-name-for-the-details-page';
   render(Page, {
     title,
   });
@@ -37,6 +89,27 @@ test('Expect title is defined', async () => {
   const titleElement = screen.getByRole('heading', { level: 1, name: title });
   expect(titleElement).toBeInTheDocument();
   expect(titleElement).toHaveTextContent(title);
+  expect(titleElement).toHaveAttribute('title', title);
+  expect(titleElement).not.toHaveClass('line-clamp-2');
+});
+
+test('Renders the detail next to the tabs and outside the header', () => {
+  const detail = createRawSnippet(() => ({ render: (): string => '<span>Container statistics</span>' }));
+  render(Page, { title: 'Container Details', detail });
+
+  const header = screen.getByRole('region', { name: 'Header' });
+  const tabs = screen.getByRole('region', { name: 'Tabs' });
+  const details = screen.getByRole('region', { name: 'Page details' });
+
+  expect(tabs.previousElementSibling).toBe(details);
+  expect(details).toHaveTextContent('Container statistics');
+  expect(within(header).queryByText('Container statistics')).not.toBeInTheDocument();
+});
+
+test('Omits the detail container when no detail is provided', () => {
+  render(Page, { title: 'Image Details' });
+
+  expect(screen.queryByRole('region', { name: 'Page details' })).not.toBeInTheDocument();
 });
 
 test('Expect no backlink or close is defined', async () => {
@@ -146,45 +219,4 @@ test('Expect subtitle is defined and cut', async () => {
 
   // expect class has the clamp
   expect(subtitleElement).toHaveClass('line-clamp-1');
-});
-
-describe('Check for MutationObserver', () => {
-  let mutationObserverObserve: typeof MutationObserver.prototype.observe | undefined;
-  let mutationObserverDisconnect: typeof MutationObserver.prototype.disconnect | undefined;
-
-  beforeEach(() => {
-    vi.resetAllMocks();
-    mutationObserverObserve = MutationObserver.prototype.observe;
-    mutationObserverDisconnect = MutationObserver.prototype.disconnect;
-
-    MutationObserver.prototype.observe = vi.fn();
-    MutationObserver.prototype.disconnect = vi.fn();
-  });
-
-  afterEach(() => {
-    if (!mutationObserverObserve || !mutationObserverDisconnect) {
-      return;
-    }
-    MutationObserver.prototype.observe = mutationObserverObserve;
-    MutationObserver.prototype.disconnect = mutationObserverDisconnect;
-  });
-
-  test('Expect disconnected MutationObserver after onDestroy', async () => {
-    const subtitle = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit';
-    const page = render(Page, {
-      title: '',
-      subtitle,
-    });
-
-    const subtitleElement = screen.getByText(subtitle);
-    expect(subtitleElement).toBeInTheDocument();
-
-    expect(MutationObserver.prototype.observe).toHaveBeenCalledTimes(1);
-    expect(MutationObserver.prototype.disconnect).toHaveBeenCalledTimes(0);
-
-    // run unmount to trigger the onDestroy callback
-    page.unmount();
-
-    expect(MutationObserver.prototype.disconnect).toHaveBeenCalledTimes(1);
-  });
 });

@@ -122,6 +122,7 @@ const combined: CombinedExtensionInfoUI[] = [
     displayName: 'A installed Extension',
     name: 'A extension',
     removable: true,
+    bundled: true,
     state: 'started',
   },
   {
@@ -161,8 +162,11 @@ test('Expect to have details page', async () => {
   const extensionActions = screen.getByRole('group', { name: 'Extension Actions' });
   expect(extensionActions).toBeInTheDocument();
 
+  const header = screen.getByRole('region', { name: 'Header' });
   const extensionBadge = screen.getByRole('region', { name: 'Extension Badge' });
-  expect(extensionBadge).toBeInTheDocument();
+  expect(header).toContainElement(screen.getByRole('status', { name: 'Extension status' }));
+  expect(header).toContainElement(extensionBadge);
+  expect(extensionBadge).toHaveTextContent('Bundled extension');
 
   // no tabs as not failing state
   const readmeTab = screen.queryByRole('button', { name: 'Readme' });
